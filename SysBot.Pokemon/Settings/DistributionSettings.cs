@@ -25,7 +25,7 @@ namespace SysBot.Pokemon
         public bool LedyQuitIfNoMatch { get; set; }
 
         [Category(Distribute), Description("Distribution Trade Link Code.")]
-        public int TradeCode { get; set; } = 7196;
+        public int TradeCode { get; set; } = 84872277;
 
         [Category(Distribute), Description("Distribution Trade Link Code uses the Min and Max range rather than the fixed trade code.")]
         public bool RandomCode { get; set; }
@@ -33,6 +33,8 @@ namespace SysBot.Pokemon
         [Category(Distribute), Description("For BDSP, the distribution bot will go to a specific room and remain there until the bot is stopped.")]
         public bool RemainInUnionRoomBDSP { get; set; } = true;
 
+        [Category(Distribute), Description("Enable OT Changing")]
+        public bool AllowTraderOTInformation { get; set; } = true;
         // Synchronize
 
         [Category(Synchronize), Description("Link Trade: Using multiple distribution bots -- all bots will confirm their trade code at the same time. When Local, the bots will continue when all are at the barrier. When Remote, something else must signal the bots to continue.")]
