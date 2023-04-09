@@ -1097,7 +1097,7 @@ namespace SysBot.Pokemon
                 cln.Language = tradepartner.Language;
                 cln.OT_Name = tradepartner.TrainerName;
                 cln.Version = tradepartner.Game;
-                if (cln.HeldItem < 1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname();
+                if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname();
                 if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
 
                 poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
