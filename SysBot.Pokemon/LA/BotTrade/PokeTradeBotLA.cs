@@ -664,7 +664,7 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
 
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
-                await Click(A, 1_500, token).ConfigureAwait(false);
+                await Click(A, 0_800, token).ConfigureAwait(false);
                 if (!await SetBoxPkmWithSwappedIDDetailsLA(toSend, sav, token).ConfigureAwait(false))
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
