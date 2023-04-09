@@ -1097,6 +1097,8 @@ namespace SysBot.Pokemon
                 cln.Language = tradepartner.Language;
                 cln.OT_Name = tradepartner.TrainerName;
                 cln.Version = tradepartner.Game;
+                if (cln.HeldItem < 1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname();
+                if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
 
                 poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
                 poke.SendNotification(this, "TID: " + cln.TrainerTID7);
@@ -1105,7 +1107,7 @@ namespace SysBot.Pokemon
                 poke.SendNotification(this, "Language: " + (LanguageID)(cln.Language));
                 poke.SendNotification(this, "Game: " + (GameVersion)(cln.Version));
 
-                if (toSend.IsShiny)
+                    if (toSend.IsShiny)
                     cln.SetShiny();
 
                 cln.RefreshChecksum();
@@ -1152,6 +1154,8 @@ namespace SysBot.Pokemon
                 case "Blaines":
                 case "New Year 23":
                 case "Valentine":
+                case "ルキナ":
+                case "メタモン":
                     changeallowed = false;
                     break;
             }

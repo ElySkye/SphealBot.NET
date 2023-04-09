@@ -843,6 +843,7 @@ namespace SysBot.Pokemon
             cln.Language = tradepartners.Language;
             cln.OT_Name = tradepartners.TrainerName;
             cln.Version = tradepartners.Game;
+            cln.ClearNickname();
 
             if (toSend.IsShiny)
                 cln.SetShiny();
