@@ -11,6 +11,8 @@ using static SysBot.Pokemon.PokeDataOffsetsSV;
 using PKHeX.Core.AutoMod;
 using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
+using System.ComponentModel.Design;
 
 namespace SysBot.Pokemon
 {
@@ -1111,14 +1113,13 @@ namespace SysBot.Pokemon
                     cln.SetShiny();
 
                 cln.RefreshChecksum();
+                if (cln.Met_Location != 30024) cln.SetRandomEC();
 
                 if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
                     if (cln.EncryptionConstant % 100 == 0)
                         cln = KeepECModable(cln);
                 }
-                else
-                    cln.SetRandomEC();
                 poke.SendNotification(this, "NPC user has their OT now.");
             }
 
