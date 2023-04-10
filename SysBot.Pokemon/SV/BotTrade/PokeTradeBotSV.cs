@@ -1097,7 +1097,7 @@ namespace SysBot.Pokemon
                 cln.Language = tradepartner.Language;
                 cln.OT_Name = tradepartner.TrainerName;
                 cln.Version = tradepartner.Game;
-                if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname();
+                if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
                 if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
 
                 poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
@@ -1112,7 +1112,7 @@ namespace SysBot.Pokemon
 
                 cln.RefreshChecksum();
 
-                if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus)
+                if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
                     if (cln.EncryptionConstant % 100 == 0)
                         cln = KeepECModable(cln);
@@ -1122,7 +1122,7 @@ namespace SysBot.Pokemon
                 poke.SendNotification(this, "NPC user has their OT now.");
             }
 
-                var tradesv = new LegalityAnalysis(cln);
+                var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
 
             if (tradesv.Valid)
             {
@@ -1138,30 +1138,35 @@ namespace SysBot.Pokemon
             // Check if OT change is allowed for different situations
             switch (mon.Species)
             {
-                //Miraidon on Scarlet
+                //Miraidon on Scarlet, no longer needed
                 case (ushort)Species.Miraidon:
                     if (trader1.Game == (int)GameVersion.SL)
                         changeallowed = false;
                     break;
-                //Koraidon on Violet
+                //Koraidon on Violet, no longer needed
                 case (ushort)Species.Koraidon:
                     if (trader1.Game == (int)GameVersion.VL)
                         changeallowed = false;
                     break;
+                    //Ditto will not OT change unless it has Destiny Mark
+                case (ushort)Species.Ditto:
+                    if (mon.RibbonMarkDestiny == true)
+                        mon.SetDefaultNickname();
+                    else
+                        changeallowed = false;
+                    break;
             }
-            switch (mon.OT_Name)
+            switch (mon.OT_Name) //Stops mons with Specific OT from changing to User's OT
             {
                 case "Blaines":
                 case "New Year 23":
                 case "Valentine":
-                case "ルキナ":
-                case "メタモン":
                     changeallowed = false;
                     break;
             }
-            return changeallowed;
+                return changeallowed;
         }
-        private static PK9 KeepECModable(PK9 eckeep)
+        private static PK9 KeepECModable(PK9 eckeep) //Maintain form for Dunsparce/Tandemaus
         {
             eckeep.SetRandomEC();
 
