@@ -1113,13 +1113,14 @@ namespace SysBot.Pokemon
                     cln.SetShiny();
 
                 cln.RefreshChecksum();
-                if (cln.Met_Location != 30024) cln.SetRandomEC();
 
                 if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
                     if (cln.EncryptionConstant % 100 == 0)
                         cln = KeepECModable(cln);
                 }
+                else
+                    if (cln.Met_Location != 30024) cln.SetRandomEC(); //OT for raidmon
                 poke.SendNotification(this, "NPC user has their OT now.");
             }
 
