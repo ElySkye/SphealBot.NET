@@ -991,7 +991,7 @@ namespace SysBot.Pokemon
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
                 {
                     poke.Notifier.SendNotification(this, poke, "User has become an NPC. The owner has been notified.");
-                    var msg = $"Found NPC on {user.TrainerName}{useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+                    var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
                     list.TryRegister(TrainerNID, TrainerName);
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nNPC OT: {TrainerName}";
@@ -1078,7 +1078,6 @@ namespace SysBot.Pokemon
             Name = name,
             Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
         };
-        Random rand = new Random();
         private async Task<bool> SetBoxPkmWithSwappedIDDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
         {
             poke.SendNotification(this, "Checking if I can change OT info");
@@ -1087,7 +1086,6 @@ namespace SysBot.Pokemon
 
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
 
-            poke.SendNotification(this, "Checking if OT is allowed based on the Pokemon requested");
             var changeallowed = OTChangeAllowed(toSend, tradepartner);
 
             if (changeallowed)
@@ -1112,8 +1110,6 @@ namespace SysBot.Pokemon
                     if (toSend.IsShiny)
                     cln.SetShiny();
 
-                cln.RefreshChecksum();
-
                 if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
                     if (cln.EncryptionConstant % 100 == 0)
@@ -1121,6 +1117,7 @@ namespace SysBot.Pokemon
                 }
                 else
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //OT for raidmon
+                cln.RefreshChecksum();
                 poke.SendNotification(this, "NPC user has their OT now.");
             }
 

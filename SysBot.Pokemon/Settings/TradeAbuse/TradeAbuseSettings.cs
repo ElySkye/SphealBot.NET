@@ -10,6 +10,9 @@ namespace SysBot.Pokemon
         [Category(Monitoring), Description("When a person appears again in less than this setting's value (minutes), a notification will be sent.")]
         public double TradeCooldown { get; set; }
 
+        [Category(Monitoring), Description("Time cooldown last updated.")]
+        public string CooldownUpdate { get; set; } = "2023.04.16 - 00:00:00";
+
         [Category(Monitoring), Description("When a person ignores a trade cooldown, the echo message will include their Nintendo Account ID.")]
         public bool EchoNintendoOnlineIDCooldown { get; set; } = true;
 

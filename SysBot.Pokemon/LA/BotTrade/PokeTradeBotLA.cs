@@ -741,7 +741,7 @@ namespace SysBot.Pokemon
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
                 {
                     poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
-                    var msg = $"Found NPC on {user.TrainerName}{useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+                    var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nOT: {TrainerName}";
                     msg += $"\nID: {TrainerNID}";
@@ -847,9 +847,9 @@ namespace SysBot.Pokemon
             if (toSend.IsShiny)
                 cln.SetShiny();
 
-            cln.RefreshChecksum();
-
             cln.SetRandomEC();
+
+            cln.RefreshChecksum();
 
             var tradela = new LegalityAnalysis(cln);
 
