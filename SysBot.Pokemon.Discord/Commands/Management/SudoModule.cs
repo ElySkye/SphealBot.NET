@@ -4,11 +4,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
+using PKHeX.Core;
+using System.ComponentModel.Design;
+using System.Globalization;
 
 namespace SysBot.Pokemon.Discord
 {
     public class SudoModule : ModuleBase<SocketCommandContext>
     {
+        [Command("cooldown")]
+        [Summary("Changes cooldown in minutes.")]
+        [RequireSudo]
+        public async Task UpdateCooldown([Remainder] string input)
+        {
+            bool res = uint.TryParse(input, out var cooldown);
+            if (res)
+            {
+                SysCordSettings.HubConfig.TradeAbuse.TradeCooldown = cooldown;
+                SysCordSettings.HubConfig.TradeAbuse.CooldownUpdate = $"{DateTime.Now:yyyy.MM.dd - HH:mm:ss}";
+                await ReplyAsync($"Cooldown has been updated to {cooldown} minutes.").ConfigureAwait(false);
+            }
+            else
+            {
+                await ReplyAsync("Please enter a valid number of minutes.").ConfigureAwait(false);
+            }
+        }
         [Command("blacklist")]
         [Summary("Blacklists mentioned user.")]
         [RequireSudo]
