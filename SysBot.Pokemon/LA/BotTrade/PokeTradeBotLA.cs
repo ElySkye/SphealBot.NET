@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsLA;
+using System.Collections.Generic;
 
 namespace SysBot.Pokemon
 {
@@ -296,6 +297,11 @@ namespace SysBot.Pokemon
                 return partnerCheck;
             }
 
+            bool isDistribution = false;
+            if (poke.Type == PokeTradeType.Random)
+                isDistribution = true;
+            var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+
             poke.SendNotification(this, $"Found Link Trade partner: {tradePartner.TrainerName}. Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
@@ -366,6 +372,9 @@ namespace SysBot.Pokemon
 
             // Only log if we completed the trade.
             UpdateCountsAndExport(poke, received, toSend);
+
+            if (poke.Type == PokeTradeType.Random)
+                list.TryRegister(trainerNID, tradePartner.TrainerName);
 
             await ExitTrade(false, token).ConfigureAwait(false);
             return PokeTradeResult.Success;
@@ -727,7 +736,9 @@ namespace SysBot.Pokemon
         {
             bool quit = false;
             var user = poke.Trainer;
-            var isDistribution = poke.Type == PokeTradeType.Random;
+            bool isDistribution = false;
+            if (poke.Type == PokeTradeType.Random)
+                isDistribution = true;
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
 
@@ -742,6 +753,7 @@ namespace SysBot.Pokemon
                 {
                     poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
                     var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+                    list.TryRegister(TrainerNID, TrainerName);
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nOT: {TrainerName}";
                     msg += $"\nID: {TrainerNID}";
@@ -781,9 +793,7 @@ namespace SysBot.Pokemon
 
             // Try registering the partner in our list of recently seen.
             // Get back the details of their previous interaction.
-            var previous = isDistribution
-                ? list.TryRegister(TrainerNID, TrainerName)
-                : list.TryRegister(TrainerNID, TrainerName, poke.Trainer.ID);
+            var previous = list.TryGetPrevious(TrainerNID);
             if (previous != null && previous.NetworkID == TrainerNID && previous.RemoteID != user.ID && !isDistribution)
             {
                 var delta = DateTime.Now - previous.Time;
