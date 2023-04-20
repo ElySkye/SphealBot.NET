@@ -409,7 +409,7 @@ namespace SysBot.Pokemon
             if (poke.Type == PokeTradeType.Random)
                 list.TryRegister(trainerNID, trainerName);
 
-            await ExitTrade(Hub.Config, false, token).ConfigureAwait(false);
+            await ExitTrade(false, token).ConfigureAwait(false);
             return PokeTradeResult.Success;
         }
 
@@ -654,7 +654,7 @@ namespace SysBot.Pokemon
         {
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
-            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
+            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             if (trade != null)
             {
                 if (trade.Type == LedyResponseType.AbuseDetected)

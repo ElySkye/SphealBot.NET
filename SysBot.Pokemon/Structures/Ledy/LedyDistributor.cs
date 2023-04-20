@@ -19,9 +19,9 @@ namespace SysBot.Pokemon
 
         private const Species NoMatchSpecies = Species.None;
 
-        public LedyResponse<T>? GetLedyTrade(T pk, ulong partnerId, Species speciesMatch = NoMatchSpecies)
+        public LedyResponse<T>? GetLedyTrade(T pk, ulong partnerId, Species speciesMatch = NoMatchSpecies, Species speciesMatch2 = NoMatchSpecies)
         {
-            if (speciesMatch != NoMatchSpecies && pk.Species != (int)speciesMatch)
+            if (speciesMatch != NoMatchSpecies && speciesMatch2 != NoMatchSpecies && pk.Species != (int)speciesMatch && pk.Species != (int)speciesMatch2)
                 return null;
 
             var response = GetLedyResponse(pk);
