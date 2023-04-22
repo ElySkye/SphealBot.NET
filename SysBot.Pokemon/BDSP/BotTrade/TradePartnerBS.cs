@@ -10,14 +10,17 @@ namespace SysBot.Pokemon
         public string SID7 { get; }
         public uint TrainerID { get; }
         public string TrainerName { get; }
+        public int Game { get; }
 
-        public TradePartnerBS(byte[] TIDSID, byte[] trainerNameObject)
+        public TradePartnerBS(byte[] TIDSID, byte[] idbytes, byte[] trainerNameObject)
         {
             Debug.Assert(TIDSID.Length == 4);
             var tidsid = BitConverter.ToUInt32(TIDSID, 0);
             TID7 = $"{tidsid % 1_000_000:000000}";
             SID7 = $"{tidsid / 1_000_000:0000}";
             TrainerID = tidsid;
+
+            Game = idbytes[0];
 
             TrainerName = ReadStringFromRAMObject(trainerNameObject);
         }

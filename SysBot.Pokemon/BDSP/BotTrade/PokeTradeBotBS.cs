@@ -1,4 +1,5 @@
 ﻿using PKHeX.Core;
+using PKHeX.Core.AutoMod;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -697,9 +698,11 @@ namespace SysBot.Pokemon
 
         private async Task<TradePartnerBS> GetTradePartnerInfo(CancellationToken token)
         {
+            var tradeOffset = await SwitchConnection.PointerAll(Offsets.LinkTradePartnerIDPointer, token).ConfigureAwait(false);
             var id = await SwitchConnection.PointerPeek(4, Offsets.LinkTradePartnerIDPointer, token).ConfigureAwait(false);
+            var idbytes = await SwitchConnection.ReadBytesAbsoluteAsync(tradeOffset + 0x04, 0x04, token).ConfigureAwait(false);
             var name = await SwitchConnection.PointerPeek(TradePartnerBS.MaxByteLengthStringObject, Offsets.LinkTradePartnerNamePointer, token).ConfigureAwait(false);
-            return new TradePartnerBS(id, name);
+            return new TradePartnerBS(id, idbytes, name);
         }
 
         protected virtual async Task<(PB8 toSend, PokeTradeResult check)> GetEntityToSend(SAV8BS sav, PokeTradeDetail<PB8> poke, PB8 offered, PB8 toSend, PartnerDataHolder partnerID, CancellationToken token)
@@ -730,8 +733,8 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
 
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
-                await Click(A, 0_800, token).ConfigureAwait(false);
-                await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                if (!await SetBoxPkmWithSwappedIDDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false))
+                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
             else if (config.LedyQuitIfNoMatch)
@@ -899,5 +902,42 @@ namespace SysBot.Pokemon
             Name = name,
             Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
         };
+        private async Task<bool> SetBoxPkmWithSwappedIDDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
+        {
+            var cln = (PB8)toSend.Clone();
+
+            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+
+            Log($"Preparing to change OT");
+
+            Log(string.Concat($"I think the Trainer OT Name is: ", tradepartner.TrainerName));
+            cln.OT_Gender = offered.OT_Gender;
+            cln.TrainerTID7 = offered.TrainerTID7;
+            cln.TrainerSID7 = offered.TrainerSID7;
+            cln.OT_Name = tradepartner.TrainerName;
+            cln.Version = tradepartner.Game;
+            cln.Language = offered.Language;
+            cln.ClearNickname();
+
+            if (toSend.IsShiny)
+                cln.SetShiny();
+
+            cln.SetRandomEC();
+
+            Log(string.Concat($"Original Trainer is: ", cln.OT_Name));
+            Log(string.Concat($"SID is: ", cln.TrainerSID7));
+            Log(string.Concat($"TID is: ", cln.TrainerTID7));
+            Log(string.Concat($"OT Gender is: ", (Gender)cln.OT_Gender));
+            Log(string.Concat($"Language is: ", (LanguageID)cln.Language));
+            Log(string.Concat($"Version is: ", (GameVersion)cln.Version));
+
+            cln.RefreshChecksum();
+
+            var tradebdsp = new LegalityAnalysis(cln);
+            if (tradebdsp.Valid)
+                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
+            else Log($"Pokemon was analyzed to be not legal");
+            return tradebdsp.Valid;
+        }
     }
 }
