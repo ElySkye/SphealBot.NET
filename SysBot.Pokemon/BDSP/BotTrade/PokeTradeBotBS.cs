@@ -908,21 +908,39 @@ namespace SysBot.Pokemon
 
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
 
+            switch (cln.Species) //OT for Arceus on the other version
+            {
+                case (ushort)Species.Arceus:
+                    {
+                        if (tradepartner.Game == (int)GameVersion.BD) //Brilliant Diamond
+                        {
+                            cln.Met_Location = 218;
+                            cln.Version = (int)GameVersion.BD;
+                        }
+                        else if (tradepartner.Game == (int)GameVersion.SP) //Shining Pearl
+                        {
+                            cln.Met_Location = 618;
+                            cln.Version = (int) GameVersion.SP;
+                        }
+                        break;
+                    }
+            }
+
             Log($"Preparing to change OT");
 
-            Log(string.Concat($"I think the Trainer OT Name is: ", tradepartner.TrainerName));
             cln.OT_Gender = offered.OT_Gender;
             cln.TrainerTID7 = offered.TrainerTID7;
             cln.TrainerSID7 = offered.TrainerSID7;
             cln.OT_Name = tradepartner.TrainerName;
             cln.Version = tradepartner.Game;
             cln.Language = offered.Language;
-            cln.ClearNickname();
+            cln.SetDefaultNickname();
 
-            if (toSend.IsShiny)
+            if (cln.IsShiny)
                 cln.SetShiny();
 
             cln.SetRandomEC();
+            cln.RefreshChecksum();
 
             Log(string.Concat($"Original Trainer is: ", cln.OT_Name));
             Log(string.Concat($"SID is: ", cln.TrainerSID7));
@@ -930,8 +948,6 @@ namespace SysBot.Pokemon
             Log(string.Concat($"OT Gender is: ", (Gender)cln.OT_Gender));
             Log(string.Concat($"Language is: ", (LanguageID)cln.Language));
             Log(string.Concat($"Version is: ", (GameVersion)cln.Version));
-
-            cln.RefreshChecksum();
 
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)
