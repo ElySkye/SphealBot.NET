@@ -1150,7 +1150,7 @@ namespace SysBot.Pokemon
                     //Ditto will not OT change unless it has Destiny Mark
                 case (ushort)Species.Ditto:
                     if (mon.RibbonMarkDestiny == true)
-                        mon.SetDefaultNickname();
+                        changeallowed = true;
                     else
                         changeallowed = false;
                     break;

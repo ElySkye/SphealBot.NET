@@ -920,7 +920,7 @@ namespace SysBot.Pokemon
                         else if (tradepartner.Game == (int)GameVersion.SP) //Shining Pearl
                         {
                             cln.Met_Location = 618;
-                            cln.Version = (int) GameVersion.SP;
+                            cln.Version = (int)GameVersion.SP;
                         }
                         break;
                     }
