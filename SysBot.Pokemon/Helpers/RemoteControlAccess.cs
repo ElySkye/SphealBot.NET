@@ -11,8 +11,9 @@ namespace SysBot.Pokemon
         public ulong ID { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
-
+        public DateTime Expiration { get; set; } = DateTime.MaxValue;
         public override string ToString() => $"{Name} = {ID} // {Comment}";
+        public string ToStringCD() => $"{Name} = {ID} - Expiration: {Expiration} // {Comment}";
     }
 
     [TypeConverter(typeof(ExpandableObjectConverter))]

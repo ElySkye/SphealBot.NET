@@ -423,6 +423,25 @@ namespace SysBot.Pokemon
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
 
+            int wlIndex = AbuseSettings.WhiteListedIDs.List.FindIndex(z => z.ID == TrainerNID);
+            DateTime wlCheck = DateTime.Now;
+
+            bool wlAllow = false;
+
+            if (wlIndex > -1)
+            {
+                ulong wlID = AbuseSettings.WhiteListedIDs.List[wlIndex].ID;
+                var wlExpires = AbuseSettings.WhiteListedIDs.List[wlIndex].Expiration;
+
+                if (wlID != 0 && wlExpires <= wlCheck)
+                {
+                    AbuseSettings.WhiteListedIDs.RemoveAll(z => z.ID == TrainerNID);
+                    EchoUtil.Echo($"Removed {TrainerName} from Whitelist due to an expired duration.");
+                    wlAllow = false;
+                }
+                else if (wlID != 0)
+                    wlAllow = true;
+            }
             var cooldown = list.TryGetPrevious(TrainerNID);
             if (cooldown != null)
             {
@@ -430,7 +449,7 @@ namespace SysBot.Pokemon
                 Log($"Last saw {user.TrainerName} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
 
                 var cd = AbuseSettings.TradeCooldown;
-                if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
+                if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
                 {
                     poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
                     var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";

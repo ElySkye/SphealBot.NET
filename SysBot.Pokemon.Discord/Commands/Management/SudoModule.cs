@@ -7,6 +7,7 @@ using Discord;
 using PKHeX.Core;
 using System.ComponentModel.Design;
 using System.Globalization;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -29,7 +30,54 @@ namespace SysBot.Pokemon.Discord
                 await ReplyAsync("Please enter a valid number of minutes.").ConfigureAwait(false);
             }
         }
-        [Command("blacklist")]
+        [Command("addwl")]
+        [Summary("Adds NID to whitelist for cooldown skipping. Format: <prefix>addwl [NID] [IGN] [Duration in hours](optional)")]
+        [RequireSudo]
+        // Adds a <NID> to cooldown whitelist.  Syntax: <prefix>addwl <NID>, <IGN>, <Duration in hours>
+        // Do not provide last parameter for non-expiring whitelist.
+        public async Task AddWhiteList([Summary("Whitelist user from cooldowns. Format: <NID>, <OT Name>, <Duration>:<Day/Hour>, <Reason for whitelisting>")][Remainder] string input)
+        {
+            string msg = "";
+            var wlParams = input.Split(", ", 4);
+            DateTime wlExpires = DateTime.Now;
+            RemoteControlAccess wlRef = new RemoteControlAccess();
+
+            if (wlParams.Length <= 2)
+            {
+                await ReplyAsync(Format.Code($"Please enter the command with the correct syntax. Format: <NID>, <OT Name>, <Duration>:<Day/Hour>, <Reason for whitelisting> (Last two are optional but BOTH must be given if one is)")).ConfigureAwait(false);
+                return;
+            }
+            else if (wlParams.Length == 4)
+            {
+                var durParams = wlParams[2].Split(":", 2);
+                durParams[1] = durParams[1].ToLower();
+                bool isValidDur = int.TryParse(durParams[0], out int duration);
+                if (!isValidDur)
+                {
+                    msg += $"{durParams[0]} is an invalid number. Defaulting to no expiration\r\n";
+                    wlExpires = DateTime.MaxValue;
+                }
+                else
+                {
+                    wlExpires = durParams[1] switch
+                    {
+                        "days" or "day" => wlExpires.AddDays(duration),
+                        "hours" or "hour" => wlExpires.AddHours(duration),
+                        _ => wlExpires.AddHours(duration),
+                    };
+                }
+                wlRef = GetReference(wlParams[1], Convert.ToUInt64(wlParams[0]), wlExpires, wlParams[3]);
+            }
+            else
+            {
+                wlExpires = DateTime.MaxValue;
+                wlRef = GetReference(wlParams[1], Convert.ToUInt64(wlParams[0]), wlExpires, wlParams[2]);
+            }
+            SysCordSettings.HubConfig.TradeAbuse.WhiteListedIDs.AddIfNew(new[] { wlRef });
+            msg += $"{wlParams[1]}({wlParams[0]}) added to the whitelist";
+            await ReplyAsync(Format.Code(msg)).ConfigureAwait(false);
+        }
+            [Command("blacklist")]
         [Summary("Blacklists mentioned user.")]
         [RequireSudo]
         // ReSharper disable once UnusedParameter.Global
@@ -102,7 +150,6 @@ namespace SysBot.Pokemon.Discord
             var msg = string.Join("\n", lines);
             await ReplyAsync(Format.Code(msg)).ConfigureAwait(false);
         }
-
         private RemoteControlAccess GetReference(IUser channel) => new()
         {
             ID = channel.Id,
@@ -116,7 +163,13 @@ namespace SysBot.Pokemon.Discord
             Name = "Manual",
             Comment = $"Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
         };
-
+        private RemoteControlAccess GetReference(string name, ulong id, DateTime expiration, string comment) => new()
+        {
+            ID = id,
+            Name = name,
+            Expiration = expiration,
+            Comment = $"{comment} - Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
+        };
         protected static IEnumerable<ulong> GetIDs(string content)
         {
             return content.Split(new[] { ",", ", ", " " }, StringSplitOptions.RemoveEmptyEntries)
