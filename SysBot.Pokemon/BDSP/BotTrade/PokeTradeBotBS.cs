@@ -927,20 +927,30 @@ namespace SysBot.Pokemon
             }
 
             Log($"Preparing to change OT");
+            if (toSend.IsEgg == false)
+            {
+                cln.OT_Gender = offered.OT_Gender;
+                cln.TrainerTID7 = offered.TrainerTID7;
+                cln.TrainerSID7 = offered.TrainerSID7;
+                cln.OT_Name = tradepartner.TrainerName;
+                cln.Version = tradepartner.Game;
+                cln.Language = offered.Language;
+                cln.SetDefaultNickname();
 
-            cln.OT_Gender = offered.OT_Gender;
-            cln.TrainerTID7 = offered.TrainerTID7;
-            cln.TrainerSID7 = offered.TrainerSID7;
-            cln.OT_Name = tradepartner.TrainerName;
-            cln.Version = tradepartner.Game;
-            cln.Language = offered.Language;
-            cln.SetDefaultNickname();
+                if (toSend.IsShiny)
+                    cln.SetShiny();
 
-            if (cln.IsShiny)
-                cln.SetShiny();
-
-            cln.SetRandomEC();
-            cln.RefreshChecksum();
+                cln.SetRandomEC();
+                cln.RefreshChecksum();
+            }
+            if (toSend.IsEgg == true)
+            {
+                cln.SetDefaultNickname();
+                if (toSend.IsShiny)
+                    cln.SetShiny();
+                cln.SetRandomEC();
+                cln.RefreshChecksum();
+            }
 
             Log(string.Concat($"Original Trainer is: ", cln.OT_Name));
             Log(string.Concat($"SID is: ", cln.TrainerSID7));
