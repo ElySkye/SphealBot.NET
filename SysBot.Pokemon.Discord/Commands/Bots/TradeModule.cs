@@ -112,7 +112,7 @@ namespace SysBot.Pokemon.Discord
         public async Task BanTradeAsync([Summary("Online ID")] ulong nnid, string comment)
         {
             SysCordSettings.HubConfig.TradeAbuse.BannedIDs.AddIfNew(new[] { GetReference(nnid, comment) });
-            await ReplyAsync("Done.").ConfigureAwait(false);
+            await ReplyAsync("https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504").ConfigureAwait(false);
         }
 
         private RemoteControlAccess GetReference(ulong id, string comment) => new()

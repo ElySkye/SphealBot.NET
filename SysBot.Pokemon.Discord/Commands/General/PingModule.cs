@@ -9,7 +9,7 @@ namespace SysBot.Pokemon.Discord
         [Summary("Makes the bot respond, indicating that it is running.")]
         public async Task PingAsync()
         {
-            await ReplyAsync("Click to disable pinging the original author @on -> @off").ConfigureAwait(false);
+            await ReplyAsync("https://tenor.com/view/discord-reply-discord-reply-off-discord-reply-gif-22150762").ConfigureAwait(false);
         }
     }
 }

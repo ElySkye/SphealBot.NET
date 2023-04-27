@@ -13,6 +13,7 @@ using System.Diagnostics;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.ComponentModel.Design;
+using static System.Net.WebRequestMethods;
 
 namespace SysBot.Pokemon
 {
@@ -1009,15 +1010,32 @@ namespace SysBot.Pokemon
                 var cd = AbuseSettings.TradeCooldown;
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
                 {
-                    poke.Notifier.SendNotification(this, poke, "User has become an NPC. The owner has been notified.");
-                    var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
                     list.TryRegister(TrainerNID, TrainerName);
+                    poke.Notifier.SendNotification(this, poke, "User has become an NPC. The owner has been notified.");
+                    var msg = $"Found NPC {TrainerName}{useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"\nNPC OT: {TrainerName}";
-                    msg += $"\nNPC ID: {TrainerNID}";
-                    if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
-                        msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
+                        msg += $"\nNPC ID: {TrainerNID}";
                     EchoUtil.Echo(msg);
+                    Random rndmsg = new Random();
+                    int num = rndmsg.Next(1, 4);
+                    switch (num)
+                    {
+                        case 1:
+                            msg = $"https://tenor.com/view/madagascar-skipper-can-you-read-gif-22646390";
+                            break;
+                        case 2:
+                            msg = $"https://tenor.com/view/shame-shame-shame-shame-peter-peter-griffin-shame-on-you-gif-17923831";
+                            break;
+                        case 3:
+                            msg = $"https://tenor.com/view/cat-smh-meme-disagree-cringe-gif-25512889";
+                            break;
+                    }
+                    EchoUtil.Echo(msg);
+                    if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
+                    {
+                        msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
+                        EchoUtil.Echo(msg);
+                    }
                     quit = true;
                 }
             }
@@ -1079,13 +1097,19 @@ namespace SysBot.Pokemon
             var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
-                var msg = $"{user.TrainerName}{useridmsg} is a banned user, and was encountered in-game using OT: {TrainerName}.";
+                var msg = $"{user.TrainerName}{useridmsg} is a banned NPC, and was encountered in-game using OT: {TrainerName}.";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
-                    msg += $"\nUser was banned for: {entry.Comment}";
+                    msg += $"\nNPC was banned for: {entry.Comment}";
+                    EchoUtil.Echo(msg);
+                    msg = $"https://tenor.com/view/guilty-phoenix-wright-ace-attorney-gif-21396957";
+                    EchoUtil.Echo(msg);
+
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
+                {
                     msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
-                EchoUtil.Echo(msg);
-                return PokeTradeResult.SuspiciousActivity;
+                    EchoUtil.Echo(msg);
+                }
+                    return PokeTradeResult.SuspiciousActivity;
             }
 
             return PokeTradeResult.Success;
