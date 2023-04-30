@@ -672,6 +672,7 @@ namespace SysBot.Pokemon
         private async Task<(PK8 toSend, PokeTradeResult check)> HandleRandomLedy(SAV8SWSH sav, PokeTradeDetail<PK8> poke, PK8 offered, PK8 toSend, PartnerDataHolder partner, CancellationToken token)
         {
             // Allow the trade partner to do a Ledy swap.
+            Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             if (trade != null)
@@ -698,6 +699,9 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
+                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
+                Log($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}"); //Log to bot's log
+                EchoUtil.Echo($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}."); //Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 

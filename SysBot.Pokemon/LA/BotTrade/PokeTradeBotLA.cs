@@ -328,7 +328,7 @@ namespace SysBot.Pokemon
             {
                 Log("Trade ended because a valid Pokémon was not offered.");
                 await ExitTrade(false, token).ConfigureAwait(false);
-                return PokeTradeResult.TrainerTooSlow;
+                return PokeTradeResult.TrainerOfferCanceledQuick;
             }
 
             PokeTradeResult update;
@@ -653,6 +653,7 @@ namespace SysBot.Pokemon
         private async Task<(PA8 toSend, PokeTradeResult check)> HandleRandomLedy(SAV8LA sav, PokeTradeDetail<PA8> poke, PA8 offered, PA8 toSend, PartnerDataHolder partner, CancellationToken token)
         {
             // Allow the trade partner to do a Ledy swap.
+            Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             if (trade != null)
@@ -679,6 +680,9 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
+                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered);
+                Log($"Bad Request found from {offered.OT_Name} nicknamed {offered.Nickname}");
+                EchoUtil.Echo($"Bad Request found from {offered.OT_Name} nicknamed {offered.Nickname}.");
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -870,7 +874,14 @@ namespace SysBot.Pokemon
             cln.Language = tradepartners.Language;
             cln.OT_Name = tradepartners.TrainerName;
             cln.Version = tradepartners.Game;
-            cln.ClearNickname();
+            cln.SetDefaultNickname();
+
+            Log("OT_Name: " + cln.OT_Name);
+            Log("TID: " + cln.TrainerTID7);
+            Log("SID: " + cln.TrainerSID7);
+            Log("Gender: " + (Gender)cln.OT_Gender);
+            Log("Language: " + (LanguageID)(cln.Language));
+            Log("Game: " + (GameVersion)(cln.Version));
 
             if (toSend.IsShiny)
                 cln.SetShiny();

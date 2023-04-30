@@ -346,7 +346,7 @@ namespace SysBot.Pokemon
             var tradePartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var trainerNID = await GetTradePartnerNID(TradePartnerNIDOffset, token).ConfigureAwait(false);
             RecordUtil<PokeTradeBot>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
-            Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
+            Log($"Found Trainer: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
             var partnerCheck = CheckPartnerReputation(poke, trainerNID, tradePartner.TrainerName);
             if (partnerCheck != PokeTradeResult.Success)
@@ -369,7 +369,7 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             }
 
-            poke.SendNotification(this, $"Found Link Trade partner: {tradePartner.TrainerName}. Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} TID: {tradePartner.TID7} SID: {tradePartner.SID7}. Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
             {
@@ -886,6 +886,7 @@ namespace SysBot.Pokemon
         private async Task<(PK9 toSend, PokeTradeResult check)> HandleRandomLedy(SAV9SV sav, PokeTradeDetail<PK9> poke, PK9 offered, PK9 toSend, PartnerDataHolder partner, CancellationToken token)
         {
             // Allow the trade partner to do a Ledy swap.
+            Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             if (trade != null)
@@ -910,7 +911,7 @@ namespace SysBot.Pokemon
                 {
                     if (!await SetBoxPkmWithSwappedIDDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
                     {
-                        poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged");
+                        poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                     }
                 } else
@@ -919,6 +920,9 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
+                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
+                Log($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}"); //Log to bot's log
+                EchoUtil.Echo($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}."); //Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -1097,7 +1101,7 @@ namespace SysBot.Pokemon
             var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
-                var msg = $"{user.TrainerName}{useridmsg} is a banned NPC, and was encountered in-game using OT: {TrainerName}.";
+                var msg = $"Found a banned NPC trying to connect, and with the OT: {TrainerName}.";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                     msg += $"\nNPC was banned for: {entry.Comment}";
                     EchoUtil.Echo(msg);
@@ -1123,8 +1127,6 @@ namespace SysBot.Pokemon
         };
         private async Task<bool> SetBoxPkmWithSwappedIDDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
         {
-            poke.SendNotification(this, "Checking if I can change OT info");
-
             var cln = (PK9)toSend.Clone();
 
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
