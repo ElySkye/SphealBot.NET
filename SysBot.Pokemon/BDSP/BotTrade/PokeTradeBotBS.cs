@@ -740,6 +740,9 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
+                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered);
+                var msg = $"Bad Request found from {partner.TrainerName} nicknamed {offered.Nickname}";//Log to bot's log
+                EchoUtil.Echo(msg);//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -963,7 +966,7 @@ namespace SysBot.Pokemon
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            else Log($"Pokemon was analyzed to be not legal");
+            else Log($"Pokemon was analyzed as not legal");
             return tradebdsp.Valid;
         }
     }

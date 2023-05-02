@@ -921,8 +921,8 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                Log($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}"); //Log to bot's log
-                EchoUtil.Echo($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}."); //Log to discord
+                var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
+                EchoUtil.Echo(msg);//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -1133,6 +1133,23 @@ namespace SysBot.Pokemon
 
             var changeallowed = OTChangeAllowed(toSend, tradepartner);
 
+            switch (cln.Species) //OT for Galar Meowth from School on the other version
+            {
+                case (ushort)Species.Meowth:
+                    {
+                        if (tradepartner.Game == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
+                        {
+                            cln.Met_Location = 130;//Naranja Academy
+                            cln.Version = (int)GameVersion.SL;//Ensure correct Version
+                        }
+                        else if (tradepartner.Game == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
+                        {
+                            cln.Met_Location = 131;//Uva Academy
+                            cln.Version = (int)GameVersion.VL;//Ensure correct Version
+                        }
+                        break;
+                    }
+            }
             if (changeallowed)
             {
                 poke.SendNotification(this, "Changing OT info to:");

@@ -700,8 +700,8 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                Log($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}"); //Log to bot's log
-                EchoUtil.Echo($"Bad Request found from {offered.OT_Name}: {Enum.GetName(typeof(Species), offered.Species)} nicknamed {offered.Nickname}."); //Log to discord
+                var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
+                EchoUtil.Echo(msg);//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
