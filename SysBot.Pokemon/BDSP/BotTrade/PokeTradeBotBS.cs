@@ -947,14 +947,13 @@ namespace SysBot.Pokemon
                 cln.SetRandomEC();
                 cln.RefreshChecksum();
             }
-            if (toSend.IsEgg == true)
-            {
-                cln.SetDefaultNickname();
-                if (toSend.IsShiny)
-                    cln.SetShiny();
-                cln.SetRandomEC();
-                cln.RefreshChecksum();
-            }
+            else
+                {
+                    if (toSend.IsShiny)
+                        cln.SetShiny();
+                    cln.SetRandomEC();
+                    cln.RefreshChecksum();
+                }
 
             Log(string.Concat($"Original Trainer is: ", cln.OT_Name));
             Log(string.Concat($"SID is: ", cln.TrainerSID7));

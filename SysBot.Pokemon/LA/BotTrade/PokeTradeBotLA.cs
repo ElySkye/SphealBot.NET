@@ -881,7 +881,6 @@ namespace SysBot.Pokemon
             Log("SID: " + cln.TrainerSID7);
             Log("Gender: " + (Gender)cln.OT_Gender);
             Log("Language: " + (LanguageID)(cln.Language));
-            Log("Game: " + (GameVersion)(cln.Version));
 
             if (toSend.IsShiny)
                 cln.SetShiny();

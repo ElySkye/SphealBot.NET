@@ -1021,7 +1021,7 @@ namespace SysBot.Pokemon
                         msg += $"\nNPC ID: {TrainerNID}";
                     EchoUtil.Echo(msg);
                     Random rndmsg = new Random();
-                    int num = rndmsg.Next(1, 4);
+                    int num = rndmsg.Next(1, 5);
                     switch (num)
                     {
                         case 1:
@@ -1032,6 +1032,9 @@ namespace SysBot.Pokemon
                             break;
                         case 3:
                             msg = $"https://tenor.com/view/cat-smh-meme-disagree-cringe-gif-25512889";
+                            break;
+                        case 4:
+                            msg = $"https://tenor.com/view/psy-dance-horses-gangnam-style-music-gif-5419832";
                             break;
                     }
                     EchoUtil.Echo(msg);
@@ -1133,7 +1136,7 @@ namespace SysBot.Pokemon
 
             var changeallowed = OTChangeAllowed(toSend, tradepartner);
 
-            switch (cln.Species) //OT for Galar Meowth from School on the other version
+            switch (cln.Species) //OT for Academy Meowth on the other version
             {
                 case (ushort)Species.Meowth:
                     {
@@ -1147,31 +1150,45 @@ namespace SysBot.Pokemon
                             cln.Met_Location = 131;//Uva Academy
                             cln.Version = (int)GameVersion.VL;//Ensure correct Version
                         }
+                        cln.SetShiny();
+                        cln.SetUnshiny();
+                        cln.SetRandomEC();
+                        cln.RefreshChecksum();
                         break;
                     }
             }
             if (changeallowed)
             {
-                poke.SendNotification(this, "Changing OT info to:");
-                cln.OT_Gender = tradepartner.Gender;
-                cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-                cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-                cln.Language = tradepartner.Language;
-                cln.OT_Name = tradepartner.TrainerName;
-                cln.Version = tradepartner.Game;
-                if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
-                if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
-
-                poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
-                poke.SendNotification(this, "TID: " + cln.TrainerTID7);
-                poke.SendNotification(this, "SID: " + cln.TrainerSID7);
-                poke.SendNotification(this, "Gender: " + (Gender)cln.OT_Gender);
-                poke.SendNotification(this, "Language: " + (LanguageID)(cln.Language));
-                poke.SendNotification(this, "Game: " + (GameVersion)(cln.Version));
-
+                if (toSend.IsEgg == false)
+                {
+                    poke.SendNotification(this, "Changing OT info to:");
+                    cln.OT_Gender = tradepartner.Gender;
+                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+                    cln.Language = tradepartner.Language;
+                    cln.OT_Name = tradepartner.TrainerName;
+                    cln.Version = tradepartner.Game;
+                    if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+                    if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
                     if (toSend.IsShiny)
-                    cln.SetShiny();
-
+                        cln.SetShiny();
+                    else
+                        if (cln.Met_Location != 30024)
+                    {
+                        cln.SetShiny();
+                        cln.SetUnshiny();
+                    }
+                }
+                else if (toSend.IsEgg == true)
+                {
+                    if (toSend.IsShiny)
+                        cln.SetShiny();
+                    else
+                    {
+                        cln.SetShiny();
+                        cln.SetUnshiny();
+                    }
+                }
                 if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
                     if (cln.EncryptionConstant % 100 == 0)
@@ -1180,9 +1197,15 @@ namespace SysBot.Pokemon
                 else
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //OT for raidmon
                 cln.RefreshChecksum();
+
+                poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
+                poke.SendNotification(this, "TID: " + cln.TrainerTID7);
+                poke.SendNotification(this, "SID: " + cln.TrainerSID7);
+                poke.SendNotification(this, "Gender: " + (Gender)cln.OT_Gender);
+                poke.SendNotification(this, "Language: " + (LanguageID)(cln.Language));
+                poke.SendNotification(this, "Game: " + (GameVersion)(cln.Version));
                 poke.SendNotification(this, "NPC user has their OT now.");
             }
-
                 var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
 
             if (tradesv.Valid)
