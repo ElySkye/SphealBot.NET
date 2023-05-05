@@ -955,12 +955,13 @@ namespace SysBot.Pokemon
                     cln.RefreshChecksum();
                 }
 
-            Log(string.Concat($"Original Trainer is: ", cln.OT_Name));
-            Log(string.Concat($"SID is: ", cln.TrainerSID7));
-            Log(string.Concat($"TID is: ", cln.TrainerTID7));
-            Log(string.Concat($"OT Gender is: ", (Gender)cln.OT_Gender));
-            Log(string.Concat($"Language is: ", (LanguageID)cln.Language));
-            Log(string.Concat($"Version is: ", (GameVersion)cln.Version));
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"Game: {(GameVersion)(cln.Version)}");
+            Log($"NPC user has their OT now.");
 
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)

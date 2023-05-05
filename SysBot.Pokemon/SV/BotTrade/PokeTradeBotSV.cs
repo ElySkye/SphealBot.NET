@@ -1173,7 +1173,7 @@ namespace SysBot.Pokemon
                     if (toSend.IsShiny)
                         cln.SetShiny();
                     else
-                        if (cln.Met_Location != 30024)
+                        if (cln.Met_Location != 30024) //Allow raidmon to OT
                     {
                         cln.SetShiny();
                         cln.SetUnshiny();
@@ -1195,24 +1195,23 @@ namespace SysBot.Pokemon
                         cln = KeepECModable(cln);
                 }
                 else
-                    if (cln.Met_Location != 30024) cln.SetRandomEC(); //OT for raidmon
+                    if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
                 cln.RefreshChecksum();
 
-                poke.SendNotification(this, "OT_Name: " + cln.OT_Name);
-                poke.SendNotification(this, "TID: " + cln.TrainerTID7);
-                poke.SendNotification(this, "SID: " + cln.TrainerSID7);
-                poke.SendNotification(this, "Gender: " + (Gender)cln.OT_Gender);
-                poke.SendNotification(this, "Language: " + (LanguageID)(cln.Language));
-                poke.SendNotification(this, "Game: " + (GameVersion)(cln.Version));
-                poke.SendNotification(this, "NPC user has their OT now.");
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"NPC user has their OT now.");
             }
-                var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
 
+            var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            }
-                
+            } 
             return tradesv.Valid;
         }
         private static bool OTChangeAllowed(PK9 mon, TradePartnerSV trader1)
@@ -1222,12 +1221,12 @@ namespace SysBot.Pokemon
             // Check if OT change is allowed for different situations
             switch (mon.Species)
             {
-                //Miraidon on Scarlet, no longer needed
+                //Miraidon on Scarlet, no longer needed, keep for reference
                 case (ushort)Species.Miraidon:
                     if (trader1.Game == (int)GameVersion.SL)
                         changeallowed = false;
                     break;
-                //Koraidon on Violet, no longer needed
+                //Koraidon on Violet, no longer needed, keep for reference
                 case (ushort)Species.Koraidon:
                     if (trader1.Game == (int)GameVersion.VL)
                         changeallowed = false;

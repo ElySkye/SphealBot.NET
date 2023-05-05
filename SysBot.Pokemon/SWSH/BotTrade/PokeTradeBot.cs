@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsets;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SysBot.Pokemon
 {
@@ -690,10 +691,12 @@ namespace SysBot.Pokemon
                 }
 
                 toSend = trade.Receive;
+                var result = await SetTradePartnerDetailsSWSH(toSend, partner.TrainerName, sav, token).ConfigureAwait(false);
+                if (result.Item2 == true)
+                    toSend = result.Item1;
                 poke.TradeData = toSend;
 
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
-                await Click(A, 0_800, token).ConfigureAwait(false);
                 await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
@@ -1133,6 +1136,89 @@ namespace SysBot.Pokemon
         {
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNIDOffset, 8, token).ConfigureAwait(false);
             return BitConverter.ToUInt64(data, 0);
+        }
+        private async Task<(PK8, bool)> SetTradePartnerDetailsSWSH(PK8 toSend, string trainerName, SAV8SWSH sav, CancellationToken token)
+        {
+            var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
+            var tidsid = BitConverter.ToUInt32(data, 0);
+            var cln = (PK8)toSend.Clone();
+            var changeallowed = OTChangeAllowed(toSend, data);
+
+            Log($"Preparing to change OT");
+            if (toSend.IsEgg == false) //Seperate Non-egg from egg
+            {
+                cln.TrainerTID7 = tidsid % 1_000_000;
+                cln.TrainerSID7 = tidsid / 1_000_000;
+                cln.OT_Name = trainerName;
+                cln.Version = data[4];
+                cln.Language = data[5];
+                cln.OT_Gender = data[6];
+                cln.SetDefaultNickname();
+            }
+            if (toSend.IsShiny)
+            {
+                if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
+                {
+                    do
+                    {
+                        toSend.SetShiny();
+                    } while (toSend.ShinyXor != 0);
+                }
+                else
+                {
+                    do
+                    {
+                        toSend.SetShiny();
+                    } while (toSend.ShinyXor != 1);
+                }
+            }
+            else //reroll PID for non-shiny
+            {
+                cln.SetShiny();
+                cln.SetUnshiny();
+            }
+            cln.SetRandomEC();
+            cln.RefreshChecksum();
+
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"Game: {(GameVersion)(cln.Version)}");
+
+            var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
+            if (tradeswsh.Valid)
+            {
+                Log($"NPC user has their OT now");
+                return (cln, true);
+            }
+            else
+            {
+                Log($"Pokemon was analyzed as not legal");
+            }
+
+            return (toSend, false);
+        }
+        private static bool OTChangeAllowed(PK8 mon, byte[] trader1)
+        {
+            var changeallowed = true;
+
+            // Check if OT change is allowed for different situations
+            switch (mon.Species)
+            {
+                //Zacian on Shield
+                case (ushort)Species.Zacian:
+                    if (trader1[4] == (int)GameVersion.SH && mon.Ball != 16)
+                        changeallowed = false;
+                    break;
+                //Zamazenta on Sword
+                case (ushort)Species.Zamazenta:
+                    if (trader1[4] == (int)GameVersion.SW && mon.Ball != 16)
+                        changeallowed = false;
+                    break;
+            }
+            return changeallowed;
         }
     }
 }

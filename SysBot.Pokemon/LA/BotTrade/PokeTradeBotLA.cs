@@ -876,11 +876,12 @@ namespace SysBot.Pokemon
             cln.Version = tradepartners.Game;
             cln.SetDefaultNickname();
 
-            Log("OT_Name: " + cln.OT_Name);
-            Log("TID: " + cln.TrainerTID7);
-            Log("SID: " + cln.TrainerSID7);
-            Log("Gender: " + (Gender)cln.OT_Gender);
-            Log("Language: " + (LanguageID)(cln.Language));
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"NPC user has their OT now.");
 
             if (toSend.IsShiny)
                 cln.SetShiny();
