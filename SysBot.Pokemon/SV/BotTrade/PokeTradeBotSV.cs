@@ -14,6 +14,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Runtime.CompilerServices;
 using System.ComponentModel.Design;
 using static System.Net.WebRequestMethods;
+using System.Collections.Generic;
 
 namespace SysBot.Pokemon
 {
@@ -387,7 +388,8 @@ namespace SysBot.Pokemon
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return PokeTradeResult.TrainerTooSlow;
             }
-
+            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                list.TryRegister(trainerNID, tradePartner.TrainerName);
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, oldEC, toSend, trainer, token).ConfigureAwait(false);
@@ -891,6 +893,11 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             if (trade != null)
             {
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                {
+                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    return (toSend,PokeTradeResult.TrainerRequestBad);
+                }
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
@@ -1162,12 +1169,21 @@ namespace SysBot.Pokemon
                 if (toSend.IsEgg == false)
                 {
                     poke.SendNotification(this, "Changing OT info to:");
-                    cln.OT_Gender = tradepartner.Gender;
                     cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
                     cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
                     cln.Language = tradepartner.Language;
                     cln.OT_Name = tradepartner.TrainerName;
                     cln.Version = tradepartner.Game;
+                    cln.OT_Gender = tradepartner.Gender;
+
+                    Log($"OT_Name: {cln.OT_Name}");
+                    Log($"TID: {cln.TrainerTID7}");
+                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"Gender: {(Gender)cln.OT_Gender}");
+                    Log($"Language: {(LanguageID)(cln.Language)}");
+                    Log($"Game: {(GameVersion)(cln.Version)}");
+                    Log($"NPC user has their OT now.");
+
                     if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
                     if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
                     if (toSend.IsShiny)
@@ -1197,14 +1213,6 @@ namespace SysBot.Pokemon
                 else
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
                 cln.RefreshChecksum();
-
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-                Log($"NPC user has their OT now.");
             }
 
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead

@@ -296,7 +296,7 @@ namespace SysBot.Pokemon
             var tradePartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var trainerNID = GetFakeNID(tradePartner.TrainerName, tradePartner.TrainerID);
             RecordUtil<PokeTradeBot>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
-            Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID}");
+            Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
             var partnerCheck = CheckPartnerReputation(poke, trainerNID, tradePartner.TrainerName);
             if (partnerCheck != PokeTradeResult.Success)
@@ -722,6 +722,11 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             if (trade != null)
             {
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                {
+                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                }
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
@@ -933,35 +938,31 @@ namespace SysBot.Pokemon
             Log($"Preparing to change OT");
             if (toSend.IsEgg == false)
             {
-                cln.OT_Gender = offered.OT_Gender;
                 cln.TrainerTID7 = offered.TrainerTID7;
                 cln.TrainerSID7 = offered.TrainerSID7;
                 cln.OT_Name = tradepartner.TrainerName;
                 cln.Version = tradepartner.Game;
                 cln.Language = offered.Language;
+                cln.OT_Gender = offered.OT_Gender;
                 cln.SetDefaultNickname();
 
-                if (toSend.IsShiny)
-                    cln.SetShiny();
-
-                cln.SetRandomEC();
-                cln.RefreshChecksum();
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"NPC user has their OT now.");
             }
-            else
-                {
-                    if (toSend.IsShiny)
-                        cln.SetShiny();
-                    cln.SetRandomEC();
-                    cln.RefreshChecksum();
-                }
-
-            Log($"OT_Name: {cln.OT_Name}");
-            Log($"TID: {cln.TrainerTID7}");
-            Log($"SID: {cln.TrainerSID7}");
-            Log($"Gender: {(Gender)cln.OT_Gender}");
-            Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"Game: {(GameVersion)(cln.Version)}");
-            Log($"NPC user has their OT now.");
+            if (toSend.IsShiny)
+                cln.SetShiny();
+            else //reroll pid for non-shiny
+            {
+                cln.SetShiny();
+                cln.SetUnshiny();
+            }
+            cln.SetRandomEC();
+            cln.RefreshChecksum();
 
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)

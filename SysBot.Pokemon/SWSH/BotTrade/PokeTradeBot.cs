@@ -678,6 +678,11 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             if (trade != null)
             {
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                {
+                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                }
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
@@ -1153,7 +1158,14 @@ namespace SysBot.Pokemon
                 cln.Version = data[4];
                 cln.Language = data[5];
                 cln.OT_Gender = data[6];
-                cln.SetDefaultNickname();
+                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species !=(ushort)Species.Spheal) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
             }
             if (toSend.IsShiny)
             {
@@ -1161,15 +1173,22 @@ namespace SysBot.Pokemon
                 {
                     do
                     {
-                        toSend.SetShiny();
-                    } while (toSend.ShinyXor != 0);
+                        cln.SetShiny();
+                    } while (cln.ShinyXor != 0);
                 }
                 else
                 {
                     do
                     {
-                        toSend.SetShiny();
-                    } while (toSend.ShinyXor != 1);
+                        cln.SetShiny();
+                    } while (cln.ShinyXor != 1);
+                }
+                if (toSend.Met_Location == 244)  //Dynamax Adventures
+                {
+                    do
+                    {
+                        cln.SetShiny();
+                    } while (cln.ShinyXor != 1);
                 }
             }
             else //reroll PID for non-shiny
@@ -1177,15 +1196,11 @@ namespace SysBot.Pokemon
                 cln.SetShiny();
                 cln.SetUnshiny();
             }
-            cln.SetRandomEC();
+            if (toSend.PID != toSend.EncryptionConstant) //Filter old mons who are PID = EC
+                cln.SetRandomEC();
+            else
+                cln.EncryptionConstant = cln.PID;
             cln.RefreshChecksum();
-
-            Log($"OT_Name: {cln.OT_Name}");
-            Log($"TID: {cln.TrainerTID7}");
-            Log($"SID: {cln.TrainerSID7}");
-            Log($"Gender: {(Gender)cln.OT_Gender}");
-            Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"Game: {(GameVersion)(cln.Version)}");
 
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
@@ -1196,9 +1211,8 @@ namespace SysBot.Pokemon
             else
             {
                 Log($"Pokemon was analyzed as not legal");
+                return (toSend, false);
             }
-
-            return (toSend, false);
         }
         private static bool OTChangeAllowed(PK8 mon, byte[] trader1)
         {

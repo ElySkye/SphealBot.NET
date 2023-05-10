@@ -658,6 +658,11 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             if (trade != null)
             {
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                {
+                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                }
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
@@ -885,9 +890,13 @@ namespace SysBot.Pokemon
 
             if (toSend.IsShiny)
                 cln.SetShiny();
+            else
+            {
+                cln.SetShiny();
+                cln.SetUnshiny();
+            }
 
             cln.SetRandomEC();
-
             cln.RefreshChecksum();
 
             var tradela = new LegalityAnalysis(cln);
