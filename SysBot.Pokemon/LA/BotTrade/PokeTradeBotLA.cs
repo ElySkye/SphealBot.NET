@@ -24,6 +24,7 @@ namespace SysBot.Pokemon
         private static readonly TrackedUserLog PreviousUsers = new();
         private static readonly TrackedUserLog PreviousUsersDistribution = new();
         private static readonly TrackedUserLog EncounteredUsers = new();
+        private static readonly CooldownTracker UserCooldowns = new();
 
         /// <summary>
         /// Folder to dump received trade data to.
@@ -330,7 +331,8 @@ namespace SysBot.Pokemon
                 await ExitTrade(false, token).ConfigureAwait(false);
                 return PokeTradeResult.TrainerOfferCanceledQuick;
             }
-
+            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                list.TryRegister(trainerNID, tradePartner.TrainerName);
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, toSend, trainer, token).ConfigureAwait(false);
@@ -750,6 +752,8 @@ namespace SysBot.Pokemon
                 isDistribution = true;
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+            int attempts;
+            var listCool = UserCooldowns;
 
             int wlIndex = AbuseSettings.WhiteListedIDs.List.FindIndex(z => z.ID == TrainerNID);
             DateTime wlCheck = DateTime.Now;
@@ -774,20 +778,31 @@ namespace SysBot.Pokemon
             if (cooldown != null)
             {
                 var delta = DateTime.Now - cooldown.Time;
+                var coolDelta = DateTime.Now - DateTime.ParseExact(AbuseSettings.CooldownUpdate, "yyyy.MM.dd - HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
                 Log($"Last saw {user.TrainerName} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
 
                 var cd = AbuseSettings.TradeCooldown;
+                attempts = listCool.TryInsert(TrainerNID, TrainerName);
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
                 {
-                    poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
-                    var msg = $"Found NPC {useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
+                    poke.Notifier.SendNotification(this, poke, "User has become an NPC. Verification required.");
+                    var msg = $"Found {TrainerName}{useridmsg} ignoring the {cd} min trade cooldown. Last seen {delta.TotalMinutes:F1} mins ago. NPC registered. Strike {attempts} out of {AbuseSettings.RepeatConnections}.";
                     list.TryRegister(TrainerNID, TrainerName);
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"\nOT: {TrainerName}";
-                    msg += $"\nID: {TrainerNID}";
+                        msg += $"\nID: {TrainerNID}";
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
                     EchoUtil.Echo(msg);
+                    if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
+                    {
+                        if (attempts >= AbuseSettings.RepeatConnections)
+                        {
+                            DateTime expires = DateTime.Now.AddDays(2);
+                            string expiration = $"{expires:yyyy.MM.dd 23:59:59}";
+                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Cooldown Abuse Ban", expiration) });
+                            EchoUtil.Echo($"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.");
+                        }
+                    }
                     quit = true;
                 }
             }
@@ -849,9 +864,9 @@ namespace SysBot.Pokemon
             var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
-                var msg = $"{user.TrainerName}{useridmsg} is a banned user, and was encountered in-game using OT: {TrainerName}.";
+                var msg = $"Found a banned NPC trying to connect, with the OT: {TrainerName}.";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
-                    msg += $"\nUser was banned for: {entry.Comment}";
+                    msg += $"\nNPC was banned for: {entry.Comment}";
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
                     msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
                 EchoUtil.Echo(msg);
@@ -861,10 +876,11 @@ namespace SysBot.Pokemon
             return PokeTradeResult.Success;
         }
 
-        private static RemoteControlAccess GetReference(string name, ulong id, string comment) => new()
+        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "9999.12.31 23:59:59") => new()
         {
             ID = id,
             Name = name,
+            Expiration = DateTime.Parse(expiration),
             Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
         };
         private async Task<bool> SetBoxPkmWithSwappedIDDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
@@ -886,7 +902,7 @@ namespace SysBot.Pokemon
             Log($"SID: {cln.TrainerSID7}");
             Log($"Gender: {(Gender)cln.OT_Gender}");
             Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"NPC user has their OT now.");
+            Log($"Spheal says: Enjoy the OT.");
 
             if (toSend.IsShiny)
                 cln.SetShiny();
