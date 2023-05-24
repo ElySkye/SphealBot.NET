@@ -8,13 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsetsSV;
-using PKHeX.Core.AutoMod;
-using System.Diagnostics;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.CompilerServices;
-using System.ComponentModel.Design;
-using static System.Net.WebRequestMethods;
-using System.Collections.Generic;
+using Discord;
 
 namespace SysBot.Pokemon
 {
@@ -889,14 +883,40 @@ namespace SysBot.Pokemon
         private async Task<(PK9 toSend, PokeTradeResult check)> HandleRandomLedy(SAV9SV sav, PokeTradeDetail<PK9> poke, PK9 offered, PK9 toSend, PartnerDataHolder partner, CancellationToken token)
         {
             // Allow the trade partner to do a Ledy swap.
-            Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
+            if (offered.HeldItem != 18)
+                Log($"User's request is for {offered.Nickname}");
+            else
+            {
+                toSend = offered.Clone();
+                Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
+                var msg = $"Bad OT swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}";
+
+                var la = new LegalityAnalysis(offered);
+                if (!la.Valid)
+                {
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    var report = la.Report();
+                    EchoUtil.Echo(Format.Code(report, "cs"));
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else if (!await SetBoxPkmWithSwappedIDDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
+                {
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    return (toSend, PokeTradeResult.IllegalTrade);
+                }
+            }
             if (trade != null)
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     return (toSend,PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -914,9 +934,9 @@ namespace SysBot.Pokemon
                 toSend = trade.Receive;
                 poke.TradeData = toSend;
 
-                poke.SendNotification(this, "Injecting the requested Pokémon.");
                 if (Hub.Config.Distribution.AllowTraderOTInformation)
                 {
+                    poke.SendNotification(this, "Injecting the requested Pokémon.");
                     if (!await SetBoxPkmWithSwappedIDDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
                     {
                         poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
@@ -926,17 +946,15 @@ namespace SysBot.Pokemon
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait (false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
-            else if (config.LedyQuitIfNoMatch)
+            else if (config.LedyQuitIfNoMatch && toSend.HeldItem != 18)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(msg);//Log to discord
+                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
-
             return (toSend, PokeTradeResult.Success);
         }
-
         private void WaitAtBarrierIfApplicable(CancellationToken token)
         {
             if (!ShouldWaitAtBarrier)
@@ -1028,10 +1046,10 @@ namespace SysBot.Pokemon
                 {
                     list.TryRegister(TrainerNID, TrainerName);
                     poke.Notifier.SendNotification(this, poke, "User has become an NPC. Verification required.");
-                    var msg = $"Found {TrainerName}{useridmsg} ignoring the {cd} min trade cooldown. Last seen {delta.TotalMinutes:F1} mins ago. NPC registered. Strike {attempts} out of {AbuseSettings.RepeatConnections}.";
+                    var msg = $"Found {TrainerName} ignoring the {cd} min trade cooldown. Last seen {delta.TotalMinutes:F1} mins ago. NPC registered. Strike {attempts} out of {AbuseSettings.RepeatConnections}.";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nNPC ID: {TrainerNID}";
-                    EchoUtil.Echo(msg);
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     Random rndmsg = new Random();
                     int num = rndmsg.Next(1, 5);
                     switch (num)
@@ -1053,11 +1071,11 @@ namespace SysBot.Pokemon
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                        EchoUtil.Echo(msg);
+                        EchoUtil.Echo(Format.Code(msg, "cs"));
                     }
                     if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
                     {
-                        if (attempts >= AbuseSettings.RepeatConnections)
+                        if (attempts == AbuseSettings.RepeatConnections)
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
                             string expiration = $"{expires:yyyy.MM.dd 23:59:59}";
@@ -1130,8 +1148,8 @@ namespace SysBot.Pokemon
                 var msg = $"Found a banned NPC trying to connect, with the OT: {TrainerName}.";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                     msg += $"\nNPC was banned for: {entry.Comment}";
-                    EchoUtil.Echo(msg);
-                    msg = $"https://tenor.com/view/guilty-phoenix-wright-ace-attorney-gif-21396957";
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    msg = $"https://tenor.com/view/nmplol-emiru-cyr-banned-gif-26412698";
                     EchoUtil.Echo(msg);
 
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
@@ -1155,10 +1173,8 @@ namespace SysBot.Pokemon
         private async Task<bool> SetBoxPkmWithSwappedIDDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
         {
             var cln = (PK9)toSend.Clone();
-
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-
-            var changeallowed = OTChangeAllowed(toSend, tradepartner);
+            var changeallowed = OTChangeAllowed(toSend);
 
             switch (cln.Species) //OT for Academy Meowth on the other version
             {
@@ -1183,44 +1199,55 @@ namespace SysBot.Pokemon
             }
             if (changeallowed)
             {
+                Log($"Changing OT info to:");
+                cln.OT_Name = tradepartner.TrainerName;
+                cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+                cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+                cln.Language = tradepartner.Language;
+                cln.OT_Gender = tradepartner.Gender;
+
                 if (toSend.IsEgg == false)
                 {
-                    poke.SendNotification(this, "Changing OT info to:");
-                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-                    cln.Language = tradepartner.Language;
-                    cln.OT_Name = tradepartner.TrainerName;
-                    cln.Version = tradepartner.Game;
-                    cln.OT_Gender = tradepartner.Gender;
-
-                    Log($"OT_Name: {cln.OT_Name}");
-                    Log($"TID: {cln.TrainerTID7}");
-                    Log($"SID: {cln.TrainerSID7}");
-                    Log($"Gender: {(Gender)cln.OT_Gender}");
-                    Log($"Language: {(LanguageID)(cln.Language)}");
-                    Log($"Game: {(GameVersion)(cln.Version)}");
-                    Log($"Spheal says: Enjoy the OT.");
-
+                    cln.Version = tradepartner.Game; //Eggs should not have Origin Game
                     if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
                     if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
-                    if (toSend.IsShiny)
-                        cln.SetShiny();
-                    else
-                        if (cln.Met_Location != 30024) //Allow raidmon to OT
-                    {
-                        cln.SetShiny();
-                        cln.SetUnshiny();
-                    }
                 }
-                else if (toSend.IsEgg == true)
+                else //Set eggs received in Picnic, instead of received in Link Trade
                 {
-                    if (toSend.IsShiny)
-                        cln.SetShiny();
-                    else
+                    cln.HT_Name = "";
+                    cln.HT_Language = 0;
+                    cln.HT_Gender = 0;
+                    cln.CurrentHandler = 0;
+                    cln.Met_Location = 0;
+                    cln.IsNicknamed = true;
+                    cln.Nickname = cln.Language switch
                     {
-                        cln.SetShiny();
-                        cln.SetUnshiny();
-                    }
+                        1 => "タマゴ",
+                        3 => "Œuf",
+                        4 => "Uovo",
+                        5 => "Ei",
+                        7 => "Huevo",
+                        8 => "알",
+                        9 or 10 => "蛋",
+                        _ => "Egg",
+                    };
+                }
+
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"OT swap success.");
+                
+                if (toSend.IsShiny)
+                    cln.SetShiny();
+                else
+                    if (cln.Met_Location != 30024) //Allow raidmon to OT
+                {
+                    cln.SetShiny();
+                    cln.SetUnshiny();
                 }
                 if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
                 {
@@ -1231,32 +1258,20 @@ namespace SysBot.Pokemon
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
                 cln.RefreshChecksum();
             }
-
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            } 
+            }
             return tradesv.Valid;
         }
-        private static bool OTChangeAllowed(PK9 mon, TradePartnerSV trader1)
+        private static bool OTChangeAllowed(PK9 mon)
         {
             var changeallowed = true;
-
             // Check if OT change is allowed for different situations
             switch (mon.Species)
             {
-                //Miraidon on Scarlet, no longer needed, keep for reference
-                case (ushort)Species.Miraidon:
-                    if (trader1.Game == (int)GameVersion.SL)
-                        changeallowed = false;
-                    break;
-                //Koraidon on Violet, no longer needed, keep for reference
-                case (ushort)Species.Koraidon:
-                    if (trader1.Game == (int)GameVersion.VL)
-                        changeallowed = false;
-                    break;
-                    //Ditto will not OT change unless it has Destiny Mark
+                //Ditto will not OT change unless it has Destiny Mark
                 case (ushort)Species.Ditto:
                     if (mon.RibbonMarkDestiny == true)
                         changeallowed = true;
@@ -1272,7 +1287,7 @@ namespace SysBot.Pokemon
                     changeallowed = false;
                     break;
             }
-                return changeallowed;
+            return changeallowed;
         }
         private static PK9 KeepECModable(PK9 eckeep) //Maintain form for Dunsparce/Tandemaus
         {

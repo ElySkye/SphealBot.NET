@@ -100,7 +100,7 @@ namespace SysBot.Pokemon
 
                 if (DisallowRandomRecipientTrade(dest, la.EncounterMatch))
                 {
-                    LogUtil.LogInfo("Provided file was loaded but can't be Surprise Traded: " + dest.FileName, nameof(PokemonPool<T>));
+                    //LogUtil.LogInfo("Provided file was loaded but can't be Surprise Traded: " + dest.FileName, nameof(PokemonPool<T>));
                     surpriseBlocked++;
                 }
 

@@ -4,10 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord;
-using PKHeX.Core;
-using System.ComponentModel.Design;
-using System.Globalization;
-using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -77,7 +73,7 @@ namespace SysBot.Pokemon.Discord
             msg += $"{wlParams[1]}({wlParams[0]}) added to the whitelist";
             await ReplyAsync(Format.Code(msg)).ConfigureAwait(false);
         }
-            [Command("blacklist")]
+        [Command("blacklist")]
         [Summary("Blacklists mentioned user.")]
         [RequireSudo]
         // ReSharper disable once UnusedParameter.Global

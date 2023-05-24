@@ -1165,16 +1165,41 @@ namespace SysBot.Pokemon
             var cln = (PK8)toSend.Clone();
             var changeallowed = OTChangeAllowed(toSend, data);
 
-            Log($"Preparing to change OT");
-            if (toSend.IsEgg == false) //Seperate Non-egg from egg
+            if (changeallowed)
             {
+                Log($"Changing OT info to:");
                 cln.TrainerTID7 = tidsid % 1_000_000;
                 cln.TrainerSID7 = tidsid / 1_000_000;
                 cln.OT_Name = trainerName;
                 cln.Version = data[4];
                 cln.Language = data[5];
                 cln.OT_Gender = data[6];
-                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species !=(ushort)Species.Spheal) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+
+                if (toSend.IsEgg == false)
+                {
+                    if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
+                        cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+                }
+                else //Set eggs received in Daycare, instead of received in Link Trade
+                {
+                    cln.HT_Name = "";
+                    cln.HT_Language = 0;
+                    cln.HT_Gender = 0;
+                    cln.CurrentHandler = 0;
+                    cln.Met_Location = 0;
+                    cln.IsNicknamed = true;
+                    cln.Nickname = cln.Language switch
+                    {
+                        1 => "タマゴ",
+                        3 => "Œuf",
+                        4 => "Uovo",
+                        5 => "Ei",
+                        7 => "Huevo",
+                        8 => "알",
+                        9 or 10 => "蛋",
+                        _ => "Egg",
+                    };
+                }
 
                 Log($"OT_Name: {cln.OT_Name}");
                 Log($"TID: {cln.TrainerTID7}");
@@ -1182,6 +1207,7 @@ namespace SysBot.Pokemon
                 Log($"Gender: {(Gender)cln.OT_Gender}");
                 Log($"Language: {(LanguageID)(cln.Language)}");
                 Log($"Game: {(GameVersion)(cln.Version)}");
+                
             }
             if (toSend.IsShiny)
             {

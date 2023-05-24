@@ -35,7 +35,7 @@ namespace SysBot.Pokemon.Discord
                     AddEchoChannel(c, ch.ID);
             }
 
-            EchoUtil.Echo("Added echo notification to Discord channel(s) on Bot startup.");
+            EchoUtil.Echo("Important Messages will be echoed in this channel.");
         }
 
         [Command("echoHere")]

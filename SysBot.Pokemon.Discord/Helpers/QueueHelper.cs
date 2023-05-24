@@ -21,7 +21,7 @@ namespace SysBot.Pokemon.Discord
 
             try
             {
-                const string helper = "I've added you to the queue! I'll message you here when your trade is starting.";
+                const string helper = "Added you to the queue! I'll message you here when your trade is starting.";
                 IUserMessage test = await trader.SendMessageAsync(helper).ConfigureAwait(false);
 
                 // Try adding

@@ -21,7 +21,7 @@ namespace SysBot.Pokemon.Discord
             if (!pool)
                 await ReplyAsync("Failed to reload from folder.").ConfigureAwait(false);
             else
-                await ReplyAsync($"Reloaded from folder. Pool count: {hub.Ledy.Pool.Count}").ConfigureAwait(false);
+                await ReplyAsync($"New Pool count: {hub.Ledy.Pool.Count}").ConfigureAwait(false);
         }
 
         [Command("pool")]

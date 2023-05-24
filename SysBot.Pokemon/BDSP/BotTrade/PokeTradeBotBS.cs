@@ -934,26 +934,45 @@ namespace SysBot.Pokemon
                         break;
                     }
             }
-
             Log($"Preparing to change OT");
-            if (toSend.IsEgg == false)
-            {
-                cln.TrainerTID7 = offered.TrainerTID7;
-                cln.TrainerSID7 = offered.TrainerSID7;
-                cln.OT_Name = tradepartner.TrainerName;
-                cln.Version = tradepartner.Game;
-                cln.Language = offered.Language;
-                cln.OT_Gender = offered.OT_Gender;
-                cln.SetDefaultNickname();
+            cln.TrainerTID7 = offered.TrainerTID7;
+            cln.TrainerSID7 = offered.TrainerSID7;
+            cln.OT_Name = tradepartner.TrainerName;
+            cln.Version = tradepartner.Game;
+            cln.Language = offered.Language;
+            cln.OT_Gender = offered.OT_Gender;
 
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-                Log($"NPC user has their OT now.");
+            if (toSend.IsEgg == false)
+                cln.SetDefaultNickname();
+            else //Set eggs received in Picnic, instead of received in Link Trade
+            {
+                cln.HT_Name = "";
+                cln.HT_Language = 0;
+                cln.HT_Gender = 0;
+                cln.CurrentHandler = 0;
+                cln.Met_Location = 0;
+                cln.IsNicknamed = true;
+                cln.Nickname = cln.Language switch
+                {
+                    1 => "タマゴ",
+                    3 => "Œuf",
+                    4 => "Uovo",
+                    5 => "Ei",
+                    7 => "Huevo",
+                    8 => "알",
+                    9 or 10 => "蛋",
+                    _ => "Egg",
+                };
             }
+
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"Game: {(GameVersion)(cln.Version)}");
+            Log($"OT Swapped");
+
             if (toSend.IsShiny)
                 cln.SetShiny();
             else //reroll pid for non-shiny
