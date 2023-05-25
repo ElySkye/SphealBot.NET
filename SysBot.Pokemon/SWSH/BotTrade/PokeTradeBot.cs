@@ -415,7 +415,6 @@ namespace SysBot.Pokemon
         {
             ID = id,
             Name = name,
-            Expiration = DateTime.Parse(expiration),
             Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
         };
 

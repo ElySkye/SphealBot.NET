@@ -737,5 +737,44 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
+        private async Task<bool> SetBoxPkmWithSwappedIDDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
+        {
+            var cln = (PA8)toSend.Clone();
+
+            var tradepartners = await GetTradePartnerInfo(token).ConfigureAwait(false);
+
+            cln.OT_Gender = tradepartners.Gender;
+            cln.TrainerTID7 = Convert.ToUInt32(tradepartners.TID7);
+            cln.TrainerSID7 = Convert.ToUInt32(tradepartners.SID7);
+            cln.Language = tradepartners.Language;
+            cln.OT_Name = tradepartners.TrainerName;
+            cln.Version = tradepartners.Game;
+            cln.SetDefaultNickname();
+
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"Spheal says: Enjoy the OT.");
+
+            if (toSend.IsShiny)
+                cln.SetShiny();
+            else
+            {
+                cln.SetShiny();
+                cln.SetUnshiny();
+            }
+
+            cln.SetRandomEC();
+            cln.RefreshChecksum();
+
+            var tradela = new LegalityAnalysis(cln);
+
+            if (tradela.Valid)
+                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
+            else Log($"Pokemon was analyzed as not legal");
+            return tradela.Valid;
+        }
     }
 }

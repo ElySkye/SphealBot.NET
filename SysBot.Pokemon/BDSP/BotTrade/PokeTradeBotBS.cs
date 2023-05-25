@@ -801,5 +801,83 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
+        private async Task<bool> SetBoxPkmWithSwappedIDDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
+        {
+            var cln = (PB8)toSend.Clone();
+
+            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+
+            switch (cln.Species) //OT for Arceus on the other version
+            {
+                case (ushort)Species.Arceus:
+                    {
+                        if (tradepartner.Game == (int)GameVersion.BD) //Brilliant Diamond
+                        {
+                            cln.Met_Location = 218;
+                            cln.Version = (int)GameVersion.BD;
+                        }
+                        else if (tradepartner.Game == (int)GameVersion.SP) //Shining Pearl
+                        {
+                            cln.Met_Location = 618;
+                            cln.Version = (int)GameVersion.SP;
+                        }
+                        break;
+                    }
+            }
+            Log($"Preparing to change OT");
+            cln.TrainerTID7 = offered.TrainerTID7;
+            cln.TrainerSID7 = offered.TrainerSID7;
+            cln.OT_Name = tradepartner.TrainerName;
+            cln.Version = tradepartner.Game;
+            cln.Language = offered.Language;
+            cln.OT_Gender = offered.OT_Gender;
+
+            if (toSend.IsEgg == false)
+                cln.SetDefaultNickname();
+            else //Set eggs received in Picnic, instead of received in Link Trade
+            {
+                cln.HT_Name = "";
+                cln.HT_Language = 0;
+                cln.HT_Gender = 0;
+                cln.CurrentHandler = 0;
+                cln.Met_Location = 0;
+                cln.IsNicknamed = true;
+                cln.Nickname = cln.Language switch
+                {
+                    1 => "タマゴ",
+                    3 => "Œuf",
+                    4 => "Uovo",
+                    5 => "Ei",
+                    7 => "Huevo",
+                    8 => "알",
+                    9 or 10 => "蛋",
+                    _ => "Egg",
+                };
+            }
+
+            Log($"OT_Name: {cln.OT_Name}");
+            Log($"TID: {cln.TrainerTID7}");
+            Log($"SID: {cln.TrainerSID7}");
+            Log($"Gender: {(Gender)cln.OT_Gender}");
+            Log($"Language: {(LanguageID)(cln.Language)}");
+            Log($"Game: {(GameVersion)(cln.Version)}");
+            Log($"OT Swapped");
+
+            if (toSend.IsShiny)
+                cln.SetShiny();
+            else //reroll pid for non-shiny
+            {
+                cln.SetShiny();
+                cln.SetUnshiny();
+            }
+            cln.SetRandomEC();
+            cln.RefreshChecksum();
+
+            var tradebdsp = new LegalityAnalysis(cln);
+            if (tradebdsp.Valid)
+                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
+            else Log($"Pokemon was analyzed as not legal");
+            return tradebdsp.Valid;
+        }
     }
 }

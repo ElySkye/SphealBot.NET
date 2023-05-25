@@ -24,7 +24,6 @@ namespace SysBot.Pokemon
             Language = info.Language;
         }
     }
-
     public sealed class TradeMyStatus
     {
         public readonly byte[] Data = new byte[0x30];
