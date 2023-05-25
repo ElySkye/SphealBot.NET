@@ -24,7 +24,6 @@ namespace SysBot.Pokemon
         private static readonly TrackedUserLog PreviousUsers = new();
         private static readonly TrackedUserLog PreviousUsersDistribution = new();
         private static readonly TrackedUserLog EncounteredUsers = new();
-        private static readonly CooldownTracker UserCooldowns = new();
 
         /// <summary>
         /// Folder to dump received trade data to.
