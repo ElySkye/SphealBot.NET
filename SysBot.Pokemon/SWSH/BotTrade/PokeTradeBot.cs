@@ -420,62 +420,26 @@ namespace SysBot.Pokemon
         {
             bool quit = false;
             var user = poke.Trainer;
-            bool isDistribution = false;
-            if (poke.Type == PokeTradeType.Random)
-                isDistribution = true;
+            var isDistribution = poke.Type == PokeTradeType.Random;
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
-            int attempts;
-            var listCool = UserCooldowns;
 
-            int wlIndex = AbuseSettings.WhiteListedIDs.List.FindIndex(z => z.ID == TrainerNID);
-            DateTime wlCheck = DateTime.Now;
-
-            bool wlAllow = false;
-
-            if (wlIndex > -1)
-            {
-                ulong wlID = AbuseSettings.WhiteListedIDs.List[wlIndex].ID;
-                var wlExpires = AbuseSettings.WhiteListedIDs.List[wlIndex].Expiration;
-
-                if (wlID != 0 && wlExpires <= wlCheck)
-                {
-                    AbuseSettings.WhiteListedIDs.RemoveAll(z => z.ID == TrainerNID);
-                    EchoUtil.Echo($"Removed {TrainerName} from Whitelist due to an expired duration.");
-                    wlAllow = false;
-                }
-                else if (wlID != 0)
-                    wlAllow = true;
-            }
             var cooldown = list.TryGetPrevious(TrainerNID);
             if (cooldown != null)
             {
                 var delta = DateTime.Now - cooldown.Time;
-                var coolDelta = DateTime.Now - DateTime.ParseExact(AbuseSettings.CooldownUpdate, "yyyy.MM.dd - HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
                 Log($"Last saw {user.TrainerName} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
 
                 var cd = AbuseSettings.TradeCooldown;
-                attempts = listCool.TryInsert(TrainerNID, TrainerName);
-                if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
+                if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
                 {
-                    poke.Notifier.SendNotification(this, poke, "User has become an NPC. Verification required.");
-                    var msg = $"Found {TrainerName} ignoring the {cd} min trade cooldown. Last seen {delta.TotalMinutes:F1} mins ago. NPC registered. Strike {attempts} out of {AbuseSettings.RepeatConnections}.";
+                    poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
+                    var msg = $"Found {user.TrainerName}{useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"\nNPC ID: {TrainerNID}";
+                        msg += $"\nID: {TrainerNID}";
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
                     EchoUtil.Echo(msg);
-                    if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
-                    {
-                        if (attempts >= AbuseSettings.RepeatConnections)
-                        {
-                            DateTime expires = DateTime.Now.AddDays(2);
-                            string expiration = $"{expires:yyyy.MM.dd 23:59:59}";
-                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Cooldown Abuse Ban", expiration) });
-                            Log($"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.");
-                            EchoUtil.Echo($"https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504");
-                        }
-                    }
                     quit = true;
                 }
             }
@@ -513,7 +477,9 @@ namespace SysBot.Pokemon
 
             // Try registering the partner in our list of recently seen.
             // Get back the details of their previous interaction.
-            var previous = list.TryGetPrevious(TrainerNID);
+            var previous = isDistribution
+                ? list.TryRegister(TrainerNID, TrainerName)
+                : list.TryRegister(TrainerNID, TrainerName, poke.Trainer.ID);
             if (previous != null && previous.NetworkID == TrainerNID && previous.RemoteID != user.ID && !isDistribution)
             {
                 var delta = DateTime.Now - previous.Time;
@@ -548,9 +514,9 @@ namespace SysBot.Pokemon
                 if (AbuseSettings.BlockDetectedBannedUser)
                     await BlockUser(token).ConfigureAwait(false);
 
-                var msg = $"Found a banned NPC trying to connect, with the OT: {TrainerName}.";
+                var msg = $"{user.TrainerName}{useridmsg} is a banned user, and was encountered in-game using OT: {TrainerName}.";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
-                    msg += $"\nNPC was banned for: {entry.Comment}";
+                    msg += $"\nUser was banned for: {entry.Comment}";
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
                     msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
                 EchoUtil.Echo(msg);
