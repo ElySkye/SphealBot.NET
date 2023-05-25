@@ -1,8 +1,8 @@
-﻿using System.Linq;
-using PKHeX.Core;
+﻿using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,13 +17,9 @@ namespace SysBot.Pokemon
     {
         private readonly PokeTradeHub<PK9> Hub;
         private readonly TradeSettings TradeSettings;
-        private readonly TradeAbuseSettings AbuseSettings;
+        public readonly TradeAbuseSettings AbuseSettings;
 
         public ICountSettings Counts => TradeSettings;
-
-        private static readonly TrackedUserLog PreviousUsers = new();
-        private static readonly TrackedUserLog PreviousUsersDistribution = new();
-        private static readonly TrackedUserLog EncounteredUsers = new();
 
         /// <summary>
         /// Folder to dump received trade data to.
@@ -343,7 +339,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBot>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Trainer: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
-            var partnerCheck = CheckPartnerReputation(poke, trainerNID, tradePartner.TrainerName);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await Click(A, 1_000, token).ConfigureAwait(false); // Ensures we dismiss a popup.
@@ -1002,238 +998,5 @@ namespace SysBot.Pokemon
             }
         }
 
-        private PokeTradeResult CheckPartnerReputation(PokeTradeDetail<PK9> poke, ulong TrainerNID, string TrainerName)
-        {
-            bool quit = false;
-            var user = poke.Trainer;
-            var isDistribution = poke.Type == PokeTradeType.Random;
-            var useridmsg = isDistribution ? "" : $" ({user.ID})";
-            var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
-
-            var cooldown = list.TryGetPrevious(TrainerNID);
-            if (cooldown != null)
-            {
-                var delta = DateTime.Now - cooldown.Time;
-                Log($"Last saw {user.TrainerName} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
-
-                var cd = AbuseSettings.TradeCooldown;
-                if (cd != 0 && TimeSpan.FromMinutes(cd) > delta)
-                {
-                    poke.Notifier.SendNotification(this, poke, "You have ignored the trade cooldown set by the bot owner. The owner has been notified.");
-                    var msg = $"Found {user.TrainerName}{useridmsg} ignoring the {cd} minute trade cooldown. Last encountered {delta.TotalMinutes:F1} minutes ago.";
-                    if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"\nID: {TrainerNID}";
-                    if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
-                        msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                    EchoUtil.Echo(msg);
-                    quit = true;
-                }
-            }
-
-            if (!isDistribution)
-            {
-                var previousEncounter = EncounteredUsers.TryRegister(poke.Trainer.ID, TrainerName, poke.Trainer.ID);
-                if (previousEncounter != null && previousEncounter.Name != TrainerName)
-                {
-                    if (AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
-                    {
-                        if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
-                        {
-                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "in-game block for sending to multiple in-game players") });
-                            Log($"Added {TrainerNID} to the BannedIDs list.");
-                        }
-                        quit = true;
-                    }
-
-                    var msg = $"Found {user.TrainerName}{useridmsg} sending to multiple in-game players. Previous OT: {previousEncounter.Name}, Current OT: {TrainerName}";
-                    if (AbuseSettings.EchoNintendoOnlineIDMultiRecipients)
-                        msg += $"\nID: {TrainerNID}";
-                    if (!string.IsNullOrWhiteSpace(AbuseSettings.MultiRecipientEchoMention))
-                        msg = $"{AbuseSettings.MultiRecipientEchoMention} {msg}";
-                    EchoUtil.Echo(msg);
-                }
-            }
-
-            if (quit)
-                return PokeTradeResult.SuspiciousActivity;
-
-            // Try registering the partner in our list of recently seen.
-            // Get back the details of their previous interaction.
-            var previous = isDistribution
-                ? list.TryRegister(TrainerNID, TrainerName)
-                : list.TryRegister(TrainerNID, TrainerName, poke.Trainer.ID);
-            if (previous != null && previous.NetworkID == TrainerNID && previous.RemoteID != user.ID && !isDistribution)
-            {
-                var delta = DateTime.Now - previous.Time;
-                if (delta < TimeSpan.FromMinutes(AbuseSettings.TradeAbuseExpiration) && AbuseSettings.TradeAbuseAction != TradeAbuseAction.Ignore)
-                {
-                    if (AbuseSettings.TradeAbuseAction == TradeAbuseAction.BlockAndQuit)
-                    {
-                        AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "in-game block for multiple accounts") });
-                        Log($"Added {TrainerNID} to the BannedIDs list.");
-                    }
-                    quit = true;
-                }
-
-                var msg = $"Found {user.TrainerName}{useridmsg} using multiple accounts.\nPreviously encountered {previous.Name} ({previous.RemoteID}) {delta.TotalMinutes:F1} minutes ago on OT: {TrainerName}.";
-                if (AbuseSettings.EchoNintendoOnlineIDMulti)
-                    msg += $"\nID: {TrainerNID}";
-                if (!string.IsNullOrWhiteSpace(AbuseSettings.MultiAbuseEchoMention))
-                    msg = $"{AbuseSettings.MultiAbuseEchoMention} {msg}";
-                EchoUtil.Echo(msg);
-            }
-
-            if (quit)
-                return PokeTradeResult.SuspiciousActivity;
-
-            var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
-            if (entry != null)
-            {
-                var msg = $"{user.TrainerName}{useridmsg} is a banned user, and was encountered in-game using OT: {TrainerName}.";
-                if (!string.IsNullOrWhiteSpace(entry.Comment))
-                    msg += $"\nUser was banned for: {entry.Comment}";
-                if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
-                    msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
-                EchoUtil.Echo(msg);
-                return PokeTradeResult.SuspiciousActivity;
-            }
-
-            return PokeTradeResult.Success;
-        }
-
-        private static RemoteControlAccess GetReference(string name, ulong id, string comment) => new()
-        {
-            ID = id,
-            Name = name,
-            Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
-        };
-        private async Task<bool> SetBoxPkmWithSwappedIDDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
-        {
-            var cln = (PK9)toSend.Clone();
-            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-            var changeallowed = OTChangeAllowed(toSend);
-
-            switch (cln.Species) //OT for Academy Meowth on the other version
-            {
-                case (ushort)Species.Meowth:
-                    {
-                        if (tradepartner.Game == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
-                        {
-                            cln.Met_Location = 130;//Naranja Academy
-                            cln.Version = (int)GameVersion.SL;//Ensure correct Version
-                        }
-                        else if (tradepartner.Game == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
-                        {
-                            cln.Met_Location = 131;//Uva Academy
-                            cln.Version = (int)GameVersion.VL;//Ensure correct Version
-                        }
-                        cln.SetShiny();
-                        cln.SetUnshiny();
-                        cln.SetRandomEC();
-                        cln.RefreshChecksum();
-                        break;
-                    }
-            }
-            if (changeallowed)
-            {
-                Log($"Changing OT info to:");
-                cln.OT_Name = tradepartner.TrainerName;
-                cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-                cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-                cln.Language = tradepartner.Language;
-                cln.OT_Gender = tradepartner.Gender;
-
-                if (toSend.IsEgg == false)
-                {
-                    cln.Version = tradepartner.Game; //Eggs should not have Origin Game
-                    if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
-                    if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
-                }
-                else //Set eggs received in Picnic, instead of received in Link Trade
-                {
-                    cln.HT_Name = "";
-                    cln.HT_Language = 0;
-                    cln.HT_Gender = 0;
-                    cln.CurrentHandler = 0;
-                    cln.Met_Location = 0;
-                    cln.IsNicknamed = true;
-                    cln.Nickname = cln.Language switch
-                    {
-                        1 => "タマゴ",
-                        3 => "Œuf",
-                        4 => "Uovo",
-                        5 => "Ei",
-                        7 => "Huevo",
-                        8 => "알",
-                        9 or 10 => "蛋",
-                        _ => "Egg",
-                    };
-                }
-
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-                Log($"OT swap success.");
-                
-                if (toSend.IsShiny)
-                    cln.SetShiny();
-                else
-                    if (cln.Met_Location != 30024) //Allow raidmon to OT
-                {
-                    cln.SetShiny();
-                    cln.SetUnshiny();
-                }
-                if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
-                {
-                    if (cln.EncryptionConstant % 100 == 0)
-                        cln = KeepECModable(cln);
-                }
-                else
-                    if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
-                cln.RefreshChecksum();
-            }
-            var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
-            if (tradesv.Valid)
-            {
-                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            }
-            return tradesv.Valid;
-        }
-        private static bool OTChangeAllowed(PK9 mon)
-        {
-            var changeallowed = true;
-            // Check if OT change is allowed for different situations
-            switch (mon.Species)
-            {
-                //Ditto will not OT change unless it has Destiny Mark
-                case (ushort)Species.Ditto:
-                    if (mon.RibbonMarkDestiny == true)
-                        changeallowed = true;
-                    else
-                        changeallowed = false;
-                    break;
-            }
-            switch (mon.OT_Name) //Stops mons with Specific OT from changing to User's OT
-            {
-                case "Blaines":
-                case "New Year 23":
-                case "Valentine":
-                    changeallowed = false;
-                    break;
-            }
-            return changeallowed;
-        }
-        private static PK9 KeepECModable(PK9 eckeep) //Maintain form for Dunsparce/Tandemaus
-        {
-            eckeep.SetRandomEC();
-
-            uint ecDelta = eckeep.EncryptionConstant % 100;
-            eckeep.EncryptionConstant -= ecDelta;
-
-            return eckeep;
-        }
     }
 }

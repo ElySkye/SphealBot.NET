@@ -52,10 +52,22 @@ namespace SysBot.Pokemon
             ReplaceIndex = (ReplaceIndex + 1) % Capacity;
         }
 
+        public void RemoveAll(ulong networkID)
+        {
+            lock (_sync)
+                Users.RemoveAll(z => z.NetworkID == networkID);
+        }
+
         public TrackedUser? TryGetPrevious(ulong trainerNid)
         {
             lock (_sync)
                 return Users.Find(z => z.NetworkID == trainerNid);
+        }
+
+        public IEnumerable<string> Summarize()
+        {
+            lock (_sync)
+                return Users.FindAll(z => z.NetworkID != 0).ConvertAll(z => $"{z.Name}, ID: {z.NetworkID}, Remote ID: {z.RemoteID}");
         }
     }
 

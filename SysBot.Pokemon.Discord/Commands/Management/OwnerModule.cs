@@ -1,12 +1,13 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
+using PKHeX.Core;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Discord;
 
 namespace SysBot.Pokemon.Discord
 {
-    public class OwnerModule : SudoModule
+    public class OwnerModule<T> : SudoModule<T> where T : PKM, new()
     {
         [Command("addSudo")]
         [Summary("Adds mentioned user to global sudo")]

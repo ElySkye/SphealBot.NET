@@ -1,7 +1,8 @@
-﻿using System;
-using PKHeX.Core;
+﻿using PKHeX.Core;
 using PKHeX.Core.AutoMod;
+using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace SysBot.Pokemon
@@ -27,6 +28,9 @@ namespace SysBot.Pokemon
             InitializeSettings(cfg);
         }
 
+        // The list of encounter types in the priority we prefer if no order is specified.
+        private static readonly EncounterTypeGroup[] EncounterPriority = { EncounterTypeGroup.Egg, EncounterTypeGroup.Slot, EncounterTypeGroup.Static, EncounterTypeGroup.Mystery, EncounterTypeGroup.Trade };
+
         private static void InitializeSettings(LegalitySettings cfg)
         {
             APILegality.SetAllLegalRibbons = cfg.SetAllLegalRibbons;
@@ -37,9 +41,15 @@ namespace SysBot.Pokemon
             APILegality.AllowTrainerOverride = cfg.AllowTrainerDataOverride;
             APILegality.AllowBatchCommands = cfg.AllowBatchCommands;
             APILegality.PrioritizeGame = cfg.PrioritizeGame;
-            APILegality.PrioritizeGameVersion= cfg.PrioritizeGameVersion;
+            APILegality.PrioritizeGameVersion = cfg.PrioritizeGameVersion;
             APILegality.SetBattleVersion = cfg.SetBattleVersion;
             APILegality.Timeout = cfg.Timeout;
+
+            // We need all the encounter types present, so add the missing ones at the end.
+            var missing = EncounterPriority.Except(cfg.PrioritizeEncounters);
+            cfg.PrioritizeEncounters.AddRange(missing);
+            cfg.PrioritizeEncounters = cfg.PrioritizeEncounters.Distinct().ToList(); // Don't allow duplicates.
+            EncounterMovesetGenerator.PriorityList = cfg.PrioritizeEncounters;
         }
 
         private static void InitializeTrainerDatabase(LegalitySettings cfg)
