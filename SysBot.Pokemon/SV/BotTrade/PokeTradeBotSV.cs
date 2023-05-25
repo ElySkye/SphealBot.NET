@@ -885,7 +885,8 @@ namespace SysBot.Pokemon
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
-            if (offered.HeldItem != 18)
+
+            if (offered.HeldItem != (int)config.OTSwapItem)
                 Log($"User's request is for {offered.Nickname}");
             else
             {
@@ -946,7 +947,7 @@ namespace SysBot.Pokemon
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait (false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
-            else if (config.LedyQuitIfNoMatch && toSend.HeldItem != 18)
+            else if (config.LedyQuitIfNoMatch && toSend.HeldItem != (int)config.OTSwapItem)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log

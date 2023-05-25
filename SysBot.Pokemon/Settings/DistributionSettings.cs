@@ -23,7 +23,12 @@ namespace SysBot.Pokemon
 
         [Category(Distribute), Description("When set to something other than None, the Random Trades will accept this alternate species in addition to the nickname match.")]
         public Species LedySpecies2 { get; set; } = Species.None;
-        [Category(Distribute), Description("When set to true, Random Ledy nickname-swap trades will quit rather than trade a random entity from the pool.")]
+
+        [Category(Distribute), Description("Species selector for $it command. Default: Finizen")]
+        public Species ItemTradeSpecies { get; set; } = Species.None;
+
+        [Category(Distribute), Description("Held item used to trigger OT Swap.")]
+        public SwapItem OTSwapItem { get; set; } = SwapItem.Antidote;
         public bool LedyQuitIfNoMatch { get; set; }
 
         [Category(Distribute), Description("Distribution Trade Link Code.")]

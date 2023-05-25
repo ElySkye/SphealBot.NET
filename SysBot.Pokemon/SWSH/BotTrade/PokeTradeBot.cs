@@ -1200,7 +1200,7 @@ namespace SysBot.Pokemon
                         _ => "Egg",
                     };
                 }
-
+                
                 Log($"OT_Name: {cln.OT_Name}");
                 Log($"TID: {cln.TrainerTID7}");
                 Log($"SID: {cln.TrainerSID7}");
@@ -1247,7 +1247,7 @@ namespace SysBot.Pokemon
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
-                Log($"Spheal says: Enjoy the OT.");
+                Log($"OT Swap success");
                 return (cln, true);
             }
             else

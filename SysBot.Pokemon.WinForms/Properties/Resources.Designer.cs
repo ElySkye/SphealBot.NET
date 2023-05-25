@@ -69,5 +69,15 @@ namespace SysBot.Pokemon.WinForms.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap SphealLogo {
+            get {
+                object obj = ResourceManager.GetObject("SphealLogo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }
