@@ -348,7 +348,7 @@ namespace SysBot.Pokemon
             }
 
             bool isDistribution = false;
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
             // Hard check to verify that the offset changed from the last thing offered from the previous trade.
@@ -425,7 +425,7 @@ namespace SysBot.Pokemon
             // Sometimes they offered another mon, so store that immediately upon leaving Union Room.
             lastOffered = await SwitchConnection.ReadBytesAbsoluteAsync(TradePartnerOfferedOffset, 8, token).ConfigureAwait(false);
 
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
                 list.TryRegister(trainerNID, tradePartner.TrainerName);
 
             await ExitTradeToPortal(false, token).ConfigureAwait(false);
@@ -435,7 +435,7 @@ namespace SysBot.Pokemon
         private void UpdateCountsAndExport(PokeTradeDetail<PK9> poke, PK9 received, PK9 toSend)
         {
             var counts = TradeSettings;
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.LinkSV)
                 counts.AddCompletedDistribution();
             else if (poke.Type == PokeTradeType.Clone)
                 counts.AddCompletedClones();
@@ -822,6 +822,7 @@ namespace SysBot.Pokemon
             {
                 PokeTradeType.Random => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 PokeTradeType.Clone => await HandleClone(sav, poke, offered, oldEC, token).ConfigureAwait(false),
+                PokeTradeType.LinkSV => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 _ => (toSend, PokeTradeResult.Success),
             };
         }
@@ -880,7 +881,6 @@ namespace SysBot.Pokemon
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
-
             if (offered.HeldItem != (int)config.OTSwapItem)
                 Log($"User's request is for {offered.Nickname}");
             else
@@ -1003,6 +1003,8 @@ namespace SysBot.Pokemon
             var cln = (PK9)toSend.Clone();
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var changeallowed = OTChangeAllowed(toSend);
+            var config = Hub.Config.Distribution;
+            var counts = TradeSettings;
 
             switch (cln.Species) //OT for Academy Meowth on the other version
             {
@@ -1089,6 +1091,11 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
+                if (toSend.HeldItem == (int)config.OTSwapItem)
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
+                    counts.AddCompletedOTSwaps();
+                }
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
             }
             return tradesv.Valid;

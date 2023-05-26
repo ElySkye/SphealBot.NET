@@ -25,6 +25,9 @@
         /// <summary> Performs group battles as a host. </summary>
         RaidBot = 7,
 
+        /// <summary> Simulates Distro Trade (SV Only) </summary>
+        LinkDistro = 8,
+
         /// <summary> Triggers walking encounters until the criteria is satisfied. </summary>
         EncounterLine = 1_000,
 

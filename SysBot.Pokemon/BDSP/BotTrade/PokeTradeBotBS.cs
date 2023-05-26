@@ -1,5 +1,4 @@
 ﻿using PKHeX.Core;
-using PKHeX.Core.AutoMod;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -395,7 +394,7 @@ namespace SysBot.Pokemon
         private void UpdateCountsAndExport(PokeTradeDetail<PB8> poke, PB8 received, PB8 toSend)
         {
             var counts = TradeSettings;
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.LinkBDSP)
                 counts.AddCompletedDistribution();
             else
                 counts.AddCompletedTrade();
@@ -706,6 +705,7 @@ namespace SysBot.Pokemon
             return poke.Type switch
             {
                 PokeTradeType.Random => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
+                PokeTradeType.LinkBDSP => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 _ => (toSend, PokeTradeResult.Success),
             };
         }

@@ -8,7 +8,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsets;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SysBot.Pokemon
 {
@@ -427,7 +426,7 @@ namespace SysBot.Pokemon
         private void UpdateCountsAndExport(PokeTradeDetail<PK8> poke, PK8 received, PK8 toSend)
         {
             var counts = TradeSettings;
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.LinkSWSH)
                 counts.AddCompletedDistribution();
             else if (poke.Type == PokeTradeType.Clone)
                 counts.AddCompletedClones();
@@ -479,6 +478,7 @@ namespace SysBot.Pokemon
             {
                 PokeTradeType.Random => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 PokeTradeType.Clone => await HandleClone(sav, poke, offered, oldEC, token).ConfigureAwait(false),
+                PokeTradeType.LinkSWSH => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 _ => (toSend, PokeTradeResult.Success),
             };
         }

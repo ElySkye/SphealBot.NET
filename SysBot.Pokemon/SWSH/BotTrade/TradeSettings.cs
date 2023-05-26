@@ -46,6 +46,7 @@ namespace SysBot.Pokemon
         private int _completedSurprise;
         private int _completedDistribution;
         private int _completedTrades;
+        private int _completedOTSwaps;
         private int _completedSeedChecks;
         private int _completedClones;
         private int _completedDumps;
@@ -69,6 +70,13 @@ namespace SysBot.Pokemon
         {
             get => _completedTrades;
             set => _completedTrades = value;
+        }
+
+        [Category(Counts), Description("Completed OT Swap Trades")]
+        public int CompletedOTSwaps
+        {
+            get => _completedOTSwaps;
+            set => _completedOTSwaps = value;
         }
 
         [Category(Counts), Description("Completed Seed Check Trades")]
@@ -99,6 +107,7 @@ namespace SysBot.Pokemon
         public void AddCompletedSeedCheck() => Interlocked.Increment(ref _completedSeedChecks);
         public void AddCompletedSurprise() => Interlocked.Increment(ref _completedSurprise);
         public void AddCompletedDistribution() => Interlocked.Increment(ref _completedDistribution);
+        public void AddCompletedOTSwaps() => Interlocked.Increment(ref _completedOTSwaps);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);
 
@@ -116,6 +125,8 @@ namespace SysBot.Pokemon
                 yield return $"Link Trades: {CompletedTrades}";
             if (CompletedDistribution != 0)
                 yield return $"Distribution Trades: {CompletedDistribution}";
+            if (CompletedOTSwaps != 0)
+                yield return $"OT Swaps: {CompletedOTSwaps}";
             if (CompletedSurprise != 0)
                 yield return $"Surprise Trades: {CompletedSurprise}";
         }

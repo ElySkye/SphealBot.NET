@@ -7,5 +7,9 @@
         Seed,
         Clone,
         Dump,
+        LinkSV,
+        LinkSWSH,
+        LinkLA,
+        LinkBDSP
     }
 }
