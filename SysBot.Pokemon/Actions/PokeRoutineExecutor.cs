@@ -135,7 +135,7 @@ namespace SysBot.Pokemon
         }
 
         protected async Task<PokeTradeResult> CheckPartnerReputation(PokeRoutineExecutor<T> bot, PokeTradeDetail<T> poke, ulong TrainerNID, string TrainerName,
-            TradeAbuseSettings AbuseSettings, TrackedUserLog PreviousUsers, TrackedUserLog PreviousUsersDistribution, TrackedUserLog EncounteredUsers, CancellationToken token)
+            TradeAbuseSettings AbuseSettings, TrackedUserLog PreviousUsers, TrackedUserLog PreviousUsersDistribution, TrackedUserLog EncounteredUsers, CooldownTracker UserCooldowns, CancellationToken token)
         {
             bool quit = false;
             var user = poke.Trainer;
@@ -206,8 +206,8 @@ namespace SysBot.Pokemon
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nNPC ID: {TrainerNID}";
                     EchoUtil.Echo(Format.Code(msg, "cs"));
-                    Random rndmsg = new Random();
-                    int num = rndmsg.Next(1, 5);
+                    Random rndmsg = new();
+                    int num = rndmsg.Next(1, 4);
                     switch (num)
                     {
                         case 1:
@@ -219,10 +219,8 @@ namespace SysBot.Pokemon
                         case 3:
                             msg = $"https://tenor.com/view/cat-smh-meme-disagree-cringe-gif-25512889";
                             break;
-                        case 4:
-                            msg = $"https://tenor.com/view/psy-dance-horses-gangnam-style-music-gif-5419832";
-                            break;
                     }
+                    EchoUtil.Echo(msg);
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
@@ -230,12 +228,13 @@ namespace SysBot.Pokemon
                     }
                     if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
                     {
-                        if (attempts == AbuseSettings.RepeatConnections)
+                        if (attempts >= AbuseSettings.RepeatConnections)
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
                             string expiration = $"{expires:yyyy.MM.dd 23:59:59}";
                             AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Cooldown Abuse Ban", expiration) });
-                            Log($"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.");
+                            var msgban = $"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.";
+                            EchoUtil.Echo(Format.Code(msgban, "cs"));
                             EchoUtil.Echo($"https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504");
                         }
                     }

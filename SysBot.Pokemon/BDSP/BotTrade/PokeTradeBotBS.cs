@@ -1,4 +1,5 @@
-﻿using PKHeX.Core;
+﻿using Discord;
+using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -17,6 +18,7 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PB8> Hub;
         private readonly TradeSettings TradeSettings;
         private readonly TradeAbuseSettings AbuseSettings;
+        private static readonly Random rnd = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -291,9 +293,9 @@ namespace SysBot.Pokemon
             var tradePartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var trainerNID = GetFakeNID(tradePartner.TrainerName, tradePartner.TrainerID);
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
-            Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID}");
+            Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
-            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, UserCooldowns, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 // Try to get out of the box.
@@ -720,7 +722,8 @@ namespace SysBot.Pokemon
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -735,7 +738,7 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
 
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
-                if (!await SetBoxPkmWithSwappedIDDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false))
+                if (!await SetTradePartnerDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false))
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
@@ -743,7 +746,7 @@ namespace SysBot.Pokemon
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered);
                 var msg = $"Bad Request found from {partner.TrainerName} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(msg);//Log to discord
+                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -801,10 +804,9 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
-        private async Task<bool> SetBoxPkmWithSwappedIDDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
         {
             var cln = (PB8)toSend.Clone();
-
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
 
             switch (cln.Species) //OT for Arceus on the other version
@@ -824,7 +826,7 @@ namespace SysBot.Pokemon
                         break;
                     }
             }
-            Log($"Preparing to change OT");
+            Log($"Preparing to change OT");//offered - todo future
             cln.TrainerTID7 = offered.TrainerTID7;
             cln.TrainerSID7 = offered.TrainerSID7;
             cln.OT_Name = tradepartner.TrainerName;
@@ -836,11 +838,13 @@ namespace SysBot.Pokemon
                 cln.SetDefaultNickname();
             else //Set eggs received in Picnic, instead of received in Link Trade
             {
+                cln.HeightScalar = (byte)rnd.Next(1, 254);
+                cln.WeightScalar = (byte)rnd.Next(1, 254);
                 cln.HT_Name = "";
                 cln.HT_Language = 0;
                 cln.HT_Gender = 0;
                 cln.CurrentHandler = 0;
-                cln.Met_Location = 0;
+                cln.Met_Location = 65535;
                 cln.IsNicknamed = true;
                 cln.Nickname = cln.Language switch
                 {
@@ -863,14 +867,20 @@ namespace SysBot.Pokemon
             Log($"Game: {(GameVersion)(cln.Version)}");
             Log($"OT Swapped");
 
-            if (toSend.IsShiny)
-                cln.SetShiny();
-            else //reroll pid for non-shiny
+            //OT for Shiny Roamers, else set shiny as normal
+            if (toSend.Species == (ushort)Species.Mesprit || toSend.Species == (ushort)Species.Cresselia)
+                cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF);
+            else
             {
-                cln.SetShiny();
-                cln.SetUnshiny();
+                if (toSend.IsShiny)
+                    cln.SetShiny();
+                else //reroll PID for non-shiny
+                {
+                    cln.SetShiny();
+                    cln.SetUnshiny();
+                }
+                cln.SetRandomEC();
             }
-            cln.SetRandomEC();
             cln.RefreshChecksum();
 
             var tradebdsp = new LegalityAnalysis(cln);

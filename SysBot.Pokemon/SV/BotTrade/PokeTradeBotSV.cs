@@ -339,7 +339,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
-            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, UserCooldowns, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await Click(A, 1_000, token).ConfigureAwait(false); // Ensures we dismiss a popup.
@@ -893,14 +893,14 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
-                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
-                    var report = la.Report();
-                    EchoUtil.Echo(Format.Code(report, "cs"));
-                    return (offered, PokeTradeResult.IllegalTrade);
+                        var report = la.Report();
+                        EchoUtil.Echo(Format.Code(report, "cs"));
+                        return (offered, PokeTradeResult.IllegalTrade);
                 }
-                else if (!await SetBoxPkmWithSwappedIDDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
+                else if (!await SetTradePartnerDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
                 {
                     EchoUtil.Echo(Format.Code(msg, "cs"));
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -933,7 +933,7 @@ namespace SysBot.Pokemon
                 if (Hub.Config.Distribution.AllowTraderOTInformation)
                 {
                     poke.SendNotification(this, "Injecting the requested Pokémon.");
-                    if (!await SetBoxPkmWithSwappedIDDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
+                    if (!await SetTradePartnerDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
                     {
                         poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
@@ -998,7 +998,7 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
-        private async Task<bool> SetBoxPkmWithSwappedIDDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
         {
             var cln = (PK9)toSend.Clone();
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
@@ -1038,9 +1038,11 @@ namespace SysBot.Pokemon
 
                 if (toSend.IsEgg == false)
                 {
-                    cln.Version = tradepartner.Game; //Eggs should not have Origin Game
+                    cln.Version = tradepartner.Game; //Eggs should not have Origin Game on SV
                     if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
                     if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
+                    if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                        cln.Egg_Location = 30023; //Picnic
                 }
                 else //Set eggs received in Picnic, instead of received in Link Trade
                 {
@@ -1072,9 +1074,19 @@ namespace SysBot.Pokemon
                 Log($"OT swap success.");
 
                 if (toSend.IsShiny)
-                    cln.SetShiny();
+                {
+                    if (cln.Met_Location == 30024) //Allow Shiny Raidmons to OT
+                    {
+                        if (toSend.ShinyXor != 0)
+                            cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF); //Star
+                        else
+                            cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF); //Square
+                    }
+                    else
+                        cln.SetShiny();
+                }
                 else
-                    if (cln.Met_Location != 30024) //Allow raidmon to OT
+                    if (cln.Met_Location != 30024) //Allow Raidmons to OT, Reroll PID of Non-Shinies 
                 {
                     cln.SetShiny();
                     cln.SetUnshiny();
@@ -1100,9 +1112,10 @@ namespace SysBot.Pokemon
             }
             return tradesv.Valid;
         }
-        private static bool OTChangeAllowed(PK9 mon)
+        private bool OTChangeAllowed(PK9 mon)
         {
             var changeallowed = true;
+            var config = Hub.Config.Distribution;
             // Check if OT change is allowed for different situations
             switch (mon.Species)
             {
@@ -1119,7 +1132,10 @@ namespace SysBot.Pokemon
                 case "Blaines":
                 case "New Year 23":
                 case "Valentine":
-                    changeallowed = false;
+                    if (mon.HeldItem == (int)config.OTSwapItem) //Allow OT Swap if function triggered by held item only
+                        changeallowed = true;
+                    else
+                        changeallowed = false;
                     break;
             }
             return changeallowed;

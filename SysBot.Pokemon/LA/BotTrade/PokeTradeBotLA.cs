@@ -1,4 +1,5 @@
-﻿using PKHeX.Core;
+﻿using Discord;
+using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -285,7 +286,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{tradePartner.TrainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Link Trade partner: {tradePartner.TrainerName}-{tradePartner.TID7} (ID: {trainerNID})");
 
-            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, tradePartner.TrainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, UserCooldowns, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await ExitTrade(false, token).ConfigureAwait(false);
@@ -657,7 +658,8 @@ namespace SysBot.Pokemon
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -676,7 +678,7 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
 
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
-                if (!await SetBoxPkmWithSwappedIDDetailsLA(toSend, sav, token).ConfigureAwait(false))
+                if (!await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false))
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
@@ -684,7 +686,7 @@ namespace SysBot.Pokemon
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered);
                 var msg = $"Bad Request found from {partner.TrainerName} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(msg);//Log to discord
+                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -737,18 +739,17 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
-        private async Task<bool> SetBoxPkmWithSwappedIDDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
         {
             var cln = (PA8)toSend.Clone();
+            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
 
-            var tradepartners = await GetTradePartnerInfo(token).ConfigureAwait(false);
-
-            cln.OT_Gender = tradepartners.Gender;
-            cln.TrainerTID7 = Convert.ToUInt32(tradepartners.TID7);
-            cln.TrainerSID7 = Convert.ToUInt32(tradepartners.SID7);
-            cln.Language = tradepartners.Language;
-            cln.OT_Name = tradepartners.TrainerName;
-            cln.Version = tradepartners.Game;
+            cln.OT_Gender = tradepartner.Gender;
+            cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+            cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+            cln.Language = tradepartner.Language;
+            cln.OT_Name = tradepartner.TrainerName;
+            cln.Version = tradepartner.Game;
             cln.SetDefaultNickname();
 
             Log($"OT_Name: {cln.OT_Name}");
@@ -756,7 +757,7 @@ namespace SysBot.Pokemon
             Log($"SID: {cln.TrainerSID7}");
             Log($"Gender: {(Gender)cln.OT_Gender}");
             Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"Spheal says: Enjoy the OT.");
+            Log($"OT Swap Success");
 
             if (toSend.IsShiny)
                 cln.SetShiny();

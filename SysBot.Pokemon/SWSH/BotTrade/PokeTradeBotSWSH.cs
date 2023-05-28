@@ -1,4 +1,5 @@
-﻿using PKHeX.Core;
+﻿using Discord;
+using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -320,7 +321,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{trainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Link Trade partner: {trainerName}-{trainerTID} (ID: {trainerNID})");
 
-            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, trainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, trainerName, AbuseSettings, PreviousUsers, PreviousUsersDistribution, EncounteredUsers, UserCooldowns, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await ExitSeedCheckTrade(token).ConfigureAwait(false);
@@ -546,7 +547,8 @@ namespace SysBot.Pokemon
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    EchoUtil.Echo($"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Quitting trade");
+                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -575,7 +577,7 @@ namespace SysBot.Pokemon
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(msg);//Log to discord
+                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 
@@ -1002,7 +1004,7 @@ namespace SysBot.Pokemon
             var cln = (PK8)toSend.Clone();
             var changeallowed = OTChangeAllowed(toSend, data);
 
-            if (changeallowed)
+            if (changeallowed && toSend.OT_Name != "Crown")
             {
                 Log($"Changing OT info to:");
                 cln.TrainerTID7 = tidsid % 1_000_000;
@@ -1046,39 +1048,67 @@ namespace SysBot.Pokemon
                 Log($"Game: {(GameVersion)(cln.Version)}");
                 
             }
-            if (toSend.IsShiny)
+            //OT for Overworld8 (Galar Birds/Gen 5 Trio/Marked mons)
+            if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
+                || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
             {
-                if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
-                {
-                    do
-                    {
-                        cln.SetShiny();
-                    } while (cln.ShinyXor != 0);
-                }
+                if (toSend.Species == (ushort)Species.Zapdos || toSend.Species == (ushort)Species.Moltres || toSend.Species == (ushort)Species.Articuno)
+                    Log($"Non-Shiny OW8, Do nothing to PID");
                 else
-                {
-                    do
-                    {
-                        cln.SetShiny();
-                    } while (cln.ShinyXor != 1);
-                }
-                if (toSend.Met_Location == 244)  //Dynamax Adventures
-                {
-                    do
-                    {
-                        cln.SetShiny();
-                    } while (cln.ShinyXor != 1);
-                }
+                    cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
             }
-            else //reroll PID for non-shiny
-            {
-                cln.SetShiny();
-                cln.SetUnshiny();
-            }
-            if (toSend.PID != toSend.EncryptionConstant) //Filter old mons who are PID = EC
-                cln.SetRandomEC();
             else
-                cln.EncryptionConstant = cln.PID;
+            {
+                if (toSend.IsShiny)
+                {
+                    if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
+                    {
+                        do
+                        {
+                            cln.SetShiny();
+                        } while (cln.ShinyXor != 0);
+                    }
+                    else
+                    {
+                        do
+                        {
+                            cln.SetShiny();
+                        } while (cln.ShinyXor != 1);
+                    }
+                    if (toSend.Met_Location == 244)  //Dynamax Adventures
+                    {
+                        do
+                        {
+                            cln.SetShiny();
+                        } while (cln.ShinyXor != 1);
+                    }
+                }
+                else //reroll PID for non-shiny
+                {
+                    cln.SetShiny();
+                    cln.SetUnshiny();
+                }
+                if (toSend.PID != toSend.EncryptionConstant) //Filter old mons who are PID = EC
+                    cln.SetRandomEC();
+                else
+                    cln.EncryptionConstant = cln.PID;
+            }
+            if (toSend.OT_Name == "Crown" && toSend.Ball == 16) //Galar Articuno Event, use ENG file as base
+            {
+                cln.Language = data[5];
+                cln.OT_Name = cln.Language switch
+                {
+                    1 => "カンムリ",
+                    3 => "Couronneige",
+                    4 => "L. Corona",
+                    5 => "Krone",
+                    7 => "Corona",
+                    8 => "왕관설원",
+                    9 or 10 => "王冠",
+                    _ => "Crown",
+                };
+                cln.SetDefaultNickname();
+            }
             cln.RefreshChecksum();
 
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead

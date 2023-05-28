@@ -231,7 +231,7 @@ namespace SysBot.Pokemon.WinForms
             Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             Name = "Main";
             StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            Text = "SysBot: Pokémon";
+            Text = "SphealBot: Pokémon";
             FormClosing += Main_FormClosing;
             TC_Main.ResumeLayout(false);
             Tab_Bots.ResumeLayout(false);
