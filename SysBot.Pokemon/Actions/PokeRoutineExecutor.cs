@@ -140,7 +140,7 @@ namespace SysBot.Pokemon
             bool quit = false;
             var user = poke.Trainer;
             bool isDistribution = false;
-            if (poke.Type == PokeTradeType.Random)
+            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
                 isDistribution = true;
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;

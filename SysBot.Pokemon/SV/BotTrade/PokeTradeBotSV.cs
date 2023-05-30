@@ -351,6 +351,7 @@ namespace SysBot.Pokemon
             if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+            var listCool = UserCooldowns;
             // Hard check to verify that the offset changed from the last thing offered from the previous trade.
             // This is because box opening times can vary per person, the offset persists between trades, and can also change offset between trades.
             var tradeOffered = await ReadUntilChanged(TradePartnerOfferedOffset, lastOffered, 10_000, 0_500, false, true, token).ConfigureAwait(false);
@@ -425,8 +426,8 @@ namespace SysBot.Pokemon
             // Sometimes they offered another mon, so store that immediately upon leaving Union Room.
             lastOffered = await SwitchConnection.ReadBytesAbsoluteAsync(TradePartnerOfferedOffset, 8, token).ConfigureAwait(false);
 
-            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
-                list.TryRegister(trainerNID, tradePartner.TrainerName);
+            list.TryRegister(trainerNID, tradePartner.TrainerName);
+            _ = listCool.TryInsert(trainerNID, tradePartner.TrainerName, true);
 
             await ExitTradeToPortal(false, token).ConfigureAwait(false);
             return PokeTradeResult.Success;
@@ -900,7 +901,7 @@ namespace SysBot.Pokemon
                         EchoUtil.Echo(Format.Code(report, "cs"));
                         return (offered, PokeTradeResult.IllegalTrade);
                 }
-                else if (!await SetTradePartnerDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
+                else if (!await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false))
                 {
                     EchoUtil.Echo(Format.Code(msg, "cs"));
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -933,7 +934,7 @@ namespace SysBot.Pokemon
                 if (Hub.Config.Distribution.AllowTraderOTInformation)
                 {
                     poke.SendNotification(this, "Injecting the requested Pokémon.");
-                    if (!await SetTradePartnerDetailsSV(toSend, sav, poke, token).ConfigureAwait(false))
+                    if (!await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false))
                     {
                         poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
@@ -998,7 +999,7 @@ namespace SysBot.Pokemon
                 Log($"Left the Barrier. Count: {Hub.BotSync.Barrier.ParticipantCount}");
             }
         }
-        private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, PK9 offered, SAV9SV sav, PokeTradeDetail<PK9> poke, CancellationToken token)
         {
             var cln = (PK9)toSend.Clone();
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
@@ -1073,6 +1074,11 @@ namespace SysBot.Pokemon
                 Log($"Game: {(GameVersion)(cln.Version)}");
                 Log($"OT swap success.");
 
+                if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)config.OTSwapItem) //Distro Ball Selector
+                {
+                    cln.Ball = BallSwap(offered.HeldItem);
+                    Log($"Ball swapped to: {(Ball)cln.Ball}");
+                }
                 if (toSend.IsShiny)
                 {
                     if (cln.Met_Location == 30024) //Allow Shiny Raidmons to OT
@@ -1149,5 +1155,34 @@ namespace SysBot.Pokemon
 
             return eckeep;
         }
+        private static int BallSwap(int ballItem) => ballItem switch
+        {
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            6 => 6,
+            7 => 7,
+            8 => 8,
+            9 => 9,
+            10 => 10,
+            11 => 11,
+            12 => 12,
+            13 => 13,
+            14 => 14,
+            15 => 15,
+            492 => 17,
+            493 => 18,
+            494 => 19,
+            495 => 20,
+            496 => 21,
+            497 => 22,
+            498 => 23,
+            499 => 24,
+            576 => 25,
+            851 => 26,
+            _ => 0,
+        };
     }
 }

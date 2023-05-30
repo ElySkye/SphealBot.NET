@@ -12,7 +12,7 @@ using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
 namespace SysBot.Pokemon
 {
-    public class PokeTradeBotSWSH : PokeRoutineExecutor8SWSH, ICountBot
+    public partial class PokeTradeBotSWSH : PokeRoutineExecutor8SWSH, ICountBot
     {
         public static ISeedSearchHandler<PK8> SeedChecker = new NoSeedSearchHandler<PK8>();
         private readonly PokeTradeHub<PK8> Hub;
@@ -311,6 +311,7 @@ namespace SysBot.Pokemon
             if (poke.Type == PokeTradeType.Random)
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+            var listCool = UserCooldowns;
             // Select Pokemon
             // pkm already injected to b1s1
             await Task.Delay(5_500 + Hub.Config.Timings.ExtraTimeOpenBox, token).ConfigureAwait(false); // necessary delay to get to the box properly
@@ -404,8 +405,8 @@ namespace SysBot.Pokemon
             // Only log if we completed the trade.
             UpdateCountsAndExport(poke, received, toSend);
 
-            if (poke.Type == PokeTradeType.Random)
-                list.TryRegister(trainerNID, trainerName);
+            list.TryRegister(trainerNID, trainerName);
+            _ = listCool.TryInsert(trainerNID, trainerName, true);
 
             await ExitTrade(false, token).ConfigureAwait(false);
             return PokeTradeResult.Success;
@@ -996,152 +997,6 @@ namespace SysBot.Pokemon
         {
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNIDOffset, 8, token).ConfigureAwait(false);
             return BitConverter.ToUInt64(data, 0);
-        }
-        private async Task<(PK8, bool)> SetTradePartnerDetailsSWSH(PK8 toSend, string trainerName, SAV8SWSH sav, CancellationToken token)
-        {
-            var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
-            var tidsid = BitConverter.ToUInt32(data, 0);
-            var cln = (PK8)toSend.Clone();
-            var changeallowed = OTChangeAllowed(toSend, data);
-
-            if (changeallowed && toSend.OT_Name != "Crown")
-            {
-                Log($"Changing OT info to:");
-                cln.TrainerTID7 = tidsid % 1_000_000;
-                cln.TrainerSID7 = tidsid / 1_000_000;
-                cln.OT_Name = trainerName;
-                cln.Version = data[4];
-                cln.Language = data[5];
-                cln.OT_Gender = data[6];
-
-                if (toSend.IsEgg == false)
-                {
-                    if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
-                        cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
-                }
-                else //Set eggs received in Daycare, instead of received in Link Trade
-                {
-                    cln.HT_Name = "";
-                    cln.HT_Language = 0;
-                    cln.HT_Gender = 0;
-                    cln.CurrentHandler = 0;
-                    cln.Met_Location = 0;
-                    cln.IsNicknamed = true;
-                    cln.Nickname = cln.Language switch
-                    {
-                        1 => "タマゴ",
-                        3 => "Œuf",
-                        4 => "Uovo",
-                        5 => "Ei",
-                        7 => "Huevo",
-                        8 => "알",
-                        9 or 10 => "蛋",
-                        _ => "Egg",
-                    };
-                }
-                
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-                
-            }
-            //OT for Overworld8 (Galar Birds/Gen 5 Trio/Marked mons)
-            if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
-                || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
-            {
-                if (toSend.Species == (ushort)Species.Zapdos || toSend.Species == (ushort)Species.Moltres || toSend.Species == (ushort)Species.Articuno)
-                    Log($"Non-Shiny OW8, Do nothing to PID");
-                else
-                    cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
-            }
-            else
-            {
-                if (toSend.IsShiny)
-                {
-                    if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 0);
-                    }
-                    else
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 1);
-                    }
-                    if (toSend.Met_Location == 244)  //Dynamax Adventures
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 1);
-                    }
-                }
-                else //reroll PID for non-shiny
-                {
-                    cln.SetShiny();
-                    cln.SetUnshiny();
-                }
-                if (toSend.PID != toSend.EncryptionConstant) //Filter old mons who are PID = EC
-                    cln.SetRandomEC();
-                else
-                    cln.EncryptionConstant = cln.PID;
-            }
-            if (toSend.OT_Name == "Crown" && toSend.Ball == 16) //Galar Articuno Event, use ENG file as base
-            {
-                cln.Language = data[5];
-                cln.OT_Name = cln.Language switch
-                {
-                    1 => "カンムリ",
-                    3 => "Couronneige",
-                    4 => "L. Corona",
-                    5 => "Krone",
-                    7 => "Corona",
-                    8 => "왕관설원",
-                    9 or 10 => "王冠",
-                    _ => "Crown",
-                };
-                cln.SetDefaultNickname();
-            }
-            cln.RefreshChecksum();
-
-            var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
-            if (tradeswsh.Valid)
-            {
-                Log($"OT Swap success");
-                return (cln, true);
-            }
-            else
-            {
-                Log($"Pokemon was analyzed as not legal");
-                return (toSend, false);
-            }
-        }
-        private static bool OTChangeAllowed(PK8 mon, byte[] trader1)
-        {
-            var changeallowed = true;
-
-            // Check if OT change is allowed for different situations
-            switch (mon.Species)
-            {
-                //Zacian on Shield
-                case (ushort)Species.Zacian:
-                    if (trader1[4] == (int)GameVersion.SH && mon.Ball != 16)
-                        changeallowed = false;
-                    break;
-                //Zamazenta on Sword
-                case (ushort)Species.Zamazenta:
-                    if (trader1[4] == (int)GameVersion.SW && mon.Ball != 16)
-                        changeallowed = false;
-                    break;
-            }
-            return changeallowed;
         }
     }
 }
