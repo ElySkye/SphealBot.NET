@@ -1,5 +1,6 @@
 ﻿using PKHeX.Core;
 using System;
+using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
@@ -14,6 +15,8 @@ namespace SysBot.Pokemon
             var tidsid = BitConverter.ToUInt32(data, 0);
             var cln = (PK8)toSend.Clone();
             var changeallowed = OTChangeAllowed(toSend, data);
+            var config = Hub.Config.Distribution;
+            var counts = TradeSettings;
 
             if (changeallowed && toSend.OT_Name != "Crown")
             {
@@ -29,6 +32,8 @@ namespace SysBot.Pokemon
                 {
                     if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
                         cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+                    if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                        cln.Egg_Location = 60002; //Nursery (SWSH)
                 }
                 else //Set eggs received in Daycare, instead of received in Link Trade
                 {
@@ -125,6 +130,11 @@ namespace SysBot.Pokemon
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
+                if (toSend.HeldItem == (int)config.OTSwapItem)
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
+                    counts.AddCompletedOTSwaps();
+                }
                 Log($"OT Swap success");
                 return (cln, true);
             }
@@ -188,7 +198,10 @@ namespace SysBot.Pokemon
             cln.OT_Gender = offered.OT_Gender;
 
             if (toSend.IsEgg == false)
-                cln.SetDefaultNickname();
+            {
+                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Spheal)
+                    cln.SetDefaultNickname();
+            }
             else //Set eggs received in Picnic, instead of received in Link Trade
             {
                 cln.HeightScalar = (byte)rnd.Next(1, 254);

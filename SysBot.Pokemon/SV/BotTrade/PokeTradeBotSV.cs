@@ -882,9 +882,32 @@ namespace SysBot.Pokemon
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
-            if (offered.HeldItem != (int)config.OTSwapItem)
+            var counts = TradeSettings;
+            var cln = (PK9)toSend.Clone();
+            //Custom message for mini-events
+            var eventmsg = $"======\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n======";
+            if (offered.Nickname == config.SphealEvent)
+            {
+                EchoUtil.Echo(Format.Code(eventmsg, "cs"));
+                EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
+            }
+            if (offered.Nickname == config.MysteryTrade)
+            {
+                PK9? rnd;
+                do
+                {
+                    rnd = Hub.Ledy.Pool.GetRandomEgg();
+                } while (!rnd.IsEgg);
+                toSend = rnd;
+                Log($"Sending Surprise Egg: {GameInfo.GetStrings(1).Species[toSend.Species]}");
+                await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false);
+                counts.AddCompletedMystery();
+                poke.TradeData = toSend;
+                return (toSend, PokeTradeResult.Success);
+            }
+            if (trade != null && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else
+            else if (offered.HeldItem == (int)config.OTSwapItem)
             {
                 toSend = offered.Clone();
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
@@ -906,6 +929,13 @@ namespace SysBot.Pokemon
                     EchoUtil.Echo(Format.Code(msg, "cs"));
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     return (toSend, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
+                    counts.AddCompletedOTSwaps();
+                    poke.TradeData = toSend;
+                    return (toSend, PokeTradeResult.Success);
                 }
             }
             if (trade != null)
@@ -936,7 +966,7 @@ namespace SysBot.Pokemon
                     poke.SendNotification(this, "Injecting the requested Pokémon.");
                     if (!await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false))
                     {
-                        poke.SendNotification(this, "Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
+                        Log($"Uh oh! Something happened and I sent the original pokemon unchanged"); //OT swap fail
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                     }
                 }
@@ -944,7 +974,7 @@ namespace SysBot.Pokemon
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
             }
-            else if (config.LedyQuitIfNoMatch && toSend.HeldItem != (int)config.OTSwapItem)
+            else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
@@ -1005,7 +1035,6 @@ namespace SysBot.Pokemon
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var changeallowed = OTChangeAllowed(toSend);
             var config = Hub.Config.Distribution;
-            var counts = TradeSettings;
 
             switch (cln.Species) //OT for Academy Meowth on the other version
             {
@@ -1108,14 +1137,7 @@ namespace SysBot.Pokemon
             }
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
-            {
-                if (toSend.HeldItem == (int)config.OTSwapItem)
-                {
-                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
-                    counts.AddCompletedOTSwaps();
-                }
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            }
             return tradesv.Valid;
         }
         private bool OTChangeAllowed(PK9 mon)

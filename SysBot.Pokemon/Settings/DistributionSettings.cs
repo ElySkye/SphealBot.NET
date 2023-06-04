@@ -25,10 +25,17 @@ namespace SysBot.Pokemon
         public Species LedySpecies2 { get; set; } = Species.None;
 
         [Category(Distribute), Description("Species selector for $it command. Default: Finizen")]
-        public Species ItemTradeSpecies { get; set; } = Species.None;
+        public Species ItemTradeSpecies { get; set; } = Species.Spheal;
 
         [Category(Distribute), Description("Held item used to trigger OT Swap.")]
         public SwapItem OTSwapItem { get; set; } = SwapItem.Antidote;
+
+        [Category(Distribute), Description("Nickname to trigger Mystery Trades - Defaults to trading only Eggs")]
+        public string MysteryTrade { get; set; } = "Mystery";
+
+        [Category(Distribute), Description("Input Nickname for Spheal Event.")]
+        public string SphealEvent { get; set; } = "SphealEventPlaceholder";
+
         public bool LedyQuitIfNoMatch { get; set; }
 
         [Category(Distribute), Description("Distribution Trade Link Code.")]

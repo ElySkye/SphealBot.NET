@@ -541,9 +541,61 @@ namespace SysBot.Pokemon
         private async Task<(PK8 toSend, PokeTradeResult check)> HandleRandomLedy(SAV8SWSH sav, PokeTradeDetail<PK8> poke, PK8 offered, PK8 toSend, PartnerDataHolder partner, CancellationToken token)
         {
             // Allow the trade partner to do a Ledy swap.
-            Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
+            //Custom message for mini-events
+            var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n============";
+            if (offered.Nickname == config.SphealEvent)
+            {
+                EchoUtil.Echo(Format.Code(eventmsg, "cs"));
+                EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
+            }
+            if (trade != null && trade.Type == LedyResponseType.MatchPool)
+                Log($"User's request is for {offered.Nickname}");
+            else if (offered.HeldItem == (int)config.OTSwapItem)
+            {
+                toSend = offered.Clone();
+                Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
+                var msg = $"Bad OT swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}";
+                var result = await SetTradePartnerDetailsSWSH(toSend, partner.TrainerName, sav, token).ConfigureAwait(false);
+                var la = new LegalityAnalysis(offered);
+
+                if (offered.FatefulEncounter && la.Valid)
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
+                    await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
+                    return (toSend, PokeTradeResult.Success);
+                }
+                else
+                {
+                    if (!la.Valid)
+                    {
+                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                        var report = la.Report();
+                        EchoUtil.Echo(Format.Code(report, "cs"));
+                        return (offered, PokeTradeResult.IllegalTrade);
+                    }
+                    else
+                    {
+                        if (result.Item2 == false)
+                        {
+                            EchoUtil.Echo(Format.Code(msg, "cs"));
+                            DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                            return (toSend, PokeTradeResult.IllegalTrade);
+                        }
+                        else
+                            toSend = result.Item1;
+                        poke.TradeData = toSend;
+                    }
+                }
+                await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
+                await Task.Delay(2_500, token).ConfigureAwait(false);
+                return (toSend, PokeTradeResult.Success);
+            }
             if (trade != null)
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)

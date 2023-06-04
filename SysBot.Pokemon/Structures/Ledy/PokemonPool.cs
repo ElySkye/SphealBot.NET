@@ -46,7 +46,24 @@ namespace SysBot.Pokemon
                 return rand;
             }
         }
-
+        public T GetRandomEgg()
+        {
+            while (true)
+            {
+                var rand = GetRandomEggSend();
+                if (DisallowRandomRecipientTrade(rand))
+                    continue;
+                return rand;
+            }
+        }
+        public T GetRandomEggSend()
+        {
+            var choice = this[Counter];
+            Counter = (Counter + 1) % Count;
+            if (Randomized)
+                Shuffle(this, 0, Count, Util.Rand);
+            return choice;
+        }
         public bool Reload(string path, SearchOption opt = SearchOption.AllDirectories)
         {
             if (!Directory.Exists(path))
