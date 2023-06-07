@@ -3,6 +3,7 @@ using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -18,6 +19,8 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PK8> Hub;
         private readonly TradeSettings TradeSettings;
         private readonly TradeAbuseSettings AbuseSettings;
+        Sphealcl SphealEmbed = new();
+
         public ICountSettings Counts => TradeSettings;
 
         /// <summary>
@@ -557,11 +560,11 @@ namespace SysBot.Pokemon
                 toSend = offered.Clone();
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
                 Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
-                var msg = $"Bad OT swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}";
-                var result = await SetTradePartnerDetailsSWSH(toSend, partner.TrainerName, sav, token).ConfigureAwait(false);
+                string? msg;
+                var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 var la = new LegalityAnalysis(offered);
 
-                if (offered.FatefulEncounter && la.Valid)
+                if (offered.FatefulEncounter || offered.Generation != 8 && la.Valid)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
                     await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
@@ -572,18 +575,24 @@ namespace SysBot.Pokemon
                 {
                     if (!la.Valid)
                     {
-                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        msg = $"Pokémon: {(Species)offered.Species}";
+                        msg += $"\nPokémon OT: {partner.TrainerName}";
+                        msg += $"\nUser: {offered.OT_Name}";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
-                        var report = la.Report();
-                        EchoUtil.Echo(Format.Code(report, "cs"));
+                        msg = la.Report();
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
                         return (offered, PokeTradeResult.IllegalTrade);
                     }
                     else
                     {
                         if (result.Item2 == false)
                         {
-                            EchoUtil.Echo(Format.Code(msg, "cs"));
+                            msg = $"Pokémon: {(Species)offered.Species}";
+                            msg += $"\nPokémon OT: {partner.TrainerName}";
+                            msg += $"\nUser: {offered.OT_Name}";
+                            await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                             DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                             return (toSend, PokeTradeResult.IllegalTrade);
                         }
@@ -596,12 +605,54 @@ namespace SysBot.Pokemon
                 await Task.Delay(2_500, token).ConfigureAwait(false);
                 return (toSend, PokeTradeResult.Success);
             }
+            else if (BallSwap(offered.HeldItem) != 0)
+            {
+                Log($"User's request is for Ball swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                toSend = offered.Clone();
+                Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
+                var cln = (PK8)toSend.Clone();
+                var counts = TradeSettings;
+                var msg = $"Bad Ball swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with: {(Ball)offered.Ball}";
+                var la = new LegalityAnalysis(offered);
+
+                if (!la.Valid)
+                {
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    var report = la.Report();
+                    EchoUtil.Echo(Format.Code(report, "cs"));
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    cln.Ball = BallSwap(offered.HeldItem);
+                    Log($"Ball swapped to: {(Ball)cln.Ball}");
+                    var la2 = new LegalityAnalysis(cln);
+                    if (la2.Valid)
+                    {
+                        poke.TradeData = cln;
+                        counts.AddCompletedBallSwaps();
+                        await SetBoxPokemon(cln, 0, 0, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else
+                    {
+                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", cln);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
             if (trade != null)
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    var msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nUser: {partner.TrainerName}";
+                    msg += $"\nLeaving Trade...";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -617,7 +668,7 @@ namespace SysBot.Pokemon
                 }
 
                 toSend = trade.Receive;
-                var result = await SetTradePartnerDetailsSWSH(toSend, partner.TrainerName, sav, token).ConfigureAwait(false);
+                var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 if (result.Item2 == true)
                     toSend = result.Item1;
                 poke.TradeData = toSend;
@@ -629,8 +680,10 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
+                var msg = $"Pokémon: {(Species)offered.Species}";
+                msg += $"\nNickname: {offered.Nickname}";
+                msg += $"\nUser: {partner.TrainerName}";
+                await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 

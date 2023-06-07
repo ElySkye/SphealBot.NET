@@ -206,21 +206,7 @@ namespace SysBot.Pokemon
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"\nNPC ID: {TrainerNID}";
                     EchoUtil.Echo(Format.Code(msg, "cs"));
-                    Random rndmsg = new();
-                    int num = rndmsg.Next(1, 4);
-                    switch (num)
-                    {
-                        case 1:
-                            msg = $"https://tenor.com/view/madagascar-skipper-can-you-read-gif-22646390";
-                            break;
-                        case 2:
-                            msg = $"https://tenor.com/view/shame-shame-shame-shame-peter-peter-griffin-shame-on-you-gif-17923831";
-                            break;
-                        case 3:
-                            msg = $"https://tenor.com/view/cat-smh-meme-disagree-cringe-gif-25512889";
-                            break;
-                    }
-                    EchoUtil.Echo(msg);
+
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";

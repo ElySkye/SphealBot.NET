@@ -3,6 +3,8 @@ using Discord.Commands;
 using System.Threading.Tasks;
 using Discord;
 using System;
+using System.IO;
+using System.Threading;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -223,5 +225,74 @@ namespace SysBot.Pokemon.Discord
             Expiration = expiration,
             Comment = $"{comment} - Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
         };
+
+        // Peek Command - Extracted from [https://github.com/Koi-3088/ForkBot.NET]
+        [Command("peek")]
+        [Summary("Take and send a screenshot from the specified Switch.")]
+        [RequireSudo]
+        public async Task Peek(string address)
+        {
+            var source = new CancellationTokenSource();
+            var token = source.Token;
+
+            var bot = SysCord<T>.Runner.GetBot(address);
+            if (bot == null)
+            {
+                await ReplyAsync($"No bot found with the specified address ({address}).").ConfigureAwait(false);
+                return;
+            }
+
+            var c = bot.Bot.Connection;
+            var bytes = await c.PixelPeek(token).ConfigureAwait(false);
+            if (bytes.Length == 1)
+            {
+                await ReplyAsync($"Failed to take a screenshot for bot at {address}. Is the bot connected?").ConfigureAwait(false);
+                return;
+            }
+            MemoryStream ms = new(bytes);
+
+            var img = "SphealCheck.jpg";
+            var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = Color.Blue }.WithFooter(new EmbedFooterBuilder { Text = $"Captured image from bot at address {address}." });
+            await Context.Channel.SendFileAsync(ms, img, "", false, embed: embed.Build());
+        }
+        public class SphealModule : ModuleBase<SocketCommandContext>
+        {
+            [Command("spheal")]
+            [Summary("Sends random Spheals")]
+            public async Task SphealAsync()
+            {
+                var msg = "Placeholder";
+                Random rndmsg = new();
+                int num = rndmsg.Next(1, 5);
+                switch (num)
+                {
+                    case 1:
+                        msg = $"https://tenor.com/view/tess-spheal-gif-22641311";
+                        break;
+                    case 2:
+                        msg = $"https://tenor.com/view/spheal-pokemon-clapping-gif-25991342";
+                        break;
+                    case 3:
+                        msg = $"https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062";
+                        break;
+                    case 4:
+                        msg = $"https://tenor.com/view/spheal-pokemon-soupokailloux-seal-gif-24173644";
+                        break;
+                    case 5:
+                        msg = $"https://tenor.com/view/pokemon-spheal-gif-26674053";
+                        break;
+                    case 6:
+                        msg = $"https://tenor.com/view/spheal-wake-up-gif-19887467";
+                        break;
+                    case 7:
+                        msg = $"https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411";
+                        break;
+                    case 8:
+                        msg = $"https://tenor.com/view/pokemon-spheal-rolling-yolo-gif-24805701";
+                        break;
+                }
+                await ReplyAsync(msg).ConfigureAwait(false);
+            }
+        }
     }
 }

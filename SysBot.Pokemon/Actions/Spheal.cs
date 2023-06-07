@@ -1,15 +1,18 @@
 ﻿using PKHeX.Core;
 using System;
-using System.Diagnostics.Metrics;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
+using Discord;
+using System.Net.Http;
+using SysBot.Base;
+using System.Net;
 
 namespace SysBot.Pokemon
 {
     public partial class PokeTradeBotSWSH : PokeRoutineExecutor8SWSH, ICountBot
     {
-        private async Task<(PK8, bool)> SetTradePartnerDetailsSWSH(PK8 toSend, string trainerName, SAV8SWSH sav, CancellationToken token)
+        private async Task<(PK8, bool)> SetTradePartnerDetailsSWSH(PK8 toSend, PK8 offered, string trainerName, SAV8SWSH sav, CancellationToken token)
         {
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
             var tidsid = BitConverter.ToUInt32(data, 0);
@@ -63,6 +66,11 @@ namespace SysBot.Pokemon
                 Log($"Language: {(LanguageID)(cln.Language)}");
                 Log($"Game: {(GameVersion)(cln.Version)}");
 
+            }
+            if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)config.OTSwapItem) //Distro Ball Selector
+            {
+                cln.Ball = BallSwap(offered.HeldItem);
+                Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Gen 5 Trio/Marked mons)
             if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
@@ -164,6 +172,35 @@ namespace SysBot.Pokemon
             }
             return changeallowed;
         }
+        private static int BallSwap(int ballItem) => ballItem switch
+        {
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            6 => 6,
+            7 => 7,
+            8 => 8,
+            9 => 9,
+            10 => 10,
+            11 => 11,
+            12 => 12,
+            13 => 13,
+            14 => 14,
+            15 => 15,
+            492 => 17,
+            493 => 18,
+            494 => 19,
+            495 => 20,
+            496 => 21,
+            497 => 22,
+            498 => 23,
+            499 => 24,
+            576 => 25,
+            851 => 26,
+            _ => 0,
+        };
     }
     public partial class PokeTradeBotBS : PokeRoutineExecutor8BS, ICountBot
     {
@@ -295,6 +332,102 @@ namespace SysBot.Pokemon
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
             else Log($"Pokemon was analyzed as not legal");
             return tradela.Valid;
+        }
+    }
+    public class Sphealcl
+    {
+        static readonly HttpClient client = new HttpClient();
+        public async Task EmbedPokemonMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
+        {
+            EmbedAuthorBuilder embedAuthor = new EmbedAuthorBuilder
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)toSend.Ball).ToString().ToLower() + "ball.png",
+                Name = msgTitle,
+            };
+
+            string embedThumbUrl = await embedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+
+            Color embedMsgColor = new Color((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), toSend.Ball)));
+
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = embedMsgColor,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "```" + msg + "```",
+                Author = embedAuthor
+            };
+            Embed embedMsg = embedBuilder.Build();
+            EchoUtil.EchoEmbed(embedMsg);
+        }
+        public async Task EmbedAlertMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
+        {
+            string embedThumbUrl = await embedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+
+            EmbedAuthorBuilder embedAuthor = new EmbedAuthorBuilder
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/alert.png",
+                Name = msgTitle,
+            };
+
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Red,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "```" + msg + "```",
+                Author = embedAuthor
+            };
+
+            Embed embedMsg = embedBuilder.Build();
+
+            EchoUtil.EchoEmbed(embedMsg);
+        }
+        public async Task<string> embedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
+        {
+            string URLStart = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture";
+            string URLString, URLGender;
+            string URLGMax = canGMax ? "g" : "n";
+            string URLShiny = mon.IsShiny ? "r.png" : "n.png";
+
+            if (mon.Gender < 2)
+                URLGender = "mf";
+            else
+                URLGender = "uk";
+
+            URLString = URLStart + "_" + mon.Species.ToString("0000") + "_" + mon.Form.ToString("000") + "_" + URLGender + "_" + URLGMax + "_" + URLFormArg + "_f_" + URLShiny;
+
+            if (mon.IsEgg)
+                URLString = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/512x512/egg.png";
+
+            try
+            {
+                using HttpResponseMessage response = await client.GetAsync(URLString);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                if (mon.Gender == 0)
+                    URLGender = "md";
+                else
+                    URLGender = "fd";
+
+                URLString = URLStart + "_" + mon.Species.ToString("0000") + "_" + mon.Form.ToString("000") + "_" + URLGender + "_" + URLGMax + "_" + URLFormArg + "_f_" + URLShiny;
+
+                try
+                {
+                    using HttpResponseMessage response = await client.GetAsync(URLString);
+                    response.EnsureSuccessStatusCode();
+                }
+                catch (HttpRequestException ex1) when (ex1.StatusCode == HttpStatusCode.NotFound)
+                {
+                    if (mon.Gender == 0)
+                        URLGender = "mo";
+                    else
+                        URLGender = "fo";
+
+                    URLString = URLStart + "_" + mon.Species.ToString("0000") + "_" + mon.Form.ToString("000") + "_" + URLGender + "_" + URLGMax + "_" + URLFormArg + "_f_" + URLShiny;
+                }
+            }
+            return URLString;
         }
     }
 }

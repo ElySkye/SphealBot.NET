@@ -59,7 +59,7 @@ namespace SysBot.Pokemon
 
         [Category(Monitoring), Description("If not empty, the provided string will be appended to Echo alerts to notify whomever you specify when a user violates Ledy trade rules. For Discord, use <@userIDnumber> to mention.")]
         public string LedyAbuseEchoMention { get; set; } = string.Empty;
-        [Category(Monitoring), Description("White-listed online IDs that will not trigger cooldown or in-game block.")]
+        [Category(Monitoring), Description("White-listed online IDs that will not trigger cooldown or in-game block. Format: <NID>, <OT Name>, <Duration>:<Day/Hour>, <Reason for whitelisting>")]
         public RemoteControlAccessList WhiteListedIDs { get; set; } = new();
     }
 }

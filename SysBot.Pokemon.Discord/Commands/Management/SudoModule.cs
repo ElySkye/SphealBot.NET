@@ -95,7 +95,7 @@ namespace SysBot.Pokemon.Discord
             var me = SysCord<T>.Runner;
             var hub = me.Hub;
             hub.Config.TradeAbuse.BannedIDs.AddIfNew(objects);
-            await ReplyAsync("Done.").ConfigureAwait(false);
+            await ReplyAsync("https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504").ConfigureAwait(false);
         }
 
         [Command("bannedIDComment")]

@@ -18,6 +18,7 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PK9> Hub;
         private readonly TradeSettings TradeSettings;
         public readonly TradeAbuseSettings AbuseSettings;
+        Sphealcl SphealEmbed = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -912,38 +913,44 @@ namespace SysBot.Pokemon
                 toSend = offered.Clone();
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
                 Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
-                var msg = $"Bad OT swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}";
+                string? msg;
+
+                if (offered.Tracker != 0 && offered.Generation == 9)
+                    cln.Tracker = 0;
 
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                        EchoUtil.Echo(Format.Code(msg, "cs"));
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nPokémon OT: {partner.TrainerName}";
+                    msg += $"\nUser: {offered.OT_Name}";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
-                        var report = la.Report();
-                        EchoUtil.Echo(Format.Code(report, "cs"));
-                        return (offered, PokeTradeResult.IllegalTrade);
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
                 }
                 else if (!await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false))
                 {
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nPokémon OT: {partner.TrainerName}";
+                    msg += $"\nUser: {offered.OT_Name}";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
-                else
-                {
-                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
-                    counts.AddCompletedOTSwaps();
-                    poke.TradeData = toSend;
-                    return (toSend, PokeTradeResult.Success);
-                }
+                poke.TradeData = toSend;
+                return (toSend, PokeTradeResult.Success);
             }
             if (trade != null)
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
                 {
-                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    var msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nUser: {partner.TrainerName}";
+                    msg += $"\nLeaving Trade...";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -977,8 +984,10 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Bad Request found from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
+                var msg = $"Pokémon: {(Species)offered.Species}";
+                msg += $"\nNickname: {offered.Nickname}";
+                msg += $"\nUser: {partner.TrainerName}";
+                await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
             return (toSend, PokeTradeResult.Success);
@@ -1035,6 +1044,7 @@ namespace SysBot.Pokemon
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
             var changeallowed = OTChangeAllowed(toSend);
             var config = Hub.Config.Distribution;
+            var counts = TradeSettings;
 
             switch (cln.Species) //OT for Academy Meowth on the other version
             {
@@ -1137,7 +1147,14 @@ namespace SysBot.Pokemon
             }
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
+            {
+                if (toSend.HeldItem == (int)config.OTSwapItem)
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
+                    counts.AddCompletedOTSwaps();
+                }
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
+            }
             return tradesv.Valid;
         }
         private bool OTChangeAllowed(PK9 mon)

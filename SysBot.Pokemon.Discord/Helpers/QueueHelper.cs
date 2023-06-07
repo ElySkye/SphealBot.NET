@@ -3,6 +3,8 @@ using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
 using PKHeX.Core;
+using System;
+using System.Data.SqlTypes;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord
@@ -28,7 +30,103 @@ namespace SysBot.Pokemon.Discord
                 var result = AddToTradeQueue(context, trade, code, trainer, sig, routine, type, trader, out var msg);
 
                 // Notify in channel
-                await context.Channel.SendMessageAsync(msg).ConfigureAwait(false);
+                // await context.Channel.SendMessageAsync(msg).ConfigureAwait(false); 
+
+                string embedMsg, embedTitle, embedAuthor;
+                bool CanGMax = false;
+                uint FormArgument = 0;
+
+                switch (trade.Generation)
+                {
+                    case (int)GameVersion.X or (int)GameVersion.Y:
+                        PK6 mon6 = (PK6)trade.Clone();
+                        FormArgument = mon6.FormArgument;
+                        break;
+                    case (int)GameVersion.SN or (int)GameVersion.MN or (int)GameVersion.US or (int)GameVersion.UM:
+                        PK7 mon7 = (PK7)trade.Clone();
+                        FormArgument = mon7.FormArgument;
+                        break;
+                    case (int)GameVersion.GP or (int)GameVersion.GE:
+                        PB7 monLGPE = (PB7)trade.Clone();
+                        FormArgument = monLGPE.FormArgument;
+                        break;
+                    case (int)GameVersion.SW or (int)GameVersion.SH:
+                        PK8 mon8 = (PK8)trade.Clone();
+                        CanGMax = mon8.CanGigantamax;
+                        FormArgument = mon8.FormArgument;
+                        break;
+                    case (int)GameVersion.BD or (int)GameVersion.SP:
+                        PB8 monBDSP = (PB8)trade.Clone();
+                        CanGMax = monBDSP.CanGigantamax;
+                        FormArgument = monBDSP.FormArgument;
+                        break;
+                    case (int)GameVersion.PLA:
+                        PA8 monLA = (PA8)trade.Clone();
+                        CanGMax = monLA.CanGigantamax;
+                        FormArgument = monLA.FormArgument;
+                        break;
+                    case (int)GameVersion.SL or (int)GameVersion.VL:
+                        PK9 mon9 = (PK9)trade.Clone();
+                        FormArgument = mon9.FormArgument;
+                        break;
+                }
+
+                embedTitle = trade.IsShiny ? "★" : "";
+                embedTitle += $" {(Species)trade.Species} ";
+                if (trade.Gender == 0)
+                    embedTitle += "(M)";
+                else if (trade.Gender == 1)
+                    embedTitle += "(F)";
+                if (trade.HeldItem > 0)
+                    embedTitle += $" ➜ {(SwapItem)trade.HeldItem}";
+
+                embedAuthor = $"{trainer}'s ";
+                embedAuthor += trade.IsShiny ? "shiny " : "";
+                embedAuthor += "Pokémon:";
+
+                embedMsg = $"Ability: {(Ability)trade.Ability}";
+                embedMsg += $"\nLevel: {trade.CurrentLevel}";
+                embedMsg += $"\nNature: {(Nature)trade.Nature}";
+                embedMsg += $"\nIVs: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
+                embedMsg += $"\nEVs: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
+                embedMsg += $"\nMoves:";
+                if (trade.Move1 != 0)
+                    embedMsg += $"\n- {(Move)trade.Move1}";
+                if (trade.Move2 != 0)
+                    embedMsg += $"\n- {(Move)trade.Move2}";
+                if (trade.Move3 != 0)
+                    embedMsg += $"\n- {(Move)trade.Move3}";
+                if (trade.Move4 != 0)
+                    embedMsg += $"\n- {(Move)trade.Move4}";
+                embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue.";
+
+                EmbedAuthorBuilder embedAuthorBuild = new()
+                {
+                    IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)trade.Ball).ToString().ToLower() + "ball.png",
+                    Name = embedAuthor,
+                };
+                EmbedFooterBuilder embedFtr = new()
+                {
+                    Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
+                    IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+                };
+
+                Color embedMsgColor = new Color((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
+                Sphealcl tradespheal = new();
+                string embedThumbUrl = await tradespheal.embedImgUrlBuilder(trade, CanGMax, FormArgument.ToString("00000000")).ConfigureAwait(false);
+
+                EmbedBuilder builder = new EmbedBuilder
+                {
+                    //Optional color
+                    Color = embedMsgColor,
+                    Author = embedAuthorBuild,
+                    Title = embedTitle,
+                    Description = embedMsg,
+                    ThumbnailUrl = embedThumbUrl,
+                    Footer = embedFtr
+                };
+                await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+
                 // Notify in PM to mirror what is said in the channel.
                 await trader.SendMessageAsync($"{msg}\nYour trade code will be **{code:0000 0000}**.").ConfigureAwait(false);
 

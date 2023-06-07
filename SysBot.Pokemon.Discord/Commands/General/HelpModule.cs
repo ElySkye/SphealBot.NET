@@ -65,7 +65,7 @@ namespace SysBot.Pokemon.Discord
                 });
             }
 
-            await ReplyAsync("Help has arrived!", false, builder.Build()).ConfigureAwait(false);
+            await ReplyAsync("Commands:", false, builder.Build()).ConfigureAwait(false);
         }
 
         [Command("help")]
