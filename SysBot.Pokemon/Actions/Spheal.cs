@@ -336,10 +336,10 @@ namespace SysBot.Pokemon
     }
     public class Sphealcl
     {
-        static readonly HttpClient client = new HttpClient();
+        static readonly HttpClient client = new();
         public async Task EmbedPokemonMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
         {
-            EmbedAuthorBuilder embedAuthor = new EmbedAuthorBuilder
+            EmbedAuthorBuilder embedAuthor = new()
             {
                 IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)toSend.Ball).ToString().ToLower() + "ball.png",
                 Name = msgTitle,
@@ -363,7 +363,7 @@ namespace SysBot.Pokemon
         {
             string embedThumbUrl = await embedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
-            EmbedAuthorBuilder embedAuthor = new EmbedAuthorBuilder
+            EmbedAuthorBuilder embedAuthor = new()
             {
                 IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/alert.png",
                 Name = msgTitle,
@@ -379,6 +379,32 @@ namespace SysBot.Pokemon
 
             Embed embedMsg = embedBuilder.Build();
 
+            EchoUtil.EchoEmbed(embedMsg);
+        }
+        public static async Task EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
+        {
+            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/alert.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Last encountered {cdAbuse.TotalMinutes:F1} minutes ago.\nIgnoring the the {cd} minute trade cooldown.\nStrike {attempts} out of {repeatConnections}",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Blue,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "```" + msg + "```",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+
+            Embed embedMsg = embedBuilder.Build();
             EchoUtil.EchoEmbed(embedMsg);
         }
         public async Task<string> embedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)

@@ -19,7 +19,7 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PK8> Hub;
         private readonly TradeSettings TradeSettings;
         private readonly TradeAbuseSettings AbuseSettings;
-        Sphealcl SphealEmbed = new();
+        readonly Sphealcl SphealEmbed = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -364,7 +364,7 @@ namespace SysBot.Pokemon
                 // Immediately exit, we aren't trading anything.
                 return await EndSeedCheckTradeAsync(poke, offered, token).ConfigureAwait(false);
             }
-            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 list.TryRegister(trainerNID, trainerName);
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(trainerNID, trainerName, trainerTID);
@@ -647,7 +647,7 @@ namespace SysBot.Pokemon
             }
             if (trade != null)
             {
-                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 {
                     var msg = $"Pokémon: {(Species)offered.Species}";
                     msg += $"\nUser: {partner.TrainerName}";

@@ -201,16 +201,15 @@ namespace SysBot.Pokemon
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
                 {
                     list.TryRegister(TrainerNID, TrainerName);
-                    poke.Notifier.SendNotification(this, poke, "User has become an NPC. Verification required.");
-                    var msg = $"Found {TrainerName} ignoring the {cd} min trade cooldown. Last seen {delta.TotalMinutes:F1} mins ago. NPC registered. Strike {attempts} out of {AbuseSettings.RepeatConnections}.";
+                    var msg = $"Added to NPC Registry\n\n";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"\nNPC ID: {TrainerNID}";
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                        msg += $"NPC Name: {TrainerName}\nNPC ID: {TrainerNID}";
+                    await Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]");
 
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        await Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]");
                     }
                     if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
                     {

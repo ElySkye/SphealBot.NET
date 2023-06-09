@@ -62,10 +62,7 @@ namespace SysBot.Pokemon.Discord
         {
             bool noItem = pkm.HeldItem == 0 && itemTrade;
             if (invalid || !ItemRestrictions.IsHeldItemAllowed(pkm) || noItem || (pkm.Nickname.ToLower() == "egg" && !Breeding.CanHatchAsEgg(pkm.Species)))
-            {
-                var msg = $"{(noItem ? $"{context.User.Username}, the item you entered wasn't recognized." : $"Oops! I wasn't able to create that {GameInfo.Strings.Species[pkm.Species]}.")}";
                 return Task.FromResult(true);
-            }
             return Task.FromResult(false);
         }
 
@@ -181,7 +178,7 @@ namespace SysBot.Pokemon.Discord
             string msg = "";
             var wlParams = input.Split(", ", 4);
             DateTime wlExpires = DateTime.Now;
-            RemoteControlAccess wlRef = new RemoteControlAccess();
+            RemoteControlAccess wlRef = new ();
 
             if (wlParams.Length <= 2)
             {

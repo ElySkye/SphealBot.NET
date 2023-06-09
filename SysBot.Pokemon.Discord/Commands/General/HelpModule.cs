@@ -22,7 +22,7 @@ namespace SysBot.Pokemon.Discord
             var builder = new EmbedBuilder
             {
                 Color = new Color(114, 137, 218),
-                Description = "These are the commands you can use:",
+                Description = "Commands:",
             };
 
             var mgr = SysCordSettings.Manager;
@@ -65,7 +65,7 @@ namespace SysBot.Pokemon.Discord
                 });
             }
 
-            await ReplyAsync("Commands:", false, builder.Build()).ConfigureAwait(false);
+            await ReplyAsync("https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411", false, builder.Build()).ConfigureAwait(false);
         }
 
         [Command("help")]
@@ -98,7 +98,7 @@ namespace SysBot.Pokemon.Discord
                 });
             }
 
-            await ReplyAsync("Help has arrived!", false, builder.Build()).ConfigureAwait(false);
+            await ReplyAsync("https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411", false, builder.Build()).ConfigureAwait(false);
         }
 
         private static string GetCommandSummary(CommandInfo cmd)

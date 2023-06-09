@@ -502,6 +502,7 @@ namespace SysBot.Pokemon
         Gurdurr = 533,
         Phantump = 708,
         Pumpkaboo = 710,
+        Boldore = 525,
     }
     public enum embedColor : uint
     {

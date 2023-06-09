@@ -18,7 +18,7 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PK9> Hub;
         private readonly TradeSettings TradeSettings;
         public readonly TradeAbuseSettings AbuseSettings;
-        Sphealcl SphealEmbed = new();
+        readonly Sphealcl SphealEmbed = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -380,7 +380,7 @@ namespace SysBot.Pokemon
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return PokeTradeResult.TrainerTooSlow;
             }
-            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 list.TryRegister(trainerNID, tradePartner.TrainerName);
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
@@ -943,9 +943,47 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
                 return (toSend, PokeTradeResult.Success);
             }
+            else if (BallSwap(offered.HeldItem) != 0)
+            {
+                Log($"User's request is for Ball swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                toSend = offered.Clone();
+                Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
+                var msg = $"Bad Ball swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with: {(Ball)offered.Ball}";
+                var la = new LegalityAnalysis(offered);
+
+                if (!la.Valid)
+                {
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    var report = la.Report();
+                    EchoUtil.Echo(Format.Code(report, "cs"));
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    toSend.Ball = BallSwap(offered.HeldItem);
+                    Log($"Ball swapped to: {(Ball)toSend.Ball}");
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        poke.TradeData = toSend;
+                        counts.AddCompletedBallSwaps();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else
+                    {
+                        EchoUtil.Echo(Format.Code(msg, "cs"));
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
             if (trade != null)
             {
-                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo)
+                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 {
                     var msg = $"Pokémon: {(Species)offered.Species}";
                     msg += $"\nUser: {partner.TrainerName}";

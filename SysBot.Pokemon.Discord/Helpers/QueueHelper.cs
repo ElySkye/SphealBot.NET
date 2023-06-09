@@ -111,11 +111,13 @@ namespace SysBot.Pokemon.Discord
                     IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
                 };
 
-                Color embedMsgColor = new Color((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
+#pragma warning disable CS8604 // Possible null reference argument.
+                Color embedMsgColor = new((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
+#pragma warning restore CS8604 // Possible null reference argument.
                 Sphealcl tradespheal = new();
                 string embedThumbUrl = await tradespheal.embedImgUrlBuilder(trade, CanGMax, FormArgument.ToString("00000000")).ConfigureAwait(false);
 
-                EmbedBuilder builder = new EmbedBuilder
+                EmbedBuilder builder = new()
                 {
                     //Optional color
                     Color = embedMsgColor,
