@@ -345,7 +345,7 @@ namespace SysBot.Pokemon
                 Name = msgTitle,
             };
 
-            string embedThumbUrl = await embedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+            string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
             Color embedMsgColor = new Color((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), toSend.Ball)));
 
@@ -361,7 +361,7 @@ namespace SysBot.Pokemon
         }
         public async Task EmbedAlertMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
         {
-            string embedThumbUrl = await embedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+            string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -381,7 +381,7 @@ namespace SysBot.Pokemon
 
             EchoUtil.EchoEmbed(embedMsg);
         }
-        public static async Task EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
+        public static Embed EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
         {
             string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
 
@@ -403,11 +403,10 @@ namespace SysBot.Pokemon
                 Author = embedAuthor,
                 Footer = embedFtr
             };
-
             Embed embedMsg = embedBuilder.Build();
-            EchoUtil.EchoEmbed(embedMsg);
+            return embedMsg;
         }
-        public async Task<string> embedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
+        public async Task<string> EmbedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
         {
             string URLStart = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture";
             string URLString, URLGender;

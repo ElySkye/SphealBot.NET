@@ -19,6 +19,7 @@ namespace SysBot.Pokemon
         private readonly TradeSettings TradeSettings;
         private readonly TradeAbuseSettings AbuseSettings;
         private static readonly Random rnd = new();
+        readonly Sphealcl SphealEmbed = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -722,8 +723,10 @@ namespace SysBot.Pokemon
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 {
-                    var msg = $"{partner.TrainerName} has attempted to send a trade evolution: {GameInfo.GetStrings(1).Species[offered.Species]}, Leaving trade.";
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                    var msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nUser: {partner.TrainerName}";
+                    msg += $"\nLeaving Trade...";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
@@ -744,9 +747,11 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
-                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered);
-                var msg = $"Bad Request found from {partner.TrainerName} nicknamed {offered.Nickname}";//Log to bot's log
-                EchoUtil.Echo(Format.Code(msg, "cs"));//Log to discord
+                DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
+                var msg = $"Pokémon: {(Species)offered.Species}";
+                msg += $"\nNickname: {offered.Nickname}";
+                msg += $"\nUser: {partner.TrainerName}";
+                await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
 

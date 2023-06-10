@@ -148,12 +148,24 @@ namespace SysBot.Pokemon
             var listCool = UserCooldowns;
 
             int wlIndex = AbuseSettings.WhiteListedIDs.List.FindIndex(z => z.ID == TrainerNID);
+            int banIndex = AbuseSettings.BannedIDs.List.FindIndex(z => z.ID == TrainerNID);
             DateTime wlCheck = DateTime.Now;
 
             bool wlAllow = false;
+            if (banIndex > -1)
+            {
+                var banExpires = AbuseSettings.BannedIDs.List[banIndex].Expiration;
+                ulong banID = AbuseSettings.BannedIDs.List[banIndex].ID;
 
-            // Matches to a list of banned NIDs, in case the user ever manages to enter a trade.
-            var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
+                if (banID != 0 && banExpires <= wlCheck)
+                {
+                    var msg = $"Removed {TrainerName} from the Bannedlist due to an expired duration.";
+                    AbuseSettings.BannedIDs.RemoveAll(z => z.ID == TrainerNID);
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
+                }
+            }
+                // Matches to a list of banned NIDs, in case the user ever manages to enter a trade.
+                var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
                 if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
@@ -181,8 +193,9 @@ namespace SysBot.Pokemon
 
                 if (wlID != 0 && wlExpires <= wlCheck)
                 {
+                    var msg = $"Removed {TrainerName} from Whitelist due to an expired duration.";
                     AbuseSettings.WhiteListedIDs.RemoveAll(z => z.ID == TrainerNID);
-                    EchoUtil.Echo($"Removed {TrainerName} from Whitelist due to an expired duration.");
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                     wlAllow = false;
                 }
                 else if (wlID != 0)
@@ -204,19 +217,19 @@ namespace SysBot.Pokemon
                     var msg = $"Added to NPC Registry\n\n";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"NPC Name: {TrainerName}\nNPC ID: {TrainerNID}";
-                    await Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]");
+                    EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]"));
 
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                        await Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]");
+                        EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected [Warning]"));
                     }
                     if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(60) < coolDelta)
                     {
                         if (attempts >= AbuseSettings.RepeatConnections)
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
-                            string expiration = $"{expires:yyyy.MM.dd 23:59:59}";
+                            string expiration = $"{expires:yyyy.MM.dd-hh:mm:ss}";
                             AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Cooldown Abuse Ban", expiration) });
                             var msgban = $"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.";
                             EchoUtil.Echo(Format.Code(msgban, "cs"));
@@ -297,7 +310,7 @@ namespace SysBot.Pokemon
             return PokeTradeResult.Success;
         }
 
-        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "9999.12.31 23:59:59") => new()
+        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "yyyy.MM.dd-hh:mm:ss") => new()
         {
             ID = id,
             Name = name,

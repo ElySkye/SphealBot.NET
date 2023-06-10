@@ -4,7 +4,6 @@ using Discord.Net;
 using Discord.WebSocket;
 using PKHeX.Core;
 using System;
-using System.Data.SqlTypes;
 using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord
@@ -70,64 +69,127 @@ namespace SysBot.Pokemon.Discord
                         FormArgument = mon9.FormArgument;
                         break;
                 }
-
-                embedTitle = trade.IsShiny ? "★" : "";
-                embedTitle += $" {(Species)trade.Species} ";
-                if (trade.Gender == 0)
-                    embedTitle += "(M)";
-                else if (trade.Gender == 1)
-                    embedTitle += "(F)";
-                if (trade.HeldItem > 0)
-                    embedTitle += $" ➜ {(SwapItem)trade.HeldItem}";
-
-                embedAuthor = $"{trainer}'s ";
-                embedAuthor += trade.IsShiny ? "shiny " : "";
-                embedAuthor += "Pokémon:";
-
-                embedMsg = $"Ability: {(Ability)trade.Ability}";
-                embedMsg += $"\nLevel: {trade.CurrentLevel}";
-                embedMsg += $"\nNature: {(Nature)trade.Nature}";
-                embedMsg += $"\nIVs: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
-                embedMsg += $"\nEVs: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
-                embedMsg += $"\nMoves:";
-                if (trade.Move1 != 0)
-                    embedMsg += $"\n- {(Move)trade.Move1}";
-                if (trade.Move2 != 0)
-                    embedMsg += $"\n- {(Move)trade.Move2}";
-                if (trade.Move3 != 0)
-                    embedMsg += $"\n- {(Move)trade.Move3}";
-                if (trade.Move4 != 0)
-                    embedMsg += $"\n- {(Move)trade.Move4}";
-                embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue.";
-
-                EmbedAuthorBuilder embedAuthorBuild = new()
+                if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade)
                 {
-                    IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)trade.Ball).ToString().ToLower() + "ball.png",
-                    Name = embedAuthor,
-                };
-                EmbedFooterBuilder embedFtr = new()
+                    Color embedMsgColor = new ();
+                    embedTitle = $"Prepare the trade code once the bot messages you\n";
+                    embedAuthor = $"{trainer}'s ";
+                    embedMsg = $"";
+                    if (routine == PokeRoutineType.Clone)
+                    {
+                        embedMsgColor = 0xF9F815;
+                        embedAuthor += "Clone Request";
+                        embedMsg += $"Show a Pokémon to be cloned\n";
+                        embedMsg += $"Hit B to change your offer\n";
+                        embedMsg += $"Offer a trash Pokémon to receive your clone\n";
+                        embedMsg += $"Enjoy & Please come again !";
+                    }
+                    else if (routine == PokeRoutineType.Dump)
+                    {
+                        embedMsgColor = 0x6015F9;
+                        embedAuthor += "Dump Request";
+                        embedMsg += $"Show Pokémon(s) to be dumped\n";
+                        embedMsg += $"You have 180 seconds to show your Pokémon\n";
+                        embedMsg += $"You can show up to 20 Pokémon\n";
+                        embedMsg += $"Enjoy & Please come again !";
+                    }
+                    else if (routine == PokeRoutineType.DirectTrade)
+                    {
+                        embedMsgColor = 0x6FFEEC;
+                        embedAuthor += "Direct Trade Request";
+                        embedMsg += $"Trade using the nicknames on sheet or use Special Features\n\n";
+                        embedMsg += $"Available Special Features:\n\n";
+                        embedMsg += $"Mystery Eggs (SV):\n";
+                        embedMsg += $"OTSwap (SV/SWSH):\n";
+                        embedMsg += $"Pokéball Selector (SV/SWSH):\n";
+                        embedMsg += $"Pokéball Swapper (SV/SWSH):\n";
+                        embedMsg += $"Refer to Sheet / #🌠bot-guide🌠 for more info\n";
+                        embedMsg += $"Enjoy & Please come again !";
+                    }
+
+                    EmbedAuthorBuilder embedAuthorBuild = new()
+                    {
+                        IconUrl = "https://archives.bulbagarden.net/media/upload/e/e1/PCP363.png",
+                        Name = embedAuthor,
+                    };
+                    EmbedFooterBuilder embedFtr = new()
+                    {
+                        Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
+                        IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+                    };
+                    Sphealcl tradespheal = new();
+                    string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png";
+                    EmbedBuilder builder = new()
+                    {
+                        Color = embedMsgColor,
+                        Author = embedAuthorBuild,
+                        Title = embedTitle,
+                        Description = embedMsg,
+                        ThumbnailUrl = embedThumbUrl,
+                        Footer = embedFtr
+                    };
+                    await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                }
+                else
                 {
-                    Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
-                    IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
-                };
+                    embedTitle = trade.IsShiny ? "★" : "";
+                    embedTitle += $" {(Species)trade.Species} ";
+                    if (trade.Gender == 0)
+                        embedTitle += "(M)";
+                    else if (trade.Gender == 1)
+                        embedTitle += "(F)";
+                    if (trade.HeldItem > 0)
+                        embedTitle += $" ➜ {(SwapItem)trade.HeldItem}";
+
+                    embedAuthor = $"{trainer}'s ";
+                    embedAuthor += trade.IsShiny ? "shiny " : "";
+                    embedAuthor += "Pokémon:";
+
+                    embedMsg = $"Ability: {(Ability)trade.Ability}";
+                    embedMsg += $"\nLevel: {trade.CurrentLevel}";
+                    embedMsg += $"\nNature: {(Nature)trade.Nature}";
+                    embedMsg += $"\nIVs: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
+                    embedMsg += $"\nEVs: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
+                    embedMsg += $"\nMoves:";
+                    if (trade.Move1 != 0)
+                        embedMsg += $"\n- {(Move)trade.Move1}";
+                    if (trade.Move2 != 0)
+                        embedMsg += $"\n- {(Move)trade.Move2}";
+                    if (trade.Move3 != 0)
+                        embedMsg += $"\n- {(Move)trade.Move3}";
+                    if (trade.Move4 != 0)
+                        embedMsg += $"\n- {(Move)trade.Move4}";
+                    embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue.";
+
+                    EmbedAuthorBuilder embedAuthorBuild = new()
+                    {
+                        IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)trade.Ball).ToString().ToLower() + "ball.png",
+                        Name = embedAuthor,
+                    };
+                    EmbedFooterBuilder embedFtr = new()
+                    {
+                        Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
+                        IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+                    };
 
 #pragma warning disable CS8604 // Possible null reference argument.
-                Color embedMsgColor = new((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
+                    Color embedMsgColor = new((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
 #pragma warning restore CS8604 // Possible null reference argument.
-                Sphealcl tradespheal = new();
-                string embedThumbUrl = await tradespheal.embedImgUrlBuilder(trade, CanGMax, FormArgument.ToString("00000000")).ConfigureAwait(false);
+                    Sphealcl tradespheal = new();
+                    string embedThumbUrl = await tradespheal.EmbedImgUrlBuilder(trade, CanGMax, FormArgument.ToString("00000000")).ConfigureAwait(false);
 
-                EmbedBuilder builder = new()
-                {
-                    //Optional color
-                    Color = embedMsgColor,
-                    Author = embedAuthorBuild,
-                    Title = embedTitle,
-                    Description = embedMsg,
-                    ThumbnailUrl = embedThumbUrl,
-                    Footer = embedFtr
-                };
-                await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                    EmbedBuilder builder = new()
+                    {
+                        //Optional color
+                        Color = embedMsgColor,
+                        Author = embedAuthorBuild,
+                        Title = embedTitle,
+                        Description = embedMsg,
+                        ThumbnailUrl = embedThumbUrl,
+                        Footer = embedFtr
+                    };
+                    await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                }
 
                 // Notify in PM to mirror what is said in the channel.
                 await trader.SendMessageAsync($"{msg}\nYour trade code will be **{code:0000 0000}**.").ConfigureAwait(false);

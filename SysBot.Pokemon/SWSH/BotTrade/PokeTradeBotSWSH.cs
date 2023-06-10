@@ -564,7 +564,7 @@ namespace SysBot.Pokemon
                 var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 var la = new LegalityAnalysis(offered);
 
-                if (offered.FatefulEncounter || offered.Generation != 8 && la.Valid)
+                if (offered.FatefulEncounter || offered.Version != 44 || offered.Version != 45 && la.Valid)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
                     await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
