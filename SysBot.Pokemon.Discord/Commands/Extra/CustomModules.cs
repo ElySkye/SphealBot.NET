@@ -168,6 +168,26 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
+        [Command("checkcd")]
+        [Summary("Changes cooldown in minutes.")]
+        [RequireSudo]
+        public async Task CooldownLeft([Remainder] string input)
+        {
+            bool isDistribution = true;
+            var list = isDistribution ? PokeRoutineExecutorBase.PreviousUsersDistribution : PokeRoutineExecutorBase.PreviousUsers;
+            var cooldown = list.TryGetPrevious(ulong.Parse(input));
+            if (cooldown != null)
+            {
+                string trainerName = cooldown.ToString().Substring(21, cooldown.ToString().IndexOf('=', cooldown.ToString().IndexOf('=') + 1) - 31);
+                var delta = DateTime.Now - cooldown.Time;
+                await ReplyAsync($"{trainerName} your cooldown is currently on {delta.TotalMinutes:F1} out of {SysCordSettings.HubConfig.TradeAbuse.TradeCooldown} minutes.").ConfigureAwait(false);
+            }
+            else
+                await ReplyAsync($"User has not traded with the bot recently.").ConfigureAwait(false);
+            if (!Context.IsPrivate)
+                await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
+        }
+
         [Command("addwl")]
         [Summary("Adds NID to whitelist for cooldown skipping. Format: <prefix>addwl [NID] [IGN] [Duration in hours](optional)")]
         [RequireSudo]

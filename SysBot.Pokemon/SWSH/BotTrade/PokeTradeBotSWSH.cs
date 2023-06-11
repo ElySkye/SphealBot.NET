@@ -345,7 +345,7 @@ namespace SysBot.Pokemon
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
 
-            poke.SendNotification(this, $"Found Link Trade partner: {trainerName}. Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {trainerName} NID: {trainerNID}. Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
                 return await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
@@ -561,10 +561,11 @@ namespace SysBot.Pokemon
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
                 Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
                 string? msg;
+                if (toSend.Tracker != 0 && toSend.Generation == 8)
+                    toSend.Tracker = 0;
                 var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 var la = new LegalityAnalysis(offered);
-
-                if (offered.FatefulEncounter || offered.Version != 44 || offered.Version != 45 && la.Valid)
+                if (toSend.FatefulEncounter || toSend.Generation != 8 && la.Valid)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
                     await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
@@ -609,8 +610,10 @@ namespace SysBot.Pokemon
             {
                 Log($"User's request is for Ball swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 toSend = offered.Clone();
+                var cln = offered.Clone();
+                if (cln.Tracker != 0 && cln.Generation == 8)
+                    cln.Tracker = 0;
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
-                var cln = (PK8)toSend.Clone();
                 var counts = TradeSettings;
                 var msg = $"Bad Ball swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with: {(Ball)offered.Ball}";
                 var la = new LegalityAnalysis(offered);
@@ -635,7 +638,7 @@ namespace SysBot.Pokemon
                         counts.AddCompletedBallSwaps();
                         await SetBoxPokemon(cln, 0, 0, token, sav).ConfigureAwait(false);
                         await Task.Delay(2_500, token).ConfigureAwait(false);
-                        return (toSend, PokeTradeResult.Success);
+                        return (cln, PokeTradeResult.Success);
                     }
                     else
                     {

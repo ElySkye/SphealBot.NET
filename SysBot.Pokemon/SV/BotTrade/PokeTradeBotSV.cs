@@ -362,7 +362,7 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             }
 
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} TID: {tradePartner.TID7} SID: {tradePartner.SID7}. Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} NID: {trainerNID}. Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
             {
@@ -915,8 +915,8 @@ namespace SysBot.Pokemon
                 Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
                 string? msg;
 
-                if (offered.Tracker != 0 && offered.Generation == 9)
-                    cln.Tracker = 0;
+                if (toSend.Tracker != 0 && toSend.Generation == 9)
+                    toSend.Tracker = 0;
 
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
@@ -950,7 +950,8 @@ namespace SysBot.Pokemon
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
                 var msg = $"Bad Ball swap Request from {partner.TrainerName}: {GameInfo.GetStrings(1).Species[offered.Species]} with: {(Ball)offered.Ball}";
                 var la = new LegalityAnalysis(offered);
-
+                if (toSend.Tracker != 0 && toSend.Generation == 9)
+                    toSend.Tracker = 0;
                 if (!la.Valid)
                 {
                     EchoUtil.Echo(Format.Code(msg, "cs"));
