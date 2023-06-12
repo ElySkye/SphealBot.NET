@@ -77,7 +77,7 @@ namespace SysBot.Pokemon
                 || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
             {
                 if (toSend.Species == (ushort)Species.Zapdos || toSend.Species == (ushort)Species.Moltres || toSend.Species == (ushort)Species.Articuno)
-                    Log($"Non-Shiny OW8, Do nothing to PID");
+                    cln.PID = cln.PID; //Do nothing as non shiny ov8 or Event Galar Birbs
                 else
                     cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
             }

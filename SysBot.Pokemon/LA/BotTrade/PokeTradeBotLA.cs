@@ -299,7 +299,7 @@ namespace SysBot.Pokemon
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
             var listCool = UserCooldowns;
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} NID: {trainerNID}. Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID:  {trainerNID}). Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
             {

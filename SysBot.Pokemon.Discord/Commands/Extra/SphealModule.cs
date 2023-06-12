@@ -8,10 +8,11 @@ using System.Threading;
 
 namespace SysBot.Pokemon.Discord
 {
-    [Summary("Generates and queues custom modules")]
-    public class CustomModules<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+    [Summary("Custom Spheal Commands")]
+    public class SphealModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
     {
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
+        public ProgramMode Mode { get; set; }
 
         // Item Trade - Extracted from [https://github.com/Koi-3088/ForkBot.NET]
         [Command("itemTrade")]
@@ -85,6 +86,23 @@ namespace SysBot.Pokemon.Discord
         {
             var sig = Context.User.GetFavor();
             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSV).ConfigureAwait(false);
+        }
+
+        [Command("DTList")]
+        [Alias("dtl")]
+        [Summary("List the users in the DirectTrade queue.")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task GetDTListAsync()
+        {
+            string msg = Info.GetTradeList(PokeRoutineType.DirectTrade);
+            var embed = new EmbedBuilder();
+            embed.AddField(s =>
+            {
+                s.Name = "Pending Trades";
+                s.Value = msg;
+                s.IsInline = false;
+            });
+            await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
         }
 
         [Command("requestSWSH")]
@@ -169,8 +187,8 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("checkcd")]
-        [Summary("Changes cooldown in minutes.")]
-        [RequireSudo]
+        [Summary("Allows users to check their current cooldown using NID")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task CooldownLeft([Remainder] string input)
         {
             bool isDistribution = true;
@@ -180,7 +198,11 @@ namespace SysBot.Pokemon.Discord
             {
                 string trainerName = cooldown.ToString().Substring(21, cooldown.ToString().IndexOf('=', cooldown.ToString().IndexOf('=') + 1) - 31);
                 var delta = DateTime.Now - cooldown.Time;
-                await ReplyAsync($"{trainerName} your cooldown is currently on {delta.TotalMinutes:F1} out of {SysCordSettings.HubConfig.TradeAbuse.TradeCooldown} minutes.").ConfigureAwait(false);
+                double ddelta = delta.TotalMinutes;
+                if (ddelta.CompareTo((double)SysCordSettings.HubConfig.TradeAbuse.TradeCooldown) < 1)
+                    await ReplyAsync($"{trainerName} your last encounter with the bot was {delta.TotalMinutes:F1} mins ago. The trade cooldown is {SysCordSettings.HubConfig.TradeAbuse.TradeCooldown} mins.").ConfigureAwait(false);
+                else
+                    await ReplyAsync($"{trainerName} your cooldown is up. You may trade again.").ConfigureAwait(false);
             }
             else
                 await ReplyAsync($"User has not traded with the bot recently.").ConfigureAwait(false);
@@ -272,44 +294,41 @@ namespace SysBot.Pokemon.Discord
             var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = Color.Blue }.WithFooter(new EmbedFooterBuilder { Text = $"Captured image from bot at address {address}." });
             await Context.Channel.SendFileAsync(ms, img, "", false, embed: embed.Build());
         }
-        public class SphealModule : ModuleBase<SocketCommandContext>
+        [Command("spheal")]
+        [Summary("Sends random Spheals")]
+        public async Task SphealAsync()
         {
-            [Command("spheal")]
-            [Summary("Sends random Spheals")]
-            public async Task SphealAsync()
+            var msg = "Placeholder";
+            Random rndmsg = new();
+            int num = rndmsg.Next(1, 5);
+            switch (num)
             {
-                var msg = "Placeholder";
-                Random rndmsg = new();
-                int num = rndmsg.Next(1, 5);
-                switch (num)
-                {
-                    case 1:
-                        msg = $"https://tenor.com/view/tess-spheal-gif-22641311";
-                        break;
-                    case 2:
-                        msg = $"https://tenor.com/view/spheal-pokemon-clapping-gif-25991342";
-                        break;
-                    case 3:
-                        msg = $"https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062";
-                        break;
-                    case 4:
-                        msg = $"https://tenor.com/view/spheal-pokemon-soupokailloux-seal-gif-24173644";
-                        break;
-                    case 5:
-                        msg = $"https://tenor.com/view/pokemon-spheal-gif-26674053";
-                        break;
-                    case 6:
-                        msg = $"https://tenor.com/view/spheal-wake-up-gif-19887467";
-                        break;
-                    case 7:
-                        msg = $"https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411";
-                        break;
-                    case 8:
-                        msg = $"https://tenor.com/view/pokemon-spheal-rolling-yolo-gif-24805701";
-                        break;
-                }
-                await ReplyAsync(msg).ConfigureAwait(false);
+                case 1:
+                    msg = $"https://tenor.com/view/tess-spheal-gif-22641311";
+                    break;
+                case 2:
+                    msg = $"https://tenor.com/view/spheal-pokemon-clapping-gif-25991342";
+                    break;
+                case 3:
+                    msg = $"https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062";
+                    break;
+                case 4:
+                    msg = $"https://tenor.com/view/spheal-pokemon-soupokailloux-seal-gif-24173644";
+                    break;
+                case 5:
+                    msg = $"https://tenor.com/view/pokemon-spheal-gif-26674053";
+                    break;
+                case 6:
+                    msg = $"https://tenor.com/view/spheal-wake-up-gif-19887467";
+                    break;
+                case 7:
+                    msg = $"https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411";
+                    break;
+                case 8:
+                    msg = $"https://tenor.com/view/pokemon-spheal-rolling-yolo-gif-24805701";
+                    break;
             }
+            await ReplyAsync(msg).ConfigureAwait(false);
         }
     }
 }

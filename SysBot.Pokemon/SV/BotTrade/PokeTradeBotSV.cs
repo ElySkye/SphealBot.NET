@@ -362,7 +362,7 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             }
 
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} NID: {trainerNID}. Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
             {
@@ -884,7 +884,6 @@ namespace SysBot.Pokemon
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             var counts = TradeSettings;
-            var cln = (PK9)toSend.Clone();
             //Custom message for mini-events
             var eventmsg = $"======\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n======";
             if (offered.Nickname == config.SphealEvent)

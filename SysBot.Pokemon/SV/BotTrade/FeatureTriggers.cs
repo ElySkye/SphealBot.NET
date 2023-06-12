@@ -504,7 +504,7 @@ namespace SysBot.Pokemon
         Pumpkaboo = 710,
         Boldore = 525,
     }
-    public enum embedColor : uint
+    public enum EmbedColor : uint
     {
         None = 0x0,
 
