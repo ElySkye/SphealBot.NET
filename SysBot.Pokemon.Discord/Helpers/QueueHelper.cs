@@ -138,6 +138,7 @@ namespace SysBot.Pokemon.Discord
                 }
                 else
                 {
+                    string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? "★" : "";
                     embedTitle += $" {(Species)trade.Species} ";
                     if (trade.Gender == 0)
@@ -145,7 +146,7 @@ namespace SysBot.Pokemon.Discord
                     else if (trade.Gender == 1)
                         embedTitle += "(F)";
                     if (trade.HeldItem > 0)
-                        embedTitle += $" ➜ {(SwapItem)trade.HeldItem}";
+                        embedTitle += $" ➜ {HeldItem}";
 
                     embedAuthor = $"{trainer}'s ";
                     embedAuthor += trade.IsShiny ? "shiny " : "";
@@ -178,9 +179,7 @@ namespace SysBot.Pokemon.Discord
                         IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
                     };
 
-#pragma warning disable CS8604 // Possible null reference argument.
-                    Color embedMsgColor = new((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), trade.Ball)));
-#pragma warning restore CS8604 // Possible null reference argument.
+                    Color embedMsgColor = new((uint)Enum.Parse(typeof(EmbedColor), Enum.GetName(typeof(Ball), trade.Ball)));
                     Sphealcl tradespheal = new();
                     string embedThumbUrl = await tradespheal.EmbedImgUrlBuilder(trade, CanGMax, FormArgument.ToString("00000000")).ConfigureAwait(false);
 

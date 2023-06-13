@@ -12,7 +12,6 @@ namespace SysBot.Pokemon.Discord
     public class SphealModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
     {
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
-        public ProgramMode Mode { get; set; }
 
         // Item Trade - Extracted from [https://github.com/Koi-3088/ForkBot.NET]
         [Command("itemTrade")]

@@ -347,7 +347,7 @@ namespace SysBot.Pokemon
 
             string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
-            Color embedMsgColor = new Color((uint)Enum.Parse(typeof(embedColor), Enum.GetName(typeof(Ball), toSend.Ball)));
+            Color embedMsgColor = new Color((uint)Enum.Parse(typeof(EmbedColor), Enum.GetName(typeof(Ball), toSend.Ball)));
 
             EmbedBuilder embedBuilder = new()
             {
@@ -453,6 +453,14 @@ namespace SysBot.Pokemon
                 }
             }
             return URLString;
+        }
+        public static string FixHeldItemName(string name)
+        {
+            name = name.Replace("____", " ");
+            name = name.Replace("___", ".");
+            name = name.Replace("__", "'");
+            name = name.Replace("_", "-");
+            return name;
         }
     }
 }

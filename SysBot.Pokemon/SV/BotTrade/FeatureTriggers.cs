@@ -4,9 +4,8 @@ using System.Text;
 
 namespace SysBot.Pokemon
 {
-    //Held items to trigger Special Feature Swaps [Currently only for SV]
-    //TMs removed
-    //Item list extracted from Sinthrill (https://github.com/Sinthrill/SysSwapBot.NET)
+    //Held items to trigger Special Feature Swaps [SV/SWSH]
+    //SV Item list extracted from Sinthrill (https://github.com/Sinthrill/SysSwapBot.NET)
     public enum SwapItem
     {
         None = 0,
@@ -490,6 +489,33 @@ namespace SysBot.Pokemon
         YellowNectar = 854,
         Zinc = 52,
         ZoomLens = 276,
+        //Home
+        RustedSword = 1104,
+        RustedShield = 1105,
+        AdamantOrb = 135,
+        LustrousOrb = 136,
+        AdamantCrystal = 1777,
+        LustrousGlobe = 1778,
+        GriseousOrb = 112,
+        GriseousCore = 1779,
+        FlamePlate = 298,
+        SplashPlate = 299,
+        ZapPlate = 300,
+        MeadowPlate = 301,
+        IciclePlate = 302,
+        FistPlate = 303,
+        ToxicPlate = 304,
+        EarthPlate = 305,
+        SkyPlate = 306,
+        MindPlate = 307,
+        InsectPlate = 308,
+        StonePlate = 309,
+        SpookyPlate = 310,
+        DracoPlate = 311,
+        DreadPlate = 312,
+        IronPlate = 313,
+        PixiePlate = 644,
+        //DLC - todo future
         MAX_COUNT,
     }
     //unfinished
