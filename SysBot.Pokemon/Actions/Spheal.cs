@@ -241,8 +241,8 @@ namespace SysBot.Pokemon
             }
             else //Set eggs received in Picnic, instead of received in Link Trade
             {
-                cln.HeightScalar = (byte)rnd.Next(1, 254);
-                cln.WeightScalar = (byte)rnd.Next(1, 254);
+                cln.HeightScalar = (byte)rnd.Next(0, 255);
+                cln.WeightScalar = (byte)rnd.Next(0, 255);
                 cln.HT_Name = "";
                 cln.HT_Language = 0;
                 cln.HT_Gender = 0;
@@ -353,7 +353,7 @@ namespace SysBot.Pokemon
             {
                 Color = embedMsgColor,
                 ThumbnailUrl = embedThumbUrl,
-                Description = "```" + msg + "```",
+                Description = "" + msg + "",
                 Author = embedAuthor
             };
             Embed embedMsg = embedBuilder.Build();
@@ -373,7 +373,7 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Red,
                 ThumbnailUrl = embedThumbUrl,
-                Description = "```" + msg + "```",
+                Description = "" + msg + "",
                 Author = embedAuthor
             };
 
@@ -383,7 +383,7 @@ namespace SysBot.Pokemon
         }
         public static Embed EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
         {
-            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -399,12 +399,36 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Blue,
                 ThumbnailUrl = embedThumbUrl,
-                Description = "```" + msg + "```",
+                Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr
             };
             Embed embedMsg = embedBuilder.Build();
             return embedMsg;
+        }
+        public static EmbedBuilder EmbedCDMessage2(double cd, string msg, string msgTitle)
+        {
+            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://www.serebii.net/games/ribbons/twinklingstarribbon.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Current trade cooldown of the bot is {cd} mins",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.DarkTeal,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            return embedBuilder;
         }
         public async Task<string> EmbedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
         {

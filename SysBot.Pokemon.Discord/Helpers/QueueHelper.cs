@@ -73,6 +73,7 @@ namespace SysBot.Pokemon.Discord
                 }
                 if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade)
                 {
+                    var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
                     Color embedMsgColor = new ();
                     embedTitle = $"__Prepare the trade code once the bot messages you__\n";
                     embedAuthor = $"{trainer}'s ";
@@ -84,7 +85,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"Show a Pokémon to be cloned\n";
                         embedMsg += $"Hit B to change your offer\n";
                         embedMsg += $"Offer a trash Pokémon to receive your clone\n";
-                        embedMsg += $"Your cooldown of **{SysCordSettings.HubConfig.TradeAbuse.TradeCooldown}** mins will start once the trade completes\n";
+                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.Dump)
@@ -94,7 +95,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
                         embedMsg += $"You have **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds to show your Pokémon\n";
                         embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n";
-                        embedMsg += $"Your cooldown of **{SysCordSettings.HubConfig.TradeAbuse.TradeCooldown}** mins will start once the trade completes\n";
+                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
 
                         embedMsg += $"Enjoy & Please come again !";
                     }
@@ -109,7 +110,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"Pokéball Selector (SV/SWSH):\n";
                         embedMsg += $"Pokéball Swapper (SV/SWSH):\n";
                         embedMsg += $"Refer to Sheet / #🌠bot-guide🌠 for more info\n";
-                        embedMsg += $"Your cooldown of **{SysCordSettings.HubConfig.TradeAbuse.TradeCooldown}** mins will start once the trade completes\n";
+                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
 

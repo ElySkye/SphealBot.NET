@@ -193,18 +193,29 @@ namespace SysBot.Pokemon.Discord
             bool isDistribution = true;
             var list = isDistribution ? PokeRoutineExecutorBase.PreviousUsersDistribution : PokeRoutineExecutorBase.PreviousUsers;
             var cooldown = list.TryGetPrevious(ulong.Parse(input));
+            var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
             if (cooldown != null)
             {
                 string trainerName = cooldown.ToString().Substring(21, cooldown.ToString().IndexOf('=', cooldown.ToString().IndexOf('=') + 1) - 31);
                 var delta = DateTime.Now - cooldown.Time;
+                var wait = TimeSpan.FromMinutes(cd) - delta;
                 double ddelta = delta.TotalMinutes;
-                if (ddelta.CompareTo((double)SysCordSettings.HubConfig.TradeAbuse.TradeCooldown) < 1)
-                    await ReplyAsync($"{trainerName} your last encounter with the bot was {delta.TotalMinutes:F1} mins ago. The trade cooldown is {SysCordSettings.HubConfig.TradeAbuse.TradeCooldown} mins.").ConfigureAwait(false);
+                if (ddelta.CompareTo((double)cd) < 1)
+                {
+                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your last encounter with the bot was {delta.TotalMinutes:F1} mins ago.\nTime left: {wait.TotalMinutes:F1} mins.", "[Cooldown Checker]");
+                    await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                }
                 else
-                    await ReplyAsync($"{trainerName} your cooldown is up. You may trade again.").ConfigureAwait(false);
+                {
+                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your cooldown is up. You may trade again.", "[Cooldown Checker]");
+                    await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                }
             }
             else
-                await ReplyAsync($"User has not traded with the bot recently.").ConfigureAwait(false);
+            {
+                EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"User has not traded with the bot recently.", "[Cooldown Checker]");
+                await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+            }
             if (!Context.IsPrivate)
                 await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
