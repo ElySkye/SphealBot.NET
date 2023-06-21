@@ -3,7 +3,6 @@ using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
-using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -553,6 +552,28 @@ namespace SysBot.Pokemon
             {
                 EchoUtil.Echo(Format.Code(eventmsg, "cs"));
                 EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
+            }
+            //Mystery Trades - Default (Eggs)
+            if (offered.Nickname == config.MysteryTrade)
+            {
+                var Shiny = toSend.IsShiny switch
+                {
+                    true => "Shiny",
+                    false => "Non-Shiny",
+                };
+                PK8? rnd;
+                do
+                {
+                    rnd = Hub.Ledy.Pool.GetRandomEgg();
+                } while (!rnd.IsEgg);
+                toSend = rnd;
+                Log($"Sending Surprise Egg: {Shiny} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
+                await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
+                await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
+                await Task.Delay(2_500, token).ConfigureAwait(false);
+                counts.AddCompletedMystery();
+                poke.TradeData = toSend;
+                return (toSend, PokeTradeResult.Success);
             }
             if (trade != null && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");

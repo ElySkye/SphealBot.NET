@@ -21,7 +21,7 @@ namespace SysBot.Pokemon
             var config = Hub.Config.Distribution;
             var counts = TradeSettings;
 
-            if (changeallowed && toSend.OT_Name != "Crown")
+            if (changeallowed)
             {
                 Log($"Changing OT info to:");
                 cln.TrainerTID7 = tidsid % 1_000_000;
@@ -116,22 +116,6 @@ namespace SysBot.Pokemon
                     cln.SetRandomEC();
                 else
                     cln.EncryptionConstant = cln.PID;
-            }
-            if (toSend.OT_Name == "Crown" && toSend.Ball == 16) //Galar Articuno Event, use ENG file as base
-            {
-                cln.Language = data[5];
-                cln.OT_Name = cln.Language switch
-                {
-                    1 => "カンムリ",
-                    3 => "Couronneige",
-                    4 => "L. Corona",
-                    5 => "Krone",
-                    7 => "Corona",
-                    8 => "왕관설원",
-                    9 or 10 => "王冠",
-                    _ => "Crown",
-                };
-                cln.SetDefaultNickname();
             }
             cln.RefreshChecksum();
 
@@ -429,6 +413,31 @@ namespace SysBot.Pokemon
                 Footer = embedFtr
             };
             return embedBuilder;
+        }
+        public static Embed EmbedBanMessage(string msg, string msgTitle)
+        {
+            string embedThumbUrl = "https://www.serebii.net/scarletviolet/ribbons/alphamark.png";
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/alert.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"They may want to consider buying a new clock",
+                IconUrl = "https://archives.bulbagarden.net/media/upload/9/9b/Pok%C3%A9_Mart_FRLG.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Red,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            Embed embedMsg = embedBuilder.Build();
+            return embedMsg;
         }
         public async Task<string> EmbedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
         {

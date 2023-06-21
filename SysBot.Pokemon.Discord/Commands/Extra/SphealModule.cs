@@ -97,7 +97,7 @@ namespace SysBot.Pokemon.Discord
             var embed = new EmbedBuilder();
             embed.AddField(s =>
             {
-                s.Name = "Pending Trades";
+                s.Name = "Direct Trade Queue";
                 s.Value = msg;
                 s.IsInline = false;
             });

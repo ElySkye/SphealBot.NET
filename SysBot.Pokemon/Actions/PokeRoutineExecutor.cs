@@ -21,6 +21,7 @@ namespace SysBot.Pokemon
         public abstract Task<T> ReadPokemon(ulong offset, int size, CancellationToken token);
         public abstract Task<T> ReadPokemonPointer(IEnumerable<long> jumps, int size, CancellationToken token);
         public abstract Task<T> ReadBoxPokemon(int box, int slot, CancellationToken token);
+        readonly Sphealcl SphealEmbed = new();
 
         public async Task<T?> ReadUntilPresent(ulong offset, int waitms, int waitInterval, int size, CancellationToken token)
         {
@@ -170,19 +171,17 @@ namespace SysBot.Pokemon
             {
                 if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
                     await BlockUser(token).ConfigureAwait(false);
-
-                var msg = $"Found a banned NPC trying to connect, with the OT: {TrainerName}.";
+                var bmsg = $"What's this ?\n";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                 {
-                    msg += $"\nNPC was banned for: {entry.Comment}";
-                    EchoUtil.Echo(Format.Code(msg, "cs"));
-                    msg = $"https://tenor.com/view/nmplol-emiru-cyr-banned-gif-26412698";
-                    EchoUtil.Echo(msg);
+                    bmsg += $"Banned NPC named **{TrainerName}** has connected to the bot\n";
+                    bmsg += $"They were banned for: {entry.Comment}\n";
+                    EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
                 }
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
                 {
-                    msg = $"{AbuseSettings.BannedIDMatchEchoMention} {msg}";
-                    EchoUtil.Echo(msg);
+                    bmsg = $"{AbuseSettings.BannedIDMatchEchoMention} {bmsg}";
+                    EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
                 }
                 return PokeTradeResult.SuspiciousActivity;
             }
@@ -229,10 +228,11 @@ namespace SysBot.Pokemon
                         if (attempts >= AbuseSettings.RepeatConnections)
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
-                            string expiration = $"{expires:yyyy.MM.dd-hh:mm:ss}";
+                            string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
                             AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Cooldown Abuse Ban", expiration) });
-                            var msgban = $"{TrainerName}-{TrainerNID} is now BANNED for cooldown abuse. Learn to read.";
-                            EchoUtil.Echo(Format.Code(msgban, "cs"));
+                            var bmsg = $"Unfortunately...\n";
+                            bmsg += $"{TrainerName}-{TrainerNID} has been **BANNED** for cooldown abuse\n";
+                            EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "Cooldown Abuse Ban"));
                             EchoUtil.Echo($"https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504");
                         }
                     }
@@ -310,7 +310,7 @@ namespace SysBot.Pokemon
             return PokeTradeResult.Success;
         }
 
-        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "yyyy.MM.dd-hh:mm:ss") => new()
+        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "yyyy.MM.dd hh:mm:ss") => new()
         {
             ID = id,
             Name = name,

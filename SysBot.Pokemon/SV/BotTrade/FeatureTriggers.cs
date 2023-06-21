@@ -5,7 +5,6 @@ using System.Text;
 namespace SysBot.Pokemon
 {
     //Held items to trigger Special Feature Swaps [SV/SWSH]
-    //SV Item list extracted from Sinthrill (https://github.com/Sinthrill/SysSwapBot.NET)
     public enum SwapItem
     {
         None = 0,

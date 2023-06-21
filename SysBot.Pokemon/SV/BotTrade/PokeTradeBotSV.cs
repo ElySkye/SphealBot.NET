@@ -900,13 +900,18 @@ namespace SysBot.Pokemon
                     0 => "Tiny",
                     _ => "Average",
                 };
+                var Shiny = toSend.IsShiny switch
+                {
+                    true => "Shiny",
+                    false => "Non-Shiny",
+                };
                 PK9? rnd;
                 do
                 {
                     rnd = Hub.Ledy.Pool.GetRandomEgg();
                 } while (!rnd.IsEgg);
                 toSend = rnd;
-                Log($"Sending Surprise Egg: {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
+                Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false);
                 counts.AddCompletedMystery();
                 poke.TradeData = toSend;

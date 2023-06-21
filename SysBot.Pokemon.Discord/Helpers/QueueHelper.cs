@@ -105,10 +105,10 @@ namespace SysBot.Pokemon.Discord
                         embedAuthor += "Direct Trade Request";
                         embedMsg += $"Trade using the nicknames on sheet or use Special Features\n\n";
                         embedMsg += $"Available Special Features:\n\n";
-                        embedMsg += $"Mystery Eggs (SV):\n";
-                        embedMsg += $"OTSwap (SV/SWSH):\n";
-                        embedMsg += $"Pokéball Selector (SV/SWSH):\n";
-                        embedMsg += $"Pokéball Swapper (SV/SWSH):\n";
+                        embedMsg += $"Mystery Eggs (SV/SWSH)\n";
+                        embedMsg += $"OTSwap (SV/SWSH)\n";
+                        embedMsg += $"Pokéball Selector (SV/SWSH)\n";
+                        embedMsg += $"Pokéball Swapper (SV/SWSH)\n";
                         embedMsg += $"Refer to Sheet / #🌠bot-guide🌠 for more info\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
