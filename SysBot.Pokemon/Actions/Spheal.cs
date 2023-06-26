@@ -254,6 +254,12 @@ namespace SysBot.Pokemon
             Log($"Game: {(GameVersion)(cln.Version)}");
             Log($"OT Swapped");
 
+            if (BallSwap(offered.HeldItem) != 0) //Distro Ball Selector
+            {
+                cln.Ball = BallSwap(offered.HeldItem);
+                Log($"Ball swapped to: {(Ball)cln.Ball}");
+            }
+
             //OT for Shiny Roamers, else set shiny as normal
             if (toSend.Species == (ushort)Species.Mesprit || toSend.Species == (ushort)Species.Cresselia)
                 cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF);
@@ -276,6 +282,35 @@ namespace SysBot.Pokemon
             else Log($"Pokemon was analyzed as not legal");
             return tradebdsp.Valid;
         }
+        private static int BallSwap(int ballItem) => ballItem switch
+        {
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            6 => 6,
+            7 => 7,
+            8 => 8,
+            9 => 9,
+            10 => 10,
+            11 => 11,
+            12 => 12,
+            13 => 13,
+            14 => 14,
+            15 => 15,
+            492 => 17,
+            493 => 18,
+            494 => 19,
+            495 => 20,
+            496 => 21,
+            497 => 22,
+            498 => 23,
+            499 => 24,
+            576 => 25,
+            851 => 26,
+            _ => 0,
+        };
     }
     public partial class PokeTradeBotLA : PokeRoutineExecutor8LA, ICountBot
     {

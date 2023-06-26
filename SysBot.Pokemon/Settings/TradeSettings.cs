@@ -48,6 +48,7 @@ namespace SysBot.Pokemon
         private int _completedTrades;
         private int _completedOTSwaps;
         private int _completedBallSwaps;
+        private int _completedTeraSwaps;
         private int _completedMystery;
         private int _completedSeedChecks;
         private int _completedClones;
@@ -88,6 +89,13 @@ namespace SysBot.Pokemon
             set => _completedBallSwaps = value;
         }
 
+        [Category(Counts), Description("Completed Tera Swap Trades")]
+        public int CompletedTeraSwaps
+        {
+            get => _completedTeraSwaps;
+            set => _completedTeraSwaps = value;
+        }
+
         [Category(Counts), Description("Completed Mystery Trades [Default: Eggs Only]")]
         public int CompletedMystery
         {
@@ -125,6 +133,7 @@ namespace SysBot.Pokemon
         public void AddCompletedDistribution() => Interlocked.Increment(ref _completedDistribution);
         public void AddCompletedOTSwaps() => Interlocked.Increment(ref _completedOTSwaps);
         public void AddCompletedBallSwaps() => Interlocked.Increment(ref _completedBallSwaps);
+        public void AddCompletedTeraSwaps() => Interlocked.Increment(ref _completedTeraSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);

@@ -82,9 +82,10 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Clone Request";
+                        embedMsg += $"The prefix of this bot is $\n\n";
                         embedMsg += $"Show a Pokémon to be cloned\n";
                         embedMsg += $"Hit B to change your offer\n";
-                        embedMsg += $"Offer a trash Pokémon to receive your clone\n";
+                        embedMsg += $"Offer a trash Pokémon to receive your clone\n\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
@@ -92,24 +93,25 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0x6015F9;
                         embedAuthor += "Dump Request";
+                        embedMsg += $"The prefix of this bot is $\n\n";
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
                         embedMsg += $"You have **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds to show your Pokémon\n";
-                        embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n";
+                        embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
-
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.DirectTrade)
                     {
                         embedMsgColor = 0x6FFEEC;
                         embedAuthor += "Direct Trade Request";
-                        embedMsg += $"Trade using the nicknames on sheet or use Special Features\n\n";
+                        embedMsg += $"Trade using the nicknames on sheet or use Special Features\n";
+                        embedMsg += $"The prefix of this bot is $\n\n";
                         embedMsg += $"Available Special Features:\n\n";
                         embedMsg += $"Mystery Eggs (SV/SWSH)\n";
                         embedMsg += $"OTSwap (SV/SWSH)\n";
                         embedMsg += $"Pokéball Selector (SV/SWSH)\n";
-                        embedMsg += $"Pokéball Swapper (SV/SWSH)\n";
-                        embedMsg += $"Refer to Sheet / #🌠bot-guide🌠 for more info\n";
+                        embedMsg += $"Pokéball Swapper (SV/SWSH)\n\n";
+                        embedMsg += $"Refer to Sheet / <#1115122854376247356> for more info\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }

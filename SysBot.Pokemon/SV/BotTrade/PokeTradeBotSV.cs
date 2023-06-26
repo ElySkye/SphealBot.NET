@@ -791,7 +791,9 @@ namespace SysBot.Pokemon
                 var ot_gender = pk.OT_Gender == 0 ? "Male" : "Female";
                 var tid = pk.GetDisplayTID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringTID());
                 var sid = pk.GetDisplaySID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringSID());
-                msg += $"\n**Trainer Data**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}```";
+                var lang = (LanguageID)pk.Language;
+                var game = (GameVersion)pk.Version;
+                msg += $"\n**Trainer Data**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}\nLanguage: {lang}\nGame: {game}```";
 
                 // Extra information for shiny eggs, because of people dumping to skip hatching.
                 var eggstring = pk.IsEgg ? "Egg " : string.Empty;
@@ -884,6 +886,7 @@ namespace SysBot.Pokemon
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
             var counts = TradeSettings;
+            string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
             //Custom message for mini-events
             var eventmsg = $"======\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n======";
             if (offered.Nickname == config.SphealEvent)
@@ -894,6 +897,13 @@ namespace SysBot.Pokemon
             //Mystery Trades - Default (Eggs)
             if (offered.Nickname == config.MysteryTrade)
             {
+                PK9? rnd;
+                do
+                {
+                    rnd = Hub.Ledy.Pool.GetRandomEgg();
+                } while (!rnd.IsEgg);
+                toSend = rnd;
+
                 var Size = toSend.Scale switch
                 {
                     255 => "Jumbo",
@@ -905,12 +915,7 @@ namespace SysBot.Pokemon
                     true => "Shiny",
                     false => "Non-Shiny",
                 };
-                PK9? rnd;
-                do
-                {
-                    rnd = Hub.Ledy.Pool.GetRandomEgg();
-                } while (!rnd.IsEgg);
-                toSend = rnd;
+
                 Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 await SetTradePartnerDetailsSV(toSend, offered, sav, poke, token).ConfigureAwait(false);
                 counts.AddCompletedMystery();
@@ -986,7 +991,6 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-
                     not9 = $"Pokémon: {(Species)offered.Species}";
                     not9 += $"\nUser: {partner.TrainerName}";
                     not9 += $"\nPokémon shown is not legal";
@@ -1018,6 +1022,37 @@ namespace SysBot.Pokemon
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);
                     }
+                }
+            }
+            //Tera Swapper
+            else if (teraItem[1] == "Tera")
+            {
+                Log($"User's request is for Tera swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                toSend = offered.Clone();
+                string? msg9;
+                Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
+                var la = new LegalityAnalysis(offered);
+                if (!la.Valid)
+                {
+                    msg9 = $"Pokémon: {(Species)offered.Species}";
+                    msg9 += $"\nUser: {partner.TrainerName}";
+                    msg9 += $"\nPokémon shown is not legal";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg9, "Bad Tera Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg9 = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg9, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    toSend.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), teraItem[0]); ;
+                    Log($"Tera swapped to: {toSend.TeraTypeOverride}");
+                    poke.TradeData = toSend;
+                    counts.AddCompletedTeraSwaps();
+                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
+                    return (toSend, PokeTradeResult.Success);
                 }
             }
             if (trade != null)
@@ -1186,8 +1221,8 @@ namespace SysBot.Pokemon
                 Log($"TID: {cln.TrainerTID7}");
                 Log($"SID: {cln.TrainerSID7}");
                 Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"Language: {(LanguageID)cln.Language}");
+                Log($"Game: {(GameVersion)cln.Version}");
                 Log($"OT swap success.");
 
                 if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)config.OTSwapItem) //Distro Ball Selector
