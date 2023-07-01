@@ -5,6 +5,7 @@
 
 This is a fork. Do not join the official PDP discord and ask for assistance.
 For any issues, wait for an update. Do not bother the devs in PDP.
+Else, feel free to join our discord for support: http://discord.gg/sphealtopia
 
 ## SysBot.Base:
 - Base logic library to be built upon in game-specific projects.
