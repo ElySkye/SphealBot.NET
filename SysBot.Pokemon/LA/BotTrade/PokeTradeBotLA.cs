@@ -325,7 +325,7 @@ namespace SysBot.Pokemon
             {
                 Log("Trade ended because a valid Pokémon was not offered.");
                 await ExitTrade(false, token).ConfigureAwait(false);
-                return PokeTradeResult.TrainerOfferCanceledQuick;
+                return PokeTradeResult.TrainerTooSlow;
             }
             if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 list.TryRegister(trainerNID, tradePartner.TrainerName);

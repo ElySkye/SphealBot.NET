@@ -96,7 +96,8 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"The prefix of this bot is $\n\n";
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
                         embedMsg += $"You have **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds to show your Pokémon\n";
-                        embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n\n";
+                        embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n";
+                        embedMsg += $"You will be DM-ed the OT details of the Pokémon(s) shown\n\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
@@ -110,6 +111,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"Mystery Eggs (SV/SWSH)\n";
                         embedMsg += $"OTSwap (SV/SWSH)\n";
                         embedMsg += $"Pokéball Selector (SV/SWSH)\n";
+                        embedMsg += $"Tera Type Swapper (SV)\n";
                         embedMsg += $"Pokéball Swapper (SV/SWSH)\n\n";
                         embedMsg += $"Refer to Sheet / <#1115122854376247356> for more info\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";

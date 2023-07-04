@@ -556,17 +556,19 @@ namespace SysBot.Pokemon
             //Mystery Trades - Default (Eggs)
             if (offered.Nickname == config.MysteryTrade)
             {
-                var Shiny = toSend.IsShiny switch
-                {
-                    true => "Shiny",
-                    false => "Non-Shiny",
-                };
                 PK8? rnd;
                 do
                 {
                     rnd = Hub.Ledy.Pool.GetRandomEgg();
                 } while (!rnd.IsEgg);
                 toSend = rnd;
+
+                var Shiny = toSend.IsShiny switch
+                {
+                    true => "Shiny",
+                    false => "Non-Shiny",
+                };
+
                 Log($"Sending Surprise Egg: {Shiny} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);

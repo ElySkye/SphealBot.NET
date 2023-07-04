@@ -322,7 +322,7 @@ namespace SysBot.Pokemon
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
 
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID:  {trainerNID}). Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
 
             // Requires at least one trade for this pointer to make sense, so cache it here.
             LinkTradePokemonOffset = await SwitchConnection.PointerAll(Offsets.LinkTradePartnerPokemonPointer, token).ConfigureAwait(false);
@@ -743,7 +743,7 @@ namespace SysBot.Pokemon
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
                 if (!await SetTradePartnerDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false))
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                await Task.Delay(2_500, token).ConfigureAwait(false);
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
             }
             else if (config.LedyQuitIfNoMatch)
             {

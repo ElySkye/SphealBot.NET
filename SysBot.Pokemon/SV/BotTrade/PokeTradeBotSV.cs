@@ -1025,7 +1025,7 @@ namespace SysBot.Pokemon
                 }
             }
             //Tera Swapper
-            else if (teraItem[1] == "Tera")
+            else if (teraItem[1] == "Tera Shard")
             {
                 Log($"User's request is for Tera swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 toSend = offered.Clone();

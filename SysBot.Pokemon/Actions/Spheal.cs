@@ -72,14 +72,14 @@ namespace SysBot.Pokemon
                 cln.Ball = BallSwap(offered.HeldItem);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
-            //OT for Overworld8 (Galar Birds/Gen 5 Trio/Marked mons)
-            if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
+            //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
+            if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
                 || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
             {
-                if (toSend.Species == (ushort)Species.Zapdos || toSend.Species == (ushort)Species.Moltres || toSend.Species == (ushort)Species.Articuno)
-                    cln.PID = cln.PID; //Do nothing as non shiny ov8 or Event Galar Birbs
-                else
+                if (toSend.IsShiny)
                     cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
+                else
+                    cln.PID = cln.PID; //Do nothing as non shiny
             }
             else
             {

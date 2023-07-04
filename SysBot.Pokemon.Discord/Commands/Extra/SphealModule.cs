@@ -66,25 +66,65 @@ namespace SysBot.Pokemon.Discord
             return Task.FromResult(false);
         }
 
-        [Command("requestSV")]
-        [Alias("reqsv", "rsv")]
+        [Command("directTrade")]
+        [Alias("drt", "rsv")]
         [Summary("Starts a Distribution Trade through Discord")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqSV()
+        public async Task DRT()
         {
             var code = Info.GetRandomTradeCode();
             var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSV).ConfigureAwait(false);
+            var me = SysCord<T>.Runner;
+            string botversion;
+            if (me is not null)
+            {
+                botversion = me.ToString()!.Substring(46, 3);
+                switch (botversion)
+                {
+                    case "PK9":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSV).ConfigureAwait(false);
+                        break;
+                    case "PK8":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSWSH).ConfigureAwait(false);
+                        break;
+                    case "PA8":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
+                        break;
+                    case "PB8":
+                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        break;
+                }
+            }
         }
 
-        [Command("requestSV")]
-        [Alias("reqsv", "rsv")]
+        [Command("directTrade")]
+        [Alias("drt", "rsv")]
         [Summary("Starts a Distribution Trade through Discord")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqSV([Summary("Trade Code")] int code)
+        public async Task DRT([Summary("Trade Code")] int code)
         {
             var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSV).ConfigureAwait(false);
+            var me = SysCord<T>.Runner;
+            string botversion;
+            if (me is not null)
+            {
+                botversion = me.ToString()!.Substring(46, 3);
+                switch (botversion)
+                {
+                    case "PK9":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSV).ConfigureAwait(false);
+                        break;
+                    case "PK8":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSWSH).ConfigureAwait(false);
+                        break;
+                    case "PA8":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
+                        break;
+                    case "PB8":
+                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        break;
+                }
+            }
         }
 
         [Command("DTList")]
@@ -104,70 +144,8 @@ namespace SysBot.Pokemon.Discord
             await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
         }
 
-        [Command("requestSWSH")]
-        [Alias("reqswsh", "rswsh")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqSWSH()
-        {
-            var code = Info.GetRandomTradeCode();
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSWSH).ConfigureAwait(false);
-        }
-
-        [Command("requestSWSH")]
-        [Alias("reqswsh", "rswsh")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqSWSH([Summary("Trade Code")] int code)
-        {
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkSWSH).ConfigureAwait(false);
-        }
-
-        [Command("requestLA")]
-        [Alias("reqla", "rla")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqLA()
-        {
-            var code = Info.GetRandomTradeCode();
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
-        }
-
-        [Command("requestLA")]
-        [Alias("reqla", "rla")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqLA([Summary("Trade Code")] int code)
-        {
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
-        }
-
-        [Command("requestBDSP")]
-        [Alias("reqbdsp", "rbdsp")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqBDSP()
-        {
-            var code = Info.GetRandomTradeCode();
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
-        }
-
-        [Command("requestBDSP")]
-        [Alias("reqbdsp", "rbdsp")]
-        [Summary("Starts a Distribution Trade through Discord")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task ReqBDSP([Summary("Trade Code")] int code)
-        {
-            var sig = Context.User.GetFavor();
-            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
-        }
-
         [Command("cooldown")]
+        [Alias("cd")]
         [Summary("Changes cooldown in minutes.")]
         [RequireSudo]
         public async Task UpdateCooldown([Remainder] string input)
@@ -303,6 +281,8 @@ namespace SysBot.Pokemon.Discord
             var img = "SphealCheck.jpg";
             var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = Color.Blue }.WithFooter(new EmbedFooterBuilder { Text = $"Captured image from bot at address {address}." });
             await Context.Channel.SendFileAsync(ms, img, "", false, embed: embed.Build());
+            if (!Context.IsPrivate)
+                await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
         [Command("spheal")]
         [Summary("Sends random Spheals")]
@@ -310,7 +290,7 @@ namespace SysBot.Pokemon.Discord
         {
             var msg = "Placeholder";
             Random rndmsg = new();
-            int num = rndmsg.Next(1, 5);
+            int num = rndmsg.Next(1, 9);
             switch (num)
             {
                 case 1:
@@ -339,6 +319,8 @@ namespace SysBot.Pokemon.Discord
                     break;
             }
             await ReplyAsync(msg).ConfigureAwait(false);
+            if (!Context.IsPrivate)
+                await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
     }
 }
