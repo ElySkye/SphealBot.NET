@@ -680,10 +680,15 @@ namespace SysBot.Pokemon
                 toSend = trade.Receive;
                 poke.TradeData = toSend;
 
-                poke.SendNotification(this, "Injecting the requested Pokémon.");
-                if (!await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false))
-                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                await Task.Delay(2_500, token).ConfigureAwait(false);
+                if (Hub.Config.Distribution.AllowTraderOTInformation)
+                {
+                    poke.SendNotification(this, "Injecting the requested Pokémon.");
+                    if (!await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false))
+                    {
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                    }
+                }
             }
             else if (config.LedyQuitIfNoMatch)
             {
@@ -694,7 +699,18 @@ namespace SysBot.Pokemon
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
-
+            else if (Hub.Config.Distribution.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
+            {
+                var counts1 = TradeSettings;
+                toSend = Hub.Ledy.Pool.GetRandomTrade();
+                if (!await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false))
+                {
+                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
+                }
+                counts1.AddCompletedDistribution();
+                return (toSend, PokeTradeResult.Success);
+            }
             return (toSend, PokeTradeResult.Success);
         }
 

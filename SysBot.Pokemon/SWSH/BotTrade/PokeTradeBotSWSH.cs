@@ -559,7 +559,7 @@ namespace SysBot.Pokemon
                 PK8? rnd;
                 do
                 {
-                    rnd = Hub.Ledy.Pool.GetRandomEgg();
+                    rnd = Hub.Ledy.Pool.GetRandomTrade();
                 } while (!rnd.IsEgg);
                 toSend = rnd;
 
@@ -666,6 +666,7 @@ namespace SysBot.Pokemon
                 else
                 {
                     cln.Ball = BallSwap(offered.HeldItem);
+                    cln.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)cln.Ball}");
                     var la2 = new LegalityAnalysis(cln);
                     if (la2.Valid)
@@ -690,12 +691,19 @@ namespace SysBot.Pokemon
             {
                 if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
                 {
-                    var msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nUser: {partner.TrainerName}";
-                    msg += $"\nLeaving Trade...";
-                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                    if (offered.HeldItem == 229)
+                        Log($"Trade Evo Species is holding everstone, Allow trading");
+                    else
+                    {
+                        var msg = $"Pokémon: {(Species)offered.Species}";
+                        msg += $"\nUser: {partner.TrainerName}";
+                        msg += $"\nEquip an Everstone to allow trade";
+                        msg += $"\nLeaving Trade...";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.TrainerRequestBad);
+                    }
                 }
+                        
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
@@ -727,7 +735,18 @@ namespace SysBot.Pokemon
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
-
+            else if (Hub.Config.Distribution.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
+            {
+                var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
+                var counts1 = TradeSettings;
+                toSend = Hub.Ledy.Pool.GetRandomTrade();
+                if (result.Item2 == true)
+                    toSend = result.Item1;
+                await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
+                await Task.Delay(2_500, token).ConfigureAwait(false);
+                counts1.AddCompletedDistribution();
+                return (toSend, PokeTradeResult.Success);
+            }
             for (int i = 0; i < 5; i++)
             {
                 if (await IsUserBeingShifty(poke, token).ConfigureAwait(false))

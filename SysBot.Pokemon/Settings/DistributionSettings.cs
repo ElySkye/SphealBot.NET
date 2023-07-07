@@ -29,6 +29,8 @@ namespace SysBot.Pokemon
 
         [Category(Distribute), Description("Held item used to trigger OT Swap.")]
         public SwapItem OTSwapItem { get; set; } = SwapItem.Antidote;
+        [Category(Distribute), Description("Held item used to trigger Trilogy Swap.")]
+        public SwapItem TrilogySwapItem { get; set; } = SwapItem.Awakening;
 
         [Category(Distribute), Description("Nickname to trigger Mystery Trades - Defaults to trading only Eggs")]
         public string MysteryTrade { get; set; } = "Mystery";
@@ -49,6 +51,9 @@ namespace SysBot.Pokemon
 
         [Category(Distribute), Description("Enable OT Changing")]
         public bool AllowTraderOTInformation { get; set; } = true;
+
+        [Category(Distribute), Description("Enable Non Ledy OT, Requires config <LedyQuitIfNoMatch> to be false")]
+        public bool AllowRandomOT { get; set; } = true;
         // Synchronize
 
         [Category(Synchronize), Description("Link Trade: Using multiple distribution bots -- all bots will confirm their trade code at the same time. When Local, the bots will continue when all are at the barrier. When Remote, something else must signal the bots to continue.")]

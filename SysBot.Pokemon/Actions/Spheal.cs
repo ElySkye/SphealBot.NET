@@ -17,56 +17,44 @@ namespace SysBot.Pokemon
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
             var tidsid = BitConverter.ToUInt32(data, 0);
             var cln = (PK8)toSend.Clone();
-            var changeallowed = OTChangeAllowed(toSend, data);
             var config = Hub.Config.Distribution;
             var counts = TradeSettings;
 
-            if (changeallowed)
+            cln.TrainerTID7 = tidsid % 1_000_000;
+            cln.TrainerSID7 = tidsid / 1_000_000;
+            cln.OT_Name = trainerName;
+            cln.Version = data[4];
+            cln.Language = data[5];
+            cln.OT_Gender = data[6];
+
+            if (toSend.IsEgg == false)
             {
-                Log($"Changing OT info to:");
-                cln.TrainerTID7 = tidsid % 1_000_000;
-                cln.TrainerSID7 = tidsid / 1_000_000;
-                cln.OT_Name = trainerName;
-                cln.Version = data[4];
-                cln.Language = data[5];
-                cln.OT_Gender = data[6];
-
-                if (toSend.IsEgg == false)
-                {
-                    if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
-                        cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
-                    if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
-                        cln.Egg_Location = 60002; //Nursery (SWSH)
-                }
-                else //Set eggs received in Daycare, instead of received in Link Trade
-                {
-                    cln.HT_Name = "";
-                    cln.HT_Language = 0;
-                    cln.HT_Gender = 0;
-                    cln.CurrentHandler = 0;
-                    cln.Met_Location = 0;
-                    cln.IsNicknamed = true;
-                    cln.Nickname = cln.Language switch
-                    {
-                        1 => "タマゴ",
-                        3 => "Œuf",
-                        4 => "Uovo",
-                        5 => "Ei",
-                        7 => "Huevo",
-                        8 => "알",
-                        9 or 10 => "蛋",
-                        _ => "Egg",
-                    };
-                }
-
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-
+                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
+                    cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+                if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                    cln.Egg_Location = 60002; //Nursery (SWSH)
             }
+            else //Set eggs received in Daycare, instead of received in Link Trade
+            {
+                cln.HT_Name = "";
+                cln.HT_Language = 0;
+                cln.HT_Gender = 0;
+                cln.CurrentHandler = 0;
+                cln.Met_Location = 0;
+                cln.IsNicknamed = true;
+                cln.Nickname = cln.Language switch
+                {
+                    1 => "タマゴ",
+                    3 => "Œuf",
+                    4 => "Uovo",
+                    5 => "Ei",
+                    7 => "Huevo",
+                    8 => "알",
+                    9 or 10 => "蛋",
+                    _ => "Egg",
+                };
+            }
+
             if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)config.OTSwapItem) //Distro Ball Selector
             {
                 cln.Ball = BallSwap(offered.HeldItem);
@@ -122,39 +110,27 @@ namespace SysBot.Pokemon
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
+                Log($"OT info swapped to:");
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"OT Swap success");
+
                 if (toSend.HeldItem == (int)config.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
                     counts.AddCompletedOTSwaps();
                 }
-                Log($"OT Swap success");
                 return (cln, true);
             }
             else
             {
-                Log($"Pokemon was analyzed as not legal");
+                Log($"Sending original Pokémon as it can't be OT swapped");
                 return (toSend, false);
             }
-        }
-        private static bool OTChangeAllowed(PK8 mon, byte[] trader1)
-        {
-            var changeallowed = true;
-
-            // Check if OT change is allowed for different situations
-            switch (mon.Species)
-            {
-                //Zacian on Shield
-                case (ushort)Species.Zacian:
-                    if (trader1[4] == (int)GameVersion.SH && mon.Ball != 16)
-                        changeallowed = false;
-                    break;
-                //Zamazenta on Sword
-                case (ushort)Species.Zamazenta:
-                    if (trader1[4] == (int)GameVersion.SW && mon.Ball != 16)
-                        changeallowed = false;
-                    break;
-            }
-            return changeallowed;
         }
         private static int BallSwap(int ballItem) => ballItem switch
         {
@@ -210,7 +186,7 @@ namespace SysBot.Pokemon
                         break;
                     }
             }
-            Log($"Preparing to change OT");//offered - todo future
+
             cln.TrainerTID7 = offered.TrainerTID7;
             cln.TrainerSID7 = offered.TrainerSID7;
             cln.OT_Name = tradepartner.TrainerName;
@@ -246,14 +222,6 @@ namespace SysBot.Pokemon
                 };
             }
 
-            Log($"OT_Name: {cln.OT_Name}");
-            Log($"TID: {cln.TrainerTID7}");
-            Log($"SID: {cln.TrainerSID7}");
-            Log($"Gender: {(Gender)cln.OT_Gender}");
-            Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"Game: {(GameVersion)(cln.Version)}");
-            Log($"OT Swapped");
-
             if (BallSwap(offered.HeldItem) != 0) //Distro Ball Selector
             {
                 cln.Ball = BallSwap(offered.HeldItem);
@@ -278,8 +246,19 @@ namespace SysBot.Pokemon
 
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)
+            {
+                Log($"OT info swapped to:");
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"Game: {(GameVersion)(cln.Version)}");
+                Log($"OT Swapped");
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            else Log($"Pokemon was analyzed as not legal");
+            }   
+            else
+                Log($"Sending original Pokémon as it can't be OT swapped");
             return tradebdsp.Valid;
         }
         private static int BallSwap(int ballItem) => ballItem switch
@@ -327,13 +306,6 @@ namespace SysBot.Pokemon
             cln.Version = tradepartner.Game;
             cln.SetDefaultNickname();
 
-            Log($"OT_Name: {cln.OT_Name}");
-            Log($"TID: {cln.TrainerTID7}");
-            Log($"SID: {cln.TrainerSID7}");
-            Log($"Gender: {(Gender)cln.OT_Gender}");
-            Log($"Language: {(LanguageID)(cln.Language)}");
-            Log($"OT Swap Success");
-
             if (toSend.IsShiny)
                 cln.SetShiny();
             else
@@ -348,8 +320,17 @@ namespace SysBot.Pokemon
             var tradela = new LegalityAnalysis(cln);
 
             if (tradela.Valid)
+            {
+                Log($"OT info swapped to:");
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)(cln.Language)}");
+                Log($"OT Swap Success");
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            else Log($"Pokemon was analyzed as not legal");
+            }
+            else Log($"Sending original Pokémon as it can't be OT swapped");
             return tradela.Valid;
         }
     }

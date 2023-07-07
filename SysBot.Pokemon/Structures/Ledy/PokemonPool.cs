@@ -46,17 +46,17 @@ namespace SysBot.Pokemon
                 return rand;
             }
         }
-        public T GetRandomEgg()
+        public T GetRandomTrade()
         {
             while (true)
             {
-                var rand = GetRandomEggSend();
+                var rand = GetRandomTradeSend();
                 if (DisallowRandomRecipientTrade(rand))
                     continue;
                 return rand;
             }
         }
-        public T GetRandomEggSend()
+        public T GetRandomTradeSend()
         {
             var choice = this[Counter];
             Counter = (Counter + 1) % Count;

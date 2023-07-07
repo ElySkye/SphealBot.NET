@@ -174,7 +174,7 @@ namespace SysBot.Pokemon
                 var bmsg = $"What's this ?\n";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                 {
-                    bmsg += $"Banned NPC named **{TrainerName}** has connected to the bot\n";
+                    bmsg += $"Banned NPC named **{TrainerName}** is attempting to Prison Break\n";
                     bmsg += $"They were banned for: {entry.Comment}\n";
                     EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
                 }
@@ -215,7 +215,7 @@ namespace SysBot.Pokemon
                     list.TryRegister(TrainerNID, TrainerName);
                     var msg = $"Added to the NPC Registry\n\n";
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        msg += $"NPC Name: {TrainerName}\nNPC ID: {TrainerNID}";
+                        msg += $"User {TrainerName} was caught by the NPC Police\nNPC ID: {TrainerNID}";
                     EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));
 
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
@@ -266,7 +266,7 @@ namespace SysBot.Pokemon
                         msg += $"\nID: {TrainerNID}";
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.MultiRecipientEchoMention))
                         msg = $"{AbuseSettings.MultiRecipientEchoMention} {msg}";
-                    EchoUtil.Echo(msg);
+                    EchoUtil.Echo(Format.Code(msg, "cs"));
                 }
             }
 

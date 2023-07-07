@@ -49,6 +49,7 @@ namespace SysBot.Pokemon
         private int _completedOTSwaps;
         private int _completedBallSwaps;
         private int _completedTeraSwaps;
+        private int _completedTrilogySwaps;
         private int _completedMystery;
         private int _completedSeedChecks;
         private int _completedClones;
@@ -96,6 +97,13 @@ namespace SysBot.Pokemon
             set => _completedTeraSwaps = value;
         }
 
+        [Category(Counts), Description("Completed Trilogy Swap Trades")]
+        public int CompletedTrilogySwaps
+        {
+            get => _completedTrilogySwaps;
+            set => _completedTrilogySwaps = value;
+        }
+
         [Category(Counts), Description("Completed Mystery Trades [Default: Eggs Only]")]
         public int CompletedMystery
         {
@@ -134,6 +142,7 @@ namespace SysBot.Pokemon
         public void AddCompletedOTSwaps() => Interlocked.Increment(ref _completedOTSwaps);
         public void AddCompletedBallSwaps() => Interlocked.Increment(ref _completedBallSwaps);
         public void AddCompletedTeraSwaps() => Interlocked.Increment(ref _completedTeraSwaps);
+        public void AddCompletedTrilogySwaps() => Interlocked.Increment(ref _completedTrilogySwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);

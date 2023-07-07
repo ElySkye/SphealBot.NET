@@ -5,6 +5,7 @@ using Discord;
 using System;
 using System.IO;
 using System.Threading;
+using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -97,6 +98,27 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
+        [Command("checkgame")]
+        [Alias("game", "cg")]
+        [Summary("What game is currently running?")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task CheckGame()
+        {
+            var me = SysCord<T>.Runner;
+            string botversion = "";
+            if (me is not null)
+                botversion = me.ToString()!.Substring(46, 3);
+            var gamever = botversion switch
+            {
+                "PK9" => "SV",
+                "PK8" => "SWSH",
+                "PA8" => "PLA",
+                "PB8" => "BDSP",
+                _ => "LGPE",
+            };
+            await ReplyAsync($"<:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
+        }
+
         [Command("directTrade")]
         [Alias("drt", "rsv")]
         [Summary("Starts a Distribution Trade through Discord")]
@@ -168,14 +190,23 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task CooldownLeft([Remainder] string input)
         {
-            bool isDistribution = true;
-            var list = isDistribution ? PokeRoutineExecutorBase.PreviousUsersDistribution : PokeRoutineExecutorBase.PreviousUsers;
-            var cooldown = list.TryGetPrevious(ulong.Parse(input));
+            var distrocd = PokeRoutineExecutorBase.PreviousUsersDistribution.TryGetPrevious(ulong.Parse(input));
+            var othercd = PokeRoutineExecutorBase.PreviousUsers.TryGetPrevious(ulong.Parse(input));
             var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
-            if (cooldown != null)
+            string trainerName;
+            TimeSpan delta;
+            if (distrocd != null || othercd != null)
             {
-                string trainerName = cooldown.ToString().Substring(21, cooldown.ToString().IndexOf('=', cooldown.ToString().IndexOf('=') + 1) - 31);
-                var delta = DateTime.Now - cooldown.Time;
+                if (distrocd != null)
+                {
+                    trainerName = distrocd.ToString().Substring(21, distrocd.ToString().IndexOf('=', distrocd.ToString().IndexOf('=') + 1) - 31);
+                    delta = DateTime.Now - distrocd.Time;
+                }
+                else
+                {
+                    trainerName = othercd.ToString().Substring(21, othercd.ToString().IndexOf('=', othercd.ToString().IndexOf('=') + 1) - 31);
+                    delta = DateTime.Now - othercd.Time;
+                }
                 var wait = TimeSpan.FromMinutes(cd) - delta;
                 double ddelta = delta.TotalMinutes;
                 if (ddelta.CompareTo((double)cd) < 1)
