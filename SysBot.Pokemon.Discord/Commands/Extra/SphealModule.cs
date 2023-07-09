@@ -5,7 +5,6 @@ using Discord;
 using System;
 using System.IO;
 using System.Threading;
-using SysBot.Base;
 
 namespace SysBot.Pokemon.Discord
 {

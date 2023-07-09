@@ -30,7 +30,7 @@ namespace SysBot.Pokemon
             if (toSend.IsEgg == false)
             {
                 if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
-                    cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
+                    cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
                 if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
                     cln.Egg_Location = 60002; //Nursery (SWSH)
             }
@@ -197,7 +197,7 @@ namespace SysBot.Pokemon
             if (toSend.IsEgg == false)
             {
                 if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Spheal)
-                    cln.SetDefaultNickname();
+                    cln.ClearNickname();
             }
             else //Set eggs received in Picnic, instead of received in Link Trade
             {
@@ -304,7 +304,7 @@ namespace SysBot.Pokemon
             cln.OT_Name = tradepartner.TrainerName;
             cln.OT_Gender = tradepartner.Gender;
             cln.Version = tradepartner.Game;
-            cln.SetDefaultNickname();
+            cln.ClearNickname();
 
             if (toSend.IsShiny)
                 cln.SetShiny();

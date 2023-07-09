@@ -1082,10 +1082,8 @@ namespace SysBot.Pokemon
                 }
                 else
                 {
-                    toSend.SetDefaultNickname();//#1 Clear Nickname (Nickname Swap)
-                    toSend.CurrentLevel = 100;//#2 Set level to 100 (Level Swap)
-
-                    //#3 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
+                    toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
+                    //#2 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
                     switch (toSend.Species)
                     {
                         case (ushort)Species.Finizen:
@@ -1118,13 +1116,16 @@ namespace SysBot.Pokemon
                             break;
                     }
                     if (toSend.AbilityNumber == 1)
-                        toSend.RefreshAbility(0);
-                    else if (toSend.AbilityNumber == 2)
                         toSend.RefreshAbility(1);
-                    else
-                        toSend.RefreshAbility(3);
-                    toSend.SetDefaultNickname();
+                    else if (toSend.AbilityNumber == 2)
+                        toSend.RefreshAbility(2);
+                    else if (toSend.AbilityNumber == 3)
+                        toSend.RefreshAbility(4);
+                    //#3 Clear Nicknames
+                    if (!toSend.FatefulEncounter)
+                        toSend.ClearNickname();
                     toSend.RefreshChecksum();
+
                     DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
                     Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
 
@@ -1288,8 +1289,8 @@ namespace SysBot.Pokemon
                 if (toSend.IsEgg == false)
                 {
                     cln.Version = tradepartner.Game; //Eggs should not have Origin Game on SV
-                    if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.SetDefaultNickname(); //Block nickname clear for item distro, Change Species as needed.
-                    if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.SetDefaultNickname();
+                    if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
+                    if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
                     if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
                         cln.Egg_Location = 30023; //Picnic
                 }

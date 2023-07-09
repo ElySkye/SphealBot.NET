@@ -163,6 +163,14 @@ namespace SysBot.Pokemon
                 yield return $"Distribution Trades: {CompletedDistribution}";
             if (CompletedOTSwaps != 0)
                 yield return $"OT Swaps: {CompletedOTSwaps}";
+            if (CompletedBallSwaps != 0)
+                yield return $"Ball Swaps: {CompletedBallSwaps}";
+            if (CompletedTeraSwaps != 0)
+                yield return $"Tera Swaps: {CompletedTeraSwaps}";
+            if (CompletedTrilogySwaps != 0)
+                yield return $"Trilogy Swaps: {CompletedTrilogySwaps}";
+            if (CompletedMystery != 0)
+                yield return $"Mystery Trades: {CompletedMystery}";
             if (CompletedSurprise != 0)
                 yield return $"Surprise Trades: {CompletedSurprise}";
         }
