@@ -463,6 +463,9 @@ namespace SysBot.Pokemon
             {
                 if (await IsUserBeingShifty(detail, token).ConfigureAwait(false))
                     return PokeTradeResult.SuspiciousActivity;
+                // We can fall out of the box if the user offers, then quits.
+                if (!await IsInBox(PortalOffset, token).ConfigureAwait(false))
+                    return PokeTradeResult.TrainerLeft;
                 await Click(A, 1_000, token).ConfigureAwait(false);
 
                 // EC is detectable at the start of the animation.
@@ -1122,18 +1125,32 @@ namespace SysBot.Pokemon
                     else if (toSend.AbilityNumber == 3)
                         toSend.RefreshAbility(4);
                     //#3 Clear Nicknames
-                    if (!toSend.FatefulEncounter)
+                    if (!toSend.FatefulEncounter && toSend.Met_Location != 30001)
                         toSend.ClearNickname();
                     toSend.RefreshChecksum();
 
-                    DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
-                    Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                    string? trio;
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        poke.TradeData = toSend;
+                        counts.AddCompletedTrilogySwaps();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else //Safety Net incase something slips through
+                    {
+                        trio = $"{partner.TrainerName}, {(Species)offered.Species} has a problem";
+                        trio += $"\nPls refer to LA report";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, trio, "Bad Trilogy Swap:").ConfigureAwait(false);
 
-                    poke.TradeData = toSend;
-                    counts.AddCompletedTrilogySwaps();
-                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                    await Task.Delay(2_500, token).ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.Success);
+                        trio = la.Report();
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, trio, "Legality Report:").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
                 }
             }
             if (trade != null)

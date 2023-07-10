@@ -11,7 +11,7 @@ namespace SysBot.Pokemon.Discord
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
 
         [Command("seedCheck")]
-        [Alias("checkMySeed", "checkSeed", "seed", "s", "sc")]
+        [Alias("checkMySeed", "checkSeed", "seed", "sc")]
         [Summary("Checks the seed for a Pokémon.")]
         [RequireQueueRole(nameof(DiscordManager.RolesSeed))]
         public async Task SeedCheckAsync(int code)
@@ -21,7 +21,7 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("seedCheck")]
-        [Alias("checkMySeed", "checkSeed", "seed", "s", "sc")]
+        [Alias("checkMySeed", "checkSeed", "seed", "sc")]
         [Summary("Checks the seed for a Pokémon.")]
         [RequireQueueRole(nameof(DiscordManager.RolesSeed))]
         public async Task SeedCheckAsync([Summary("Trade Code")][Remainder] string code)
@@ -32,7 +32,7 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("seedCheck")]
-        [Alias("checkMySeed", "checkSeed", "seed", "s", "sc")]
+        [Alias("checkMySeed", "checkSeed", "seed", "sc")]
         [Summary("Checks the seed for a Pokémon.")]
         [RequireQueueRole(nameof(DiscordManager.RolesSeed))]
         public async Task SeedCheckAsync()

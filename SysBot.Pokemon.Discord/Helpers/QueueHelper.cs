@@ -71,7 +71,7 @@ namespace SysBot.Pokemon.Discord
                         FormArgument = mon9.FormArgument;
                         break;
                 }
-                if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade)
+                if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade || routine == PokeRoutineType.SeedCheck)
                 {
                     var me = SysCord<T>.Runner;
                     var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
@@ -92,7 +92,17 @@ namespace SysBot.Pokemon.Discord
                     embedAuthor = $"{trainer}'s ";
                     embedMsg = $"";
 
-                    if (routine == PokeRoutineType.Clone)
+                    if (routine == PokeRoutineType.SeedCheck)
+                    {
+                        embedMsgColor = 0xF9F815;
+                        embedAuthor += "Seed Check";
+                        embedMsg += $"The prefix of this bot is **{SysCordSettings.Settings.CommandPrefix}**\n\n";
+                        embedMsg += $"The current game running is **{gamever}**\n\n";
+                        embedMsg += $"Show a Pokémon caught from a raid to check seed\n";
+                        embedMsg += $"This function only works on SWSH\n\n";
+                        embedMsg += $"Enjoy & Please come again !";
+                    }
+                    else if (routine == PokeRoutineType.Clone)
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Clone Request";
