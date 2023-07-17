@@ -30,7 +30,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task ItemTrade([Summary("Trade Code")] int code, [Remainder] string item)
         {
-            Species species = Info.Hub.Config.Distribution.ItemTradeSpecies is Species.None ? Species.Finizen : Info.Hub.Config.Distribution.ItemTradeSpecies;
+            Species species = Info.Hub.Config.CustomSwaps.ItemTradeSpecies is Species.None ? Species.Finizen : Info.Hub.Config.CustomSwaps.ItemTradeSpecies;
             var set = new ShowdownSet($"{SpeciesName.GetSpeciesNameGeneration((ushort)species, 2, 8)} @ {item.Trim()}");
             var template = AutoLegalityWrapper.GetTemplate(set);
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();

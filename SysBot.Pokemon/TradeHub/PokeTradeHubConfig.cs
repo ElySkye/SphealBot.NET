@@ -31,6 +31,10 @@ namespace SysBot.Pokemon
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public DistributionSettings Distribution { get; set; } = new();
 
+        [Category(BotTrade), Description("Settings for Custom Swaps.")]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public CustomSwapSettings CustomSwaps { get; set; } = new();
+
         [Category(BotTrade)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public SeedCheckSettings SeedCheckSWSH { get; set; } = new();

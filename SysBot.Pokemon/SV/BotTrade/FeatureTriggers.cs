@@ -517,18 +517,6 @@ namespace SysBot.Pokemon
         //DLC - todo future
         MAX_COUNT,
     }
-    //unfinished
-    public enum TradeEvoSpecies : ushort
-    {
-        Kadabra = 64,
-        Machoke = 67,
-        Graveler = 75,
-        Haunter = 93,
-        Gurdurr = 533,
-        Phantump = 708,
-        Pumpkaboo = 710,
-        Boldore = 525,
-    }
     public enum EmbedColor : uint
     {
         None = 0x0,

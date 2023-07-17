@@ -13,7 +13,7 @@ namespace SysBot.Pokemon
         [Category(Monitoring), Description("Time cooldown last updated.")]
         public string CooldownUpdate { get; set; } = "2023.04.16 - 00:00:00";
         [Category(Monitoring), Description("When a person connects during cooldown consecutively, their NID is added to BannedIDs.")]
-        public bool AutoBanCooldown { get; set; } = false;
+        public bool AutoBanCooldown { get; set; } = true;
 
         [Category(Monitoring), Description("Number of consecutive attempts to ban after.")]
         public int RepeatConnections { get; set; } = 4;

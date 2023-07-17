@@ -21,23 +21,6 @@ namespace SysBot.Pokemon
         [Category(Distribute), Description("When set to something other than None, the Random Trades will require this species in addition to the nickname match.")]
         public Species LedySpecies { get; set; } = Species.None;
 
-        [Category(Distribute), Description("When set to something other than None, the Random Trades will accept this alternate species in addition to the nickname match.")]
-        public Species LedySpecies2 { get; set; } = Species.None;
-
-        [Category(Distribute), Description("Species selector for $it command. Default: Finizen")]
-        public Species ItemTradeSpecies { get; set; } = Species.Spheal;
-
-        [Category(Distribute), Description("Held item used to trigger OT Swap.")]
-        public SwapItem OTSwapItem { get; set; } = SwapItem.Antidote;
-        [Category(Distribute), Description("Held item used to trigger Trilogy Swap.")]
-        public SwapItem TrilogySwapItem { get; set; } = SwapItem.Awakening;
-
-        [Category(Distribute), Description("Nickname to trigger Mystery Trades - Defaults to trading only Eggs")]
-        public string MysteryTrade { get; set; } = "Mystery";
-
-        [Category(Distribute), Description("Input Nickname for Spheal Event.")]
-        public string SphealEvent { get; set; } = "SphealEventPlaceholder";
-
         public bool LedyQuitIfNoMatch { get; set; }
 
         [Category(Distribute), Description("Distribution Trade Link Code.")]
@@ -49,11 +32,6 @@ namespace SysBot.Pokemon
         [Category(Distribute), Description("For BDSP, the distribution bot will go to a specific room and remain there until the bot is stopped.")]
         public bool RemainInUnionRoomBDSP { get; set; } = true;
 
-        [Category(Distribute), Description("Enable OT Changing")]
-        public bool AllowTraderOTInformation { get; set; } = true;
-
-        [Category(Distribute), Description("Enable Non Ledy OT, Requires config <LedyQuitIfNoMatch> to be false")]
-        public bool AllowRandomOT { get; set; } = true;
         // Synchronize
 
         [Category(Synchronize), Description("Link Trade: Using multiple distribution bots -- all bots will confirm their trade code at the same time. When Local, the bots will continue when all are at the barrier. When Remote, something else must signal the bots to continue.")]

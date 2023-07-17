@@ -17,7 +17,7 @@ namespace SysBot.Pokemon
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
             var tidsid = BitConverter.ToUInt32(data, 0);
             var cln = (PK8)toSend.Clone();
-            var config = Hub.Config.Distribution;
+            var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
 
             cln.TrainerTID7 = tidsid % 1_000_000;
@@ -55,7 +55,7 @@ namespace SysBot.Pokemon
                 };
             }
 
-            if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)config.OTSwapItem) //Distro Ball Selector
+            if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector
             {
                 cln.Ball = BallSwap(offered.HeldItem);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
@@ -119,7 +119,7 @@ namespace SysBot.Pokemon
                 Log($"Game: {(GameVersion)(cln.Version)}");
                 Log($"OT Swap success");
 
-                if (toSend.HeldItem == (int)config.OTSwapItem)
+                if (toSend.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
                     counts.AddCompletedOTSwaps();

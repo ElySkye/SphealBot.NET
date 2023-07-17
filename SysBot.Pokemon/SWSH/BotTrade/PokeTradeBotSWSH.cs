@@ -3,6 +3,7 @@ using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -544,17 +545,19 @@ namespace SysBot.Pokemon
         {
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
-            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, config.LedySpecies2);
+            var custom = Hub.Config.CustomSwaps;
+            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
             var counts = TradeSettings;
-            //Custom message for mini-events
+            var swap = offered.HeldItem;
             var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n============";
-            if (offered.Nickname == config.SphealEvent)
+
+            if (offered.Nickname == custom.SphealEvent)
             {
                 EchoUtil.Echo(Format.Code(eventmsg, "cs"));
                 EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
             }
             //Mystery Trades - Default (Eggs)
-            if (offered.Nickname == config.MysteryTrade)
+            if (offered.Nickname == custom.MysteryEgg)
             {
                 PK8? rnd;
                 do
@@ -579,7 +582,7 @@ namespace SysBot.Pokemon
             }
             if (trade != null && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else if (offered.HeldItem == (int)config.OTSwapItem)
+            else if (swap == (int)custom.OTSwapItem)
             {
                 toSend = offered.Clone();
                 Log($"Cloned your {GameInfo.GetStrings(1).Species[offered.Species]}");
@@ -631,7 +634,7 @@ namespace SysBot.Pokemon
                 await Task.Delay(2_500, token).ConfigureAwait(false);
                 return (toSend, PokeTradeResult.Success);
             }
-            else if (BallSwap(offered.HeldItem) != 0)
+            else if (BallSwap(swap) != 0)
             {
                 Log($"User's request is for Ball swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 string? not8;
@@ -689,7 +692,19 @@ namespace SysBot.Pokemon
             }
             if (trade != null)
             {
-                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
+                var tradeevo = new List<ushort>
+                {
+                    (ushort)Species.Kadabra,
+                    (ushort)Species.Machoke,
+                    (ushort)Species.Gurdurr,
+                    (ushort)Species.Haunter,
+                    (ushort)Species.Graveler,
+                    (ushort)Species.Phantump,
+                    (ushort)Species.Pumpkaboo,
+                    (ushort)Species.Boldore,
+                };
+                var evo = offered.Species;
+                if (evo != 0 && tradeevo.Contains(evo))
                 {
                     if (offered.HeldItem == 229)
                         Log($"Trade Evo Species is holding everstone, Allow trading");
@@ -735,7 +750,7 @@ namespace SysBot.Pokemon
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
-            else if (Hub.Config.Distribution.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
+            else if (Hub.Config.CustomSwaps.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
             {
                 var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 var counts1 = TradeSettings;

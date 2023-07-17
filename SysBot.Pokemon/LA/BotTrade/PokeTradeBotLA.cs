@@ -3,6 +3,7 @@ using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
@@ -657,7 +658,19 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             if (trade != null)
             {
-                if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
+                var tradeevo = new List<ushort>
+                {
+                    (ushort)Species.Kadabra,
+                    (ushort)Species.Machoke,
+                    (ushort)Species.Gurdurr,
+                    (ushort)Species.Haunter,
+                    (ushort)Species.Graveler,
+                    (ushort)Species.Phantump,
+                    (ushort)Species.Pumpkaboo,
+                    (ushort)Species.Boldore,
+                };
+                var evo = offered.Species;
+                if (evo != 0 && tradeevo.Contains(evo))
                 {
                     var msg = $"Pokémon: {(Species)offered.Species}";
                     msg += $"\nUser: {partner.TrainerName}";
@@ -680,7 +693,7 @@ namespace SysBot.Pokemon
                 toSend = trade.Receive;
                 poke.TradeData = toSend;
 
-                if (Hub.Config.Distribution.AllowTraderOTInformation)
+                if (Hub.Config.CustomSwaps.AllowTraderOTInformation)
                 {
                     poke.SendNotification(this, "Injecting the requested Pokémon.");
                     if (!await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false))
@@ -699,7 +712,7 @@ namespace SysBot.Pokemon
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
-            else if (Hub.Config.Distribution.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
+            else if (Hub.Config.CustomSwaps.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
             {
                 var counts1 = TradeSettings;
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
