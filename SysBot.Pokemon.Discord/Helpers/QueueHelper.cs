@@ -88,7 +88,7 @@ namespace SysBot.Pokemon.Discord
                     };
 
                     Color embedMsgColor = new ();
-                    embedTitle = $"__Prepare the trade code once the bot messages you__\n";
+                    embedTitle = $"__Search once bot DMs you Initializing trade__\n";
                     embedAuthor = $"{trainer}'s ";
                     embedMsg = $"";
 
@@ -131,11 +131,9 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0x6FFEEC;
                         embedAuthor += "Direct Trade Request";
-                        embedMsg += $"Trade using the nicknames on sheet or use Special Features\n";
-                        embedMsg += $"The prefix of this bot is **{SysCordSettings.Settings.CommandPrefix}**\n\n";
-                        embedMsg += $"The current game running is **{gamever}**\n\n";
-                        embedMsg += $"Refer to **[Special]** tab in sheets to view Special Features\n";
-                        embedMsg += $"Refer to Sheet / <#1115122854376247356> for more info\n";
+                        embedMsg += $"Trade using the nicknames on sheet or use **Special Features**\n";
+                        embedMsg += $"The Current Game running is **{gamever}**\n\n";
+                        embedMsg += $"Commands:\n**$help**, **$rsv**, **$t**, **$it**, **$tc**, **$dump**, **$clone**, **$checkcd**, **$dtl**, **$spf**\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }

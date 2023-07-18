@@ -455,6 +455,31 @@ namespace SysBot.Pokemon
             Embed embedMsg = embedBuilder.Build();
             return embedMsg;
         }
+        public static Embed EmbedSFList(string msg, string msgTitle)
+        {
+            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://archives.bulbagarden.net/media/upload/1/1e/ShinyLAStar.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Special Features - Spheal Bot",
+                IconUrl = "https://www.serebii.net/games/ribbons/conteststarribbon.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Teal,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            Embed embedMsg = embedBuilder.Build();
+            return embedMsg;
+        }
         public async Task<string> EmbedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
         {
             string URLStart = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture";

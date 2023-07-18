@@ -97,27 +97,6 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        [Command("checkgame")]
-        [Alias("game", "cg")]
-        [Summary("What game is currently running?")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task CheckGame()
-        {
-            var me = SysCord<T>.Runner;
-            string botversion = "";
-            if (me is not null)
-                botversion = me.ToString()!.Substring(46, 3);
-            var gamever = botversion switch
-            {
-                "PK9" => "SV",
-                "PK8" => "SWSH",
-                "PA8" => "PLA",
-                "PB8" => "BDSP",
-                _ => "LGPE",
-            };
-            await ReplyAsync($"<:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
-        }
-
         [Command("directTrade")]
         [Alias("drt", "rsv")]
         [Summary("Starts a Distribution Trade through Discord")]
@@ -163,6 +142,27 @@ namespace SysBot.Pokemon.Discord
                 s.IsInline = false;
             });
             await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
+        }
+
+        [Command("checkgame")]
+        [Alias("game", "cg")]
+        [Summary("What game is currently running?")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task CheckGame()
+        {
+            var me = SysCord<T>.Runner;
+            string botversion = "";
+            if (me is not null)
+                botversion = me.ToString()!.Substring(46, 3);
+            var gamever = botversion switch
+            {
+                "PK9" => "SV",
+                "PK8" => "SWSH",
+                "PA8" => "PLA",
+                "PB8" => "BDSP",
+                _ => "LGPE",
+            };
+            await ReplyAsync($"<:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
         }
 
         [Command("cooldown")]
@@ -351,6 +351,100 @@ namespace SysBot.Pokemon.Discord
             await ReplyAsync(msg).ConfigureAwait(false);
             if (!Context.IsPrivate)
                 await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
+        }
+
+        [Command("specialfeatures")]
+        [Alias("spf")]
+        [Summary("Displays Special Features")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task SpecialFeatures()
+        {
+            var swap = SysCordSettings.HubConfig.CustomSwaps;
+            var me = SysCord<T>.Runner;
+            string botversion = "";
+            if (me is not null)
+                botversion = me.ToString()!.Substring(46, 3);
+            var gamever = botversion switch
+            {
+                "PK9" => "SV",
+                "PK8" => "SWSH",
+                "PA8" => "PLA",
+                "PB8" => "BDSP",
+                _ => "LGPE",
+            };
+            if (gamever == "SV")
+            {
+                var sv = "**__OT Swap__**\n";
+                sv += "Function: Changes existing Pokémon OT to yours\n";
+                sv += $"```• Have the Pokémon hold {swap.OTSwapItem}\r\n• Show it to the bot\r\n• Your choice if you want to press B (optional)\r\n• Exceptions are listed in \"Instructions\" tab\r\non what can be OT swapped```\n";
+                
+                sv += "**__Pokéball Select__**\n";
+                sv += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
+                sv += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+                
+                sv += "**__Pokéball Swap__**\n";
+                sv += "Function: Allows Ball swap for existing Pokémon\n";
+                sv += "```• Have the Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non Gen 9 / Event mons cannot be ball swapped```\n";
+
+                sv += "**__Mystery Eggs__**\n";
+                sv += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
+                sv += "```• Receive a random egg which can be shiny or non shiny & either Jumbo or Tiny size\r\n• Eggs will be in your OT and met in picnic```\n";
+
+                sv += "**__Tera Swap__**\n";
+                sv += "Function: Allows Tera type swap for existing Pokémon\n";
+                sv += "```• Have the Pokémon hold a Tera Shard of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the New Tera type according to what shard it was holding```\n";
+
+                sv += "**__Trilogy Swap__**\n";
+                sv += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
+                sv += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname => Clears the Nickname\r\nSet Level to 1OO => Sets the Pokémon's level to 1OO\r\nEvolve => Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFinizen\r\nRellor | Pawmo | Bramblin\r\nKalos Sliggoo | White Basculin\r\nGimmighoul | Primeape | Bisharp```\n";
+
+                sv += "**__Trade Evo <Purifier>__**\n";
+                sv += "Function: Evolve Basic Trade Evolutions\n";
+                sv += "```• Have the Pokémon hold an Everstone & show bot\r\n• Your choice if you want to press B (optional)\r\n\r\n[Species List]\r\nCurrently only Haunter as the rest are not in SV```\n";
+
+                sv += "**__EV Swap__**\n";
+                sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";
+                sv += $"```• Bot will reset or apply 252 EVs in 2 stats, last 6 EVs are done yourself\r\n• Raid Presets are minted to Adamant/Modest respectively\r\n• Do the thing like other swaps, follow held items as below:\r\n\r\nEV Reset ➜ {swap.EVResetItem} [Resets ALL EVs]\r\n\r\nEV Raid Atk ➜ {swap.EVRaidAtkItem} [Reset ALL EVs, Apply ATK/HP]\r\nEV Raid SP Atk ➜ {swap.EVRaidSPAItem} [Reset, Apply SPAtk/HP]\r\n\r\nEV Comp Atk ➜ {swap.EVCompAtkItem} [Reset, Atk/Speed]\r\nEV Comp SP Atk ➜ {swap.EVRaidSPAItem} [Reset, SPAtk/Speed]\r\n\r\nEV Def Tank ➜ {swap.EVGenDEFItem} [Reset, HP/Def]\r\nEV Sp Def Tank ➜ {swap.EVGenSPDItem} [Reset, HP/SPDef]```\n";
+
+                Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
+                await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+            }
+            else if (gamever == "SWSH")
+            {
+                var swsh = "**__OT Swap__**\n";
+                swsh += "Function: Changes existing Pokémon OT to yours\n";
+                swsh += $"```• Have the Pokémon hold {swap.OTSwapItem}\r\n• Show it to the bot\r\n• Your choice if you want to press B (optional)\r\n• Exceptions are listed in \"Instructions\" tab\r\non what can be OT swapped```\n";
+
+                swsh += "**__Pokéball Select__**\n";
+                swsh += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
+                swsh += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+
+                swsh += "**__Pokéball Swap__**\n";
+                swsh += "Function: Allows Ball swap for existing Pokémon\n";
+                swsh += "```• Have the Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non Gen 9 / Event mons cannot be ball swapped```\n";
+
+                swsh += "**__Mystery Eggs__**\n";
+                swsh += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
+                swsh += "```• Receive a random shiny egg\r\n• Eggs will be in your OT and met in daycare```\n";
+
+                Embed? embed = Sphealcl.EmbedSFList(swsh, "Special Features - SWSH");
+                await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+            }
+            else if (gamever == "PLA")
+            {
+                Embed? embed = Sphealcl.EmbedSFList($"There are no Special Features for PLA...yet.", "Special Features - PLA");
+                await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+            }
+            else if (gamever == "BDSP")
+            {
+                var bdsp = "**__Pokéball Select__**\n";
+                bdsp += "**__Pokéball Select__**\n";
+                bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
+                bdsp += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+
+                Embed? embed = Sphealcl.EmbedSFList(bdsp, "Special Features - BDSP");
+                await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+            }
         }
     }
 }
