@@ -365,7 +365,10 @@ namespace SysBot.Pokemon
                 return await EndSeedCheckTradeAsync(poke, offered, token).ConfigureAwait(false);
             }
             if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
-                list.TryRegister(trainerNID, trainerName);
+            {
+                if (offered.HeldItem != 229)
+                    list.TryRegister(trainerNID, trainerName);
+            }
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(trainerNID, trainerName, trainerTID);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, oldEC, toSend, trainer, token).ConfigureAwait(false);
@@ -580,7 +583,7 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
                 return (toSend, PokeTradeResult.Success);
             }
-            if (trade != null && trade.Type == LedyResponseType.MatchPool)
+            if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
             else if (swap == (int)custom.OTSwapItem)
             {

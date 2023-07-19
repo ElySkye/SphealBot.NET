@@ -1,5 +1,6 @@
 ﻿using Discord;
 using PKHeX.Core;
+using PKHeX.Core.AutoMod;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -656,6 +657,110 @@ namespace SysBot.Pokemon
             Log($"User's request is for {offered.Nickname}");
             var config = Hub.Config.Distribution;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
+            var counts = TradeSettings;
+            var sf = offered.Nickname;
+
+            if (sf == "evo")
+            {
+                toSend = offered.Clone();
+                Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                string? msg;
+
+                var la = new LegalityAnalysis(offered);
+                if (!la.Valid)
+                {
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nPokémon OT: {offered.OT_Name}";
+                    msg += $"\nUser: {partner.TrainerName}";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
+                    //#2 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
+                    switch (toSend.Species)
+                    {
+                        case (ushort)Species.Ursaring:
+                            toSend.Species = (ushort)Species.Ursaluna;
+                            break;
+                        case (ushort)Species.Qwilfish:
+                            if (toSend.Form == 1) //Hisui
+                                toSend.Species = (ushort)Species.Overqwil;
+                            break;
+                        case (ushort)Species.Scyther:
+                            toSend.Species = (ushort)Species.Kleavor;
+                            break;
+                        case (ushort)Species.Stantler:
+                            toSend.Species = (ushort)Species.Wyrdeer;
+                            break;
+                        case (ushort)Species.Sliggoo:
+                            if (toSend.Form == 1) //Hisui
+                            {
+                                toSend.Species = (ushort)Species.Goodra;
+                                toSend.Form = 1;
+                            }
+                            break;
+                        case (ushort)Species.Basculin:
+                            if (toSend.Form == 2) //White
+                            {
+                                if (toSend.Gender == 0) //Male
+                                {
+                                    toSend.Species = (ushort)Species.Basculegion;
+                                    toSend.Form = 0;
+                                    toSend.Gender = 0;
+                                }
+                                else if (toSend.Gender == 1) //Female
+                                {
+                                    toSend.Species = (ushort)Species.Basculegion;
+                                    toSend.Form = 1;
+                                    toSend.Gender = 1;
+                                }
+                                toSend.FormArgument = 300;
+                            }
+                            break;
+                    }
+                    if (toSend.AbilityNumber == 1)
+                        toSend.RefreshAbility(0);
+                    else if (toSend.AbilityNumber == 2)
+                        toSend.RefreshAbility(1);
+                    else if (toSend.AbilityNumber == 3)
+                        toSend.RefreshAbility(4);
+                    toSend.HeightAbsolute = toSend.CalcHeightAbsolute;
+                    toSend.WeightAbsolute = toSend.CalcWeightAbsolute;
+                    //#3 Clear Nicknames
+                    if (!toSend.FatefulEncounter)
+                        toSend.ClearNickname();
+                    toSend.RefreshChecksum();
+
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        poke.TradeData = toSend;
+                        counts.AddCompletedTrilogySwaps();
+                        DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else //Safety Net incase something slips through
+                    {
+                        msg = $"{partner.TrainerName}, {(Species)toSend.Species} has a problem";
+                        msg += $"\nPls refer to LA report";
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+
+                        msg = la2.Report();
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
             if (trade != null)
             {
                 var tradeevo = new List<ushort>

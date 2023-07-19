@@ -382,7 +382,10 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             }
             if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
-                list.TryRegister(trainerNID, tradePartner.TrainerName);
+            {
+                if (offered.HeldItem != 229)
+                    list.TryRegister(trainerNID, tradePartner.TrainerName);
+            }
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, oldEC, toSend, trainer, token).ConfigureAwait(false);
@@ -892,6 +895,7 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
             var counts = TradeSettings;
             var swap = offered.HeldItem;
+            var nick = offered.Nickname;
             var evSwap = new List<int>
             {
                 (int)custom.EVResetItem,
@@ -905,13 +909,13 @@ namespace SysBot.Pokemon
             string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
             var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {partner.TrainerName} <\r\n======";
 
-            if (offered.Nickname == custom.SphealEvent)
+            if (nick == custom.SphealEvent)
             {
                 EchoUtil.Echo(Format.Code(eventmsg, "cs"));
                 EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
             }
             //Mystery Eggs
-            if (offered.Nickname == custom.MysteryEgg)
+            if (nick == custom.MysteryEgg)
             {
                 PK9? rnd;
                 do
@@ -938,7 +942,7 @@ namespace SysBot.Pokemon
                 poke.TradeData = toSend;
                 return (toSend, PokeTradeResult.Success);
             }
-            if (trade != null && trade.Type == LedyResponseType.MatchPool)
+            if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
             else if (swap == (int)custom.OTSwapItem) //OT Swap for existing mons
             {
@@ -1040,7 +1044,7 @@ namespace SysBot.Pokemon
                     }
                 }
             }
-            else if (swap == (int)custom.TrilogySwapItem) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
+            else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
             {
                 toSend = offered.Clone();
                 Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
@@ -1062,55 +1066,91 @@ namespace SysBot.Pokemon
                 else
                 {
                     toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
-                    //#2 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
-                    switch (toSend.Species)
+                    if (swap == 229)
                     {
-                        case (ushort)Species.Finizen:
-                            toSend.Species = (ushort)Species.Palafin;
-                            break;
-                        case (ushort)Species.Rellor:
-                            toSend.Species = (ushort)Species.Rabsca;
-                            break;
-                        case (ushort)Species.Pawmo:
-                            toSend.Species = (ushort)Species.Pawmot;
-                            break;
-                        case (ushort)Species.Bramblin:
-                            toSend.Species = (ushort)Species.Brambleghast;
-                            break;
-                        case (ushort)Species.Sliggoo:
-                            if (toSend.Form == 0) //Kalos
-                                toSend.Species = (ushort)Species.Goodra;
-                            break;
-                        case (ushort)Species.Gimmighoul:
-                            toSend.Species = (ushort)Species.Gholdengo;
-                            toSend.FormArgument = 999;
-                            break;
-                        case (ushort)Species.Primeape:
-                            toSend.Species = (ushort)Species.Annihilape;
-                            toSend.FormArgument = 20;
-                            break;
-                        case (ushort)Species.Bisharp:
-                            toSend.Species = (ushort)Species.Kingambit;
-                            toSend.FormArgument = 3;
-                            break;
-                        case (ushort)Species.Basculin:
-                            if (toSend.Form == 2) //White
-                            {
-                                if (toSend.Gender == 0) //Male
+                        Log($"Evo Species is holding an Everstone");
+
+                        switch (toSend.Species)
+                        {
+                            case (ushort)Species.Kadabra:
+                                toSend.Species = (ushort)Species.Alakazam;
+                                break;
+                            case (ushort)Species.Machoke:
+                                toSend.Species = (ushort)Species.Machamp;
+                                break;
+                            case (ushort)Species.Gurdurr:
+                                toSend.Species = (ushort)Species.Conkeldurr;
+                                break;
+                            case (ushort)Species.Haunter:
+                                toSend.Species = (ushort)Species.Gengar;
+                                break;
+                            case (ushort)Species.Graveler:
+                                toSend.Species = (ushort)Species.Golem;
+                                break;
+                            case (ushort)Species.Phantump:
+                                toSend.Species = (ushort)Species.Trevenant;
+                                break;
+                            case (ushort)Species.Pumpkaboo:
+                                toSend.Species = (ushort)Species.Gourgeist;
+                                break;
+                            case (ushort)Species.Boldore:
+                                toSend.Species = (ushort)Species.Gigalith;
+                                break;
+                        }
+                        toSend.HeldItem = 1882;
+                    }
+                    else
+                    {
+                        //#2 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
+                        switch (toSend.Species)
+                        {
+                            case (ushort)Species.Finizen:
+                                toSend.Species = (ushort)Species.Palafin;
+                                break;
+                            case (ushort)Species.Rellor:
+                                toSend.Species = (ushort)Species.Rabsca;
+                                break;
+                            case (ushort)Species.Pawmo:
+                                toSend.Species = (ushort)Species.Pawmot;
+                                break;
+                            case (ushort)Species.Bramblin:
+                                toSend.Species = (ushort)Species.Brambleghast;
+                                break;
+                            case (ushort)Species.Sliggoo:
+                                if (toSend.Form == 0) //Kalos
+                                    toSend.Species = (ushort)Species.Goodra;
+                                break;
+                            case (ushort)Species.Gimmighoul:
+                                toSend.Species = (ushort)Species.Gholdengo;
+                                toSend.FormArgument = 999;
+                                break;
+                            case (ushort)Species.Primeape:
+                                toSend.Species = (ushort)Species.Annihilape;
+                                toSend.FormArgument = 20;
+                                break;
+                            case (ushort)Species.Bisharp:
+                                toSend.Species = (ushort)Species.Kingambit;
+                                toSend.FormArgument = 3;
+                                break;
+                            case (ushort)Species.Basculin:
+                                if (toSend.Form == 2) //White
                                 {
-                                    toSend.Species = (ushort)Species.Basculegion;
-                                    toSend.Form = 0;
-                                    toSend.Gender = 0;
+                                    if (toSend.Gender == 0) //Male
+                                    {
+                                        toSend.Species = (ushort)Species.Basculegion;
+                                        toSend.Form = 0;
+                                        toSend.Gender = 0;
+                                    }
+                                    else if (toSend.Gender == 1) //Female
+                                    {
+                                        toSend.Species = (ushort)Species.Basculegion;
+                                        toSend.Form = 1;
+                                        toSend.Gender = 1;
+                                    }
+                                    toSend.FormArgument = 300;
                                 }
-                                else if (toSend.Gender == 1) //Female
-                                {
-                                    toSend.Species = (ushort)Species.Basculegion;
-                                    toSend.Form = 1;
-                                    toSend.Gender = 1;
-                                }
-                                toSend.FormArgument = 300;
-                            }
-                            break;
+                                break;
+                        }
                     }
                     if (toSend.AbilityNumber == 1)
                         toSend.RefreshAbility(0);
@@ -1126,7 +1166,10 @@ namespace SysBot.Pokemon
                     var la2 = new LegalityAnalysis(toSend);
                     if (la2.Valid)
                     {
-                        Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        if (toSend.HeldItem == 1882)
+                            Log($"Purification Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        else
+                            Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
                         poke.TradeData = toSend;
                         counts.AddCompletedTrilogySwaps();
                         DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
@@ -1136,12 +1179,20 @@ namespace SysBot.Pokemon
                     }
                     else //Safety Net incase something slips through
                     {
-                        msg = $"{partner.TrainerName}, {(Species)offered.Species} has a problem";
-                        msg += $"\nPls refer to LA report";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
-
+                        if (toSend.HeldItem == 1882)
+                        {
+                            msg = $"{partner.TrainerName}, {(Species)toSend.Species} has failed to purify";
+                            msg += $"\nPls refer to LA report";
+                            await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Trade Evo Purification:").ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            msg = $"{partner.TrainerName}, {(Species)toSend.Species} has a problem";
+                            msg += $"\nPls refer to LA report";
+                            await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+                        }
                         msg = la2.Report();
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);
                     }
@@ -1289,74 +1340,9 @@ namespace SysBot.Pokemon
                     (ushort)Species.Boldore,
                 };
                 var evo = offered.Species;
-                if (evo != 0 && tradeevo.Contains(evo))
+                if (evo > 0 && tradeevo.Contains(evo))
                 {
-                    if (swap == 229)
-                    {
-                        Log($"Evo Species is holding an Everstone");
-                        toSend = offered.Clone();
-                        string? msg;
-                        switch (toSend.Species)
-                        {
-                            case (ushort)Species.Kadabra:
-                                toSend.Species = (ushort)Species.Alakazam;
-                                break;
-                            case (ushort)Species.Machoke:
-                                toSend.Species = (ushort)Species.Machamp;
-                                break;
-                            case (ushort)Species.Gurdurr:
-                                toSend.Species = (ushort)Species.Conkeldurr;
-                                break;
-                            case (ushort)Species.Haunter:
-                                toSend.Species = (ushort)Species.Gengar;
-                                break;
-                            case (ushort)Species.Graveler:
-                                toSend.Species = (ushort)Species.Golem;
-                                break;
-                            case (ushort)Species.Phantump:
-                                toSend.Species = (ushort)Species.Trevenant;
-                                break;
-                            case (ushort)Species.Pumpkaboo:
-                                toSend.Species = (ushort)Species.Gourgeist;
-                                break;
-                            case (ushort)Species.Boldore:
-                                toSend.Species = (ushort)Species.Gigalith;
-                                break;
-                        }
-                        toSend.HeldItem = 1882;
-                        if (toSend.AbilityNumber == 1)
-                            toSend.RefreshAbility(0);
-                        else if (toSend.AbilityNumber == 2)
-                            toSend.RefreshAbility(1);
-                        else if (toSend.AbilityNumber == 3)
-                            toSend.RefreshAbility(4);
-                        //#3 Clear Nicknames
-                        if (!toSend.FatefulEncounter || toSend.Met_Location != 30001)
-                            toSend.ClearNickname();
-                        toSend.RefreshChecksum();
-
-                        var la2 = new LegalityAnalysis(toSend);
-                        if (la2.Valid)
-                        {
-                            Log($"Purification Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
-                            poke.TradeData = toSend;
-                            await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                            await Task.Delay(2_500, token).ConfigureAwait(false);
-                            return (toSend, PokeTradeResult.Success);
-                        }
-                        else //Safety Net incase something slips through
-                        {
-                            msg = $"{partner.TrainerName}, {(Species)offered.Species} has failed to purify";
-                            msg += $"\nPls refer to LA report";
-                            await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trade Evo Purification:").ConfigureAwait(false);
-
-                            msg = la2.Report();
-                            await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
-                            DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                            return (toSend, PokeTradeResult.IllegalTrade);
-                        }
-                    }
-                    else
+                    if (swap != 229)
                     {
                         var msg = $"Pokémon: {(Species)offered.Species}";
                         msg += $"\nUser: {partner.TrainerName}";

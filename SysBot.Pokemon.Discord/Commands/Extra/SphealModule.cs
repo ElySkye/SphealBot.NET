@@ -396,7 +396,7 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trilogy Swap__**\n";
                 sv += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
-                sv += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname => Clears the Nickname\r\nSet Level to 1OO => Sets the Pokémon's level to 1OO\r\nEvolve => Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFinizen\r\nRellor | Pawmo | Bramblin\r\nKalos Sliggoo | White Basculin\r\nGimmighoul | Primeape | Bisharp```\n";
+                sv += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFinizen\r\nRellor | Pawmo | Bramblin\r\nKalos Sliggoo | White Basculin\r\nGimmighoul | Primeape | Bisharp```\n";
 
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\n";
@@ -432,7 +432,11 @@ namespace SysBot.Pokemon.Discord
             }
             else if (gamever == "PLA")
             {
-                Embed? embed = Sphealcl.EmbedSFList($"There are no Special Features for PLA...yet.", "Special Features - PLA");
+                var pla = "**__Trilogy Swap__**\n";
+                pla += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
+                pla += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nUrsaring | Hisui Qwilfish | Scyther\r\nStantler | Hisui Sliggoo | White Basculin\r\n```";
+
+                Embed? embed = Sphealcl.EmbedSFList(pla, "Special Features - PLA");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
             else if (gamever == "BDSP")
