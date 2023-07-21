@@ -552,6 +552,7 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
             var counts = TradeSettings;
             var swap = offered.HeldItem;
+            var user = partner.TrainerName;
             var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n============";
 
             if (offered.Nickname == custom.SphealEvent)
@@ -562,6 +563,7 @@ namespace SysBot.Pokemon
             //Mystery Trades - Default (Eggs)
             if (offered.Nickname == custom.MysteryEgg)
             {
+                string? myst;
                 PK8? rnd;
                 do
                 {
@@ -579,8 +581,20 @@ namespace SysBot.Pokemon
                 await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
-                counts.AddCompletedMystery();
                 poke.TradeData = toSend;
+
+                myst = $"**{user}** has received a Mystery Egg !\n";
+                myst += $"**Don't reveal if you want the surprise**\n\n";
+                myst += $"**Pokémon**: ||**{GameInfo.GetStrings(1).Species[toSend.Species]}**||\n";
+                myst += $"**Gender**: ||**{(Gender)toSend.Gender}**||\n";
+                myst += $"**Shiny**: ||**{Shiny}**||\n";
+                myst += $"**Nature**: ||**{(Nature)toSend.Nature}**||\n";
+                myst += $"**Ability**: ||**{(Ability)toSend.Ability}**||\n";
+                myst += $"**IVs**: ||**{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**||\n";
+                myst += $"**Language**: ||**{(LanguageID)toSend.Language}**||";
+
+                EchoUtil.EchoEmbed(Sphealcl.EmbedEggMystery(toSend, myst, $"{user}'s Mystery Egg"));
+                counts.AddCompletedMystery();
                 return (toSend, PokeTradeResult.Success);
             }
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)

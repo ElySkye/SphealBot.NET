@@ -20,6 +20,7 @@ namespace SysBot.Pokemon
         private readonly TradeSettings TradeSettings;
         public readonly TradeAbuseSettings AbuseSettings;
         readonly Sphealcl SphealEmbed = new();
+        private static readonly Random rnd = new();
 
         public ICountSettings Counts => TradeSettings;
 
@@ -896,6 +897,8 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var swap = offered.HeldItem;
             var nick = offered.Nickname;
+            var user = partner.TrainerName;
+
             var evSwap = new List<int>
             {
                 (int)custom.EVResetItem,
@@ -907,7 +910,7 @@ namespace SysBot.Pokemon
                 (int)custom.EVGenSPDItem,
             };
             string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
-            var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {partner.TrainerName} <\r\n======";
+            var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {user} <\r\n======";
 
             if (nick == custom.SphealEvent)
             {
@@ -917,6 +920,7 @@ namespace SysBot.Pokemon
             //Mystery Eggs
             if (nick == custom.MysteryEgg)
             {
+                string? myst;
                 PK9? rnd;
                 do
                 {
@@ -935,11 +939,24 @@ namespace SysBot.Pokemon
                     true => "Shiny",
                     false => "Non-Shiny",
                 };
-
+                
                 Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
-                counts.AddCompletedMystery();
                 poke.TradeData = toSend;
+
+                myst = $"**{user}** has received a Mystery Egg !\n";
+                myst += $"**Don't reveal if you want the surprise**\n\n";
+                myst += $"**Pokémon**: ||**{GameInfo.GetStrings(1).Species[toSend.Species]}**||\n";
+                myst += $"**Gender**: ||**{(Gender)toSend.Gender}**||\n";
+                myst += $"**Shiny**: ||**{Shiny}**||\n";
+                myst += $"**Size**: ||**{Size}**||\n";
+                myst += $"**Nature**: ||**{(Nature)toSend.Nature}**||\n";
+                myst += $"**Ability**: ||**{(Ability)toSend.Ability}**||\n";
+                myst += $"**IVs**: ||**{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**||\n";
+                myst += $"**Language**: ||**{(LanguageID)toSend.Language}**||";
+
+                EchoUtil.EchoEmbed(Sphealcl.EmbedEggMystery(toSend, myst, $"{user}'s Mystery Egg"));
+                counts.AddCompletedMystery();
                 return (toSend, PokeTradeResult.Success);
             }
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
@@ -980,7 +997,7 @@ namespace SysBot.Pokemon
                     {
                         msg = $"Pokémon: {(Species)offered.Species}";
                         msg += $"\nPokémon OT: {offered.OT_Name}";
-                        msg += $"\nUser: {partner.TrainerName}";
+                        msg += $"\nUser: {user}";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                         return (toSend, PokeTradeResult.IllegalTrade);
@@ -1000,7 +1017,7 @@ namespace SysBot.Pokemon
                 else if (toSend.Generation != 9)
                 {
                     not9 = $"Pokémon: {(Species)offered.Species}";
-                    not9 += $"\nUser: {partner.TrainerName}";
+                    not9 += $"\nUser: {user}";
                     not9 += $"\nUser is attempting to Ballswap non Gen 9 ";
                     not9 += $"\nDue to Home Tracker, bot is unable to do so";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -1011,7 +1028,7 @@ namespace SysBot.Pokemon
                 if (!la.Valid)
                 {
                     not9 = $"Pokémon: {(Species)offered.Species}";
-                    not9 += $"\nUser: {partner.TrainerName}";
+                    not9 += $"\nUser: {user}";
                     not9 += $"\nPokémon shown is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -1036,7 +1053,7 @@ namespace SysBot.Pokemon
                     }
                     else
                     {
-                        not9 = $"{partner.TrainerName}, {(Species)offered.Species} cannot be in that ball";
+                        not9 = $"{user}, {(Species)offered.Species} cannot be in that ball";
                         not9 += $"\nThe ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -1055,7 +1072,7 @@ namespace SysBot.Pokemon
                 {
                     msg = $"Pokémon: {(Species)offered.Species}";
                     msg += $"\nPokémon OT: {offered.OT_Name}";
-                    msg += $"\nUser: {partner.TrainerName}";
+                    msg += $"\nUser: {user}";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1181,13 +1198,13 @@ namespace SysBot.Pokemon
                     {
                         if (toSend.HeldItem == 1882)
                         {
-                            msg = $"{partner.TrainerName}, {(Species)toSend.Species} has failed to purify";
+                            msg = $"{user}, {(Species)toSend.Species} has failed to purify";
                             msg += $"\nPls refer to LA report";
                             await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Trade Evo Purification:").ConfigureAwait(false);
                         }
                         else
                         {
-                            msg = $"{partner.TrainerName}, {(Species)toSend.Species} has a problem";
+                            msg = $"{user}, {(Species)toSend.Species} has a problem";
                             msg += $"\nPls refer to LA report";
                             await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
                         }
@@ -1208,7 +1225,7 @@ namespace SysBot.Pokemon
                 if (!la.Valid)
                 {
                     EVS = $"Pokémon: {(Species)offered.Species}";
-                    EVS += $"\nUser: {partner.TrainerName}";
+                    EVS += $"\nUser: {user}";
                     EVS += $"\nPokémon shown is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, EVS, "Bad EV Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -1280,7 +1297,7 @@ namespace SysBot.Pokemon
                     }
                     else //Safety Net incase something slips through
                     {
-                        EVS = $"{partner.TrainerName}, {(Species)offered.Species} has a problem";
+                        EVS = $"{user}, {(Species)offered.Species} has a problem";
                         EVS += $"\nPls refer to LA report";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, EVS, "Bad EV Swap:").ConfigureAwait(false);
 
@@ -1304,7 +1321,7 @@ namespace SysBot.Pokemon
                     if (!la.Valid)
                     {
                         msg9 = $"Pokémon: {(Species)offered.Species}";
-                        msg9 += $"\nUser: {partner.TrainerName}";
+                        msg9 += $"\nUser: {user}";
                         msg9 += $"\nPokémon shown is not legal";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg9, "Bad Tera Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -1345,7 +1362,7 @@ namespace SysBot.Pokemon
                     if (swap != 229)
                     {
                         var msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nUser: {partner.TrainerName}";
+                        msg += $"\nUser: {user}";
                         msg += $"\nEquip an Everstone to allow trade";
                         msg += $"\nGiven a ticket for Unauthorised goods";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade evolution sent by:").ConfigureAwait(false);
@@ -1456,17 +1473,20 @@ namespace SysBot.Pokemon
             var changeallowed = OTChangeAllowed(toSend);
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
+            var Scarlet = (ushort)Species.Koraidon;
+            var Violet = (ushort)Species.Miraidon;
+            var version = tradepartner.Game;
 
             switch (cln.Species) //OT for Academy Meowth on the other version
             {
                 case (ushort)Species.Meowth:
                     {
-                        if (tradepartner.Game == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
+                        if (version == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
                         {
                             cln.Met_Location = 130;//Naranja Academy
                             cln.Version = (int)GameVersion.SL;//Ensure correct Version
                         }
-                        else if (tradepartner.Game == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
+                        else if (version == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
                         {
                             cln.Met_Location = 131;//Uva Academy
                             cln.Version = (int)GameVersion.VL;//Ensure correct Version
@@ -1481,38 +1501,47 @@ namespace SysBot.Pokemon
             if (changeallowed)
             {
                 cln.OT_Name = tradepartner.TrainerName;
-                cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-                cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-                cln.Language = tradepartner.Language;
                 cln.OT_Gender = tradepartner.Gender;
+                cln.Language = tradepartner.Language;
 
-                if (toSend.IsEgg == false)
+                if (toSend.Species == Scarlet && version == (int)GameVersion.VL || toSend.Species == Violet && version == (int)GameVersion.SL)
                 {
-                    cln.Version = tradepartner.Game; //Eggs should not have Origin Game on SV
-                    if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
-                    if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
-                    if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
-                        cln.Egg_Location = 30023; //Picnic
+                    cln.TrainerTID7 = (ushort)rnd.Next(1, 999999);
+                    cln.TrainerSID7 = (ushort)rnd.Next(1, 4294);
+                    cln.ClearNickname();
                 }
-                else //Set eggs received in Picnic, instead of received in Link Trade
+                else
                 {
-                    cln.HT_Name = "";
-                    cln.HT_Language = 0;
-                    cln.HT_Gender = 0;
-                    cln.CurrentHandler = 0;
-                    cln.Met_Location = 0;
-                    cln.IsNicknamed = true;
-                    cln.Nickname = cln.Language switch
+                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+                    if (toSend.IsEgg == false)
                     {
-                        1 => "タマゴ",
-                        3 => "Œuf",
-                        4 => "Uovo",
-                        5 => "Ei",
-                        7 => "Huevo",
-                        8 => "알",
-                        9 or 10 => "蛋",
-                        _ => "Egg",
-                    };
+                        cln.Version = version; //Eggs should not have Origin Game on SV
+                        if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
+                        if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
+                        if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                            cln.Egg_Location = 30023; //Picnic
+                    }
+                    else //Set eggs received in Picnic, instead of received in Link Trade
+                    {
+                        cln.HT_Name = "";
+                        cln.HT_Language = 0;
+                        cln.HT_Gender = 0;
+                        cln.CurrentHandler = 0;
+                        cln.Met_Location = 0;
+                        cln.IsNicknamed = true;
+                        cln.Nickname = cln.Language switch
+                        {
+                            1 => "タマゴ",
+                            3 => "Œuf",
+                            4 => "Uovo",
+                            5 => "Ei",
+                            7 => "Huevo",
+                            8 => "알",
+                            9 or 10 => "蛋",
+                            _ => "Egg",
+                        };
+                    }
                 }
 
                 if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector

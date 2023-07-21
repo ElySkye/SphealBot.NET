@@ -7,6 +7,7 @@ using Discord;
 using System.Net.Http;
 using SysBot.Base;
 using System.Net;
+using System.Diagnostics;
 
 namespace SysBot.Pokemon
 {
@@ -478,6 +479,32 @@ namespace SysBot.Pokemon
                 Footer = embedFtr
             };
             Embed embedMsg = embedBuilder.Build();
+            return embedMsg;
+        }
+        public static Embed EmbedEggMystery(PKM toSend, string msg, string msgTitle)
+        {
+            string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/512x512/MysteryEgg.png";
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)toSend.Ball).ToString().ToLower() + "ball.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"What could be inside that Egg? - Enjoy!",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/512x512/egg.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Teal,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            Embed embedMsg = embedBuilder.Build();
+
             return embedMsg;
         }
         public async Task<string> EmbedImgUrlBuilder(PKM mon, bool canGMax, string URLFormArg)
