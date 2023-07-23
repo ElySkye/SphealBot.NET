@@ -1492,7 +1492,7 @@ namespace SysBot.Pokemon
                             cln.Version = (int)GameVersion.VL;//Ensure correct Version
                         }
                         cln.SetShiny();
-                        cln.SetUnshiny();
+                        cln.SetUnshiny();   
                         cln.SetRandomEC();
                         cln.RefreshChecksum();
                         break;
@@ -1504,7 +1504,7 @@ namespace SysBot.Pokemon
                 cln.OT_Gender = tradepartner.Gender;
                 cln.Language = tradepartner.Language;
 
-                if (toSend.Species == Scarlet && version == (int)GameVersion.VL || toSend.Species == Violet && version == (int)GameVersion.SL)
+                if ((cln.Species == Scarlet && version == 51) || (cln.Species == Violet && version == 50)) //Box Legends OT
                 {
                     cln.TrainerTID7 = (ushort)rnd.Next(1, 999999);
                     cln.TrainerSID7 = (ushort)rnd.Next(1, 4294);

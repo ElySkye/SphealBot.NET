@@ -169,13 +169,16 @@ namespace SysBot.Pokemon
                 var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
+                var banexpire = AbuseSettings.BannedIDs.List[banIndex].Expiration;
                 if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
                     await BlockUser(token).ConfigureAwait(false);
-                var bmsg = $"What's this ?\n";
+                var bmsg = $"🚨Alert🚨\n";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                 {
                     bmsg += $"Banned NPC named **{TrainerName}** is attempting to Prison Break\n";
-                    bmsg += $"They were banned for: {entry.Comment}\n";
+                    bmsg += $"Spheal Guards are now sending them back to their cell\n\n";
+                    bmsg += $"They were banned for: {entry.Comment}\n\n";
+                    bmsg += $"Release Date: {banexpire}";
                     EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
                 }
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
