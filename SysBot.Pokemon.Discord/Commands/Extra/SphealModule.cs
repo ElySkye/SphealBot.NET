@@ -189,8 +189,8 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task CooldownLeft([Remainder] string input)
         {
-            var distrocd = PokeRoutineExecutorBase.PreviousUsersDistribution.TryGetPrevious(ulong.Parse(input));
-            var othercd = PokeRoutineExecutorBase.PreviousUsers.TryGetPrevious(ulong.Parse(input));
+            var distrocd = PokeRoutineExecutorBase.PreviousUsersDistribution.TryGetPreviousNID(ulong.Parse(input));
+            var othercd = PokeRoutineExecutorBase.PreviousUsers.TryGetPreviousNID(ulong.Parse(input));
             var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
             string trainerName;
             TimeSpan delta;

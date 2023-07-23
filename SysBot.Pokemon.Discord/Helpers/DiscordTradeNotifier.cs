@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.WebSocket;
 using PKHeX.Core;
+using SysBot.Base;
 using System;
 using System.Linq;
 
@@ -50,6 +51,7 @@ namespace SysBot.Pokemon.Discord
             Trader.SendMessageAsync(message).ConfigureAwait(false);
             if (result.Species != 0 && Hub.Config.Discord.ReturnPKMs)
                 Trader.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
+            LogUtil.LogInfo($"Finished trading {info.Trainer.TrainerName}: {GameInfo.GetStrings(1).Species[info.TradeData.Species]} for {GameInfo.GetStrings(1).Species[result.Species]}", routine.Connection.Label);
         }
 
         public void SendNotification(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, string message)
