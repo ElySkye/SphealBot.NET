@@ -7,10 +7,212 @@ using Discord;
 using System.Net.Http;
 using SysBot.Base;
 using System.Net;
-using System.Diagnostics;
 
 namespace SysBot.Pokemon
 {
+    public partial class PokeTradeBotSV : PokeRoutineExecutor9SV, ICountBot
+    {
+        private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, PK9 offered, SAV9SV sav, CancellationToken token)
+        {
+            var cln = (PK9)toSend.Clone();
+            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+            var changeallowed = OTChangeAllowed(toSend);
+            var custom = Hub.Config.CustomSwaps;
+            var counts = TradeSettings;
+            var Scarlet = (ushort)Species.Koraidon;
+            var Violet = (ushort)Species.Miraidon;
+            var version = tradepartner.Game;
+
+            switch (cln.Species) //OT for Academy Meowth on the other version
+            {
+                case (ushort)Species.Meowth:
+                    {
+                        if (version == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
+                        {
+                            cln.Met_Location = 130;//Naranja Academy
+                            cln.Version = (int)GameVersion.SL;//Ensure correct Version
+                        }
+                        else if (version == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
+                        {
+                            cln.Met_Location = 131;//Uva Academy
+                            cln.Version = (int)GameVersion.VL;//Ensure correct Version
+                        }
+                        cln.SetShiny();
+                        cln.SetUnshiny();
+                        cln.SetRandomEC();
+                        cln.RefreshChecksum();
+                        break;
+                    }
+            }
+            if (changeallowed)
+            {
+                cln.OT_Name = tradepartner.TrainerName;
+                cln.OT_Gender = tradepartner.Gender;
+                cln.Language = tradepartner.Language;
+
+                if ((cln.Species == Scarlet && version == 51) || (cln.Species == Violet && version == 50)) //Box Legends OT
+                {
+                    cln.TrainerTID7 = (ushort)rnd.Next(1, 999999);
+                    cln.TrainerSID7 = (ushort)rnd.Next(1, 4294);
+                    cln.ClearNickname();
+                }
+                else
+                {
+                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+                    if (toSend.IsEgg == false)
+                    {
+                        cln.Version = version; //Eggs should not have Origin Game on SV
+                        if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
+                        if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
+                        if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                            cln.Egg_Location = 30023; //Picnic
+                    }
+                    else //Set eggs received in Picnic, instead of received in Link Trade
+                    {
+                        cln.HT_Name = "";
+                        cln.HT_Language = 0;
+                        cln.HT_Gender = 0;
+                        cln.CurrentHandler = 0;
+                        cln.Met_Location = 0;
+                        cln.IsNicknamed = true;
+                        cln.Nickname = cln.Language switch
+                        {
+                            1 => "タマゴ",
+                            3 => "Œuf",
+                            4 => "Uovo",
+                            5 => "Ei",
+                            7 => "Huevo",
+                            8 => "알",
+                            9 or 10 => "蛋",
+                            _ => "Egg",
+                        };
+                    }
+                }
+
+                if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector
+                {
+                    cln.Ball = BallSwap(offered.HeldItem);
+                    Log($"Ball swapped to: {(Ball)cln.Ball}");
+                }
+                if (toSend.IsShiny)
+                {
+                    if (cln.Met_Location == 30024) //Allow Shiny Raidmons to OT
+                    {
+                        if (toSend.ShinyXor != 0)
+                            cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF); //Star
+                        else
+                            cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF); //Square
+                    }
+                    else
+                        cln.SetShiny();
+                }
+                else
+                    if (cln.Met_Location != 30024) //Allow Raidmons to OT, Reroll PID of Non-Shinies 
+                {
+                    cln.SetShiny();
+                    cln.SetUnshiny();
+                }
+                if (cln.Species == (ushort)Species.Dunsparce || cln.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
+                {
+                    if (cln.EncryptionConstant % 100 == 0)
+                        cln = KeepECModable(cln);
+                }
+                else
+                    if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
+                cln.RefreshChecksum();
+            }
+            var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
+            if (tradesv.Valid)
+            {
+                Log($"OT info swapped to:");
+                Log($"OT_Name: {cln.OT_Name}");
+                Log($"TID: {cln.TrainerTID7}");
+                Log($"SID: {cln.TrainerSID7}");
+                Log($"Gender: {(Gender)cln.OT_Gender}");
+                Log($"Language: {(LanguageID)cln.Language}");
+                Log($"Game: {(GameVersion)cln.Version}");
+                Log($"OT swap success.");
+
+                if (toSend.HeldItem == (int)custom.OTSwapItem)
+                {
+                    DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
+                    counts.AddCompletedOTSwaps();
+                }
+                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
+            }
+            else
+                Log($"Sending original Pokémon as it can't be OT swapped");
+            return tradesv.Valid;
+        }
+        private bool OTChangeAllowed(PK9 mon)
+        {
+            var changeallowed = true;
+            var custom = Hub.Config.CustomSwaps;
+            // Check if OT change is allowed for different situations
+            switch (mon.Species)
+            {
+                //Ditto will not OT change unless it has Destiny Mark
+                case (ushort)Species.Ditto:
+                    if (mon.RibbonMarkDestiny == true)
+                        changeallowed = true;
+                    else
+                        changeallowed = false;
+                    break;
+            }
+            switch (mon.OT_Name) //Stops mons with Specific OT from changing to User's OT
+            {
+                case "Blaines":
+                case "New Year 23":
+                case "Valentine":
+                case "4July":
+                    if (mon.HeldItem == (int)custom.OTSwapItem) //Allow OT Swap if function triggered by held item only
+                        changeallowed = true;
+                    else
+                        changeallowed = false;
+                    break;
+            }
+            return changeallowed;
+        }
+        private static PK9 KeepECModable(PK9 eckeep) //Maintain form for Dunsparce/Tandemaus
+        {
+            eckeep.SetRandomEC();
+
+            uint ecDelta = eckeep.EncryptionConstant % 100;
+            eckeep.EncryptionConstant -= ecDelta;
+
+            return eckeep;
+        }
+        private static int BallSwap(int ballItem) => ballItem switch
+        {
+            1 => 1,
+            2 => 2,
+            3 => 3,
+            4 => 4,
+            5 => 5,
+            6 => 6,
+            7 => 7,
+            8 => 8,
+            9 => 9,
+            10 => 10,
+            11 => 11,
+            12 => 12,
+            13 => 13,
+            14 => 14,
+            15 => 15,
+            492 => 17,
+            493 => 18,
+            494 => 19,
+            495 => 20,
+            496 => 21,
+            497 => 22,
+            498 => 23,
+            499 => 24,
+            576 => 25,
+            851 => 26,
+            _ => 0,
+        };
+    }
     public partial class PokeTradeBotSWSH : PokeRoutineExecutor8SWSH, ICountBot
     {
         private async Task<(PK8, bool)> SetTradePartnerDetailsSWSH(PK8 toSend, PK8 offered, string trainerName, SAV8SWSH sav, CancellationToken token)

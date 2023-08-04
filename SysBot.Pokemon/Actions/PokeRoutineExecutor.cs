@@ -218,7 +218,7 @@ namespace SysBot.Pokemon
                     var msg = $"Added to the NPC Registry\n\n";
                     var wait = TimeSpan.FromMinutes(cd) - delta;
 
-                    poke.Notifier.SendNotification(bot, poke, $"You are still on trade cooldown, and cannot trade for another {wait.TotalMinutes:F1} minute(s).");
+                    poke.Notifier.SendNotification(bot, poke, $"Still on trade cooldown, CD missed by {wait.TotalMinutes:F1} minute(s).");
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         msg += $"User {TrainerName} was caught by the NPC Police\nNPC ID: {TrainerNID}";
                     EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));

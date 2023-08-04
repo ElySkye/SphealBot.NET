@@ -75,6 +75,7 @@ namespace SysBot.Pokemon.Discord
                 {
                     var me = SysCord<T>.Runner;
                     var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
+                    var p = SysCordSettings.Settings.CommandPrefix;
                     string botversion = "";
                     if (me is not null)
                         botversion = me.ToString()!.Substring(46, 3);
@@ -96,7 +97,6 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Seed Check";
-                        embedMsg += $"The prefix of this bot is **{SysCordSettings.Settings.CommandPrefix}**\n\n";
                         embedMsg += $"The current game running is **{gamever}**\n\n";
                         embedMsg += $"Show a Pokémon caught from a raid to check seed\n";
                         embedMsg += $"This function only works on SWSH\n\n";
@@ -106,7 +106,6 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Clone Request";
-                        embedMsg += $"The prefix of this bot is **{SysCordSettings.Settings.CommandPrefix}**\n\n";
                         embedMsg += $"The current game running is **{gamever}**\n\n";
                         embedMsg += $"Show a Pokémon to be cloned\n";
                         embedMsg += $"Hit B to change your offer\n";
@@ -118,7 +117,6 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0x6015F9;
                         embedAuthor += "Dump Request";
-                        embedMsg += $"The prefix of this bot is **{SysCordSettings.Settings.CommandPrefix}**\n\n";
                         embedMsg += $"The current game running is **{gamever}**\n\n";
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
                         embedMsg += $"You have **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds to show your Pokémon\n";
@@ -133,7 +131,7 @@ namespace SysBot.Pokemon.Discord
                         embedAuthor += "Direct Trade Request";
                         embedMsg += $"Trade using the nicknames on sheet or use **Special Features**\n";
                         embedMsg += $"The Current Game running is **{gamever}**\n\n";
-                        embedMsg += $"Commands:\n**$help**, **$rsv**, **$t**, **$it**, **$tc**, **$dump**, **$clone**, **$checkcd**, **$dtl**, **$spf**\n";
+                        embedMsg += $"Commands:\n**{p}help**, **{p}rsv**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**, **{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
                         embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }

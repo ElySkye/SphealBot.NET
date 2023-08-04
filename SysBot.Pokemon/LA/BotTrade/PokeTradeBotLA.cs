@@ -660,7 +660,7 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var sf = offered.Nickname;
 
-            if (sf == "evo")
+            if (sf == "evo" || sf == "Evo" || sf == "EVO") //Account for lower/uppercase
             {
                 toSend = offered.Clone();
                 Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
