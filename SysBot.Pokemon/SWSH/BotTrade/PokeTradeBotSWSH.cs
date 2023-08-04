@@ -556,7 +556,7 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
-            var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {partner.TrainerName} <\r\n============";
+            var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {user} <\r\n============";
 
             if (offered.Nickname == custom.SphealEvent)
             {
@@ -626,7 +626,7 @@ namespace SysBot.Pokemon
                     {
                         msg = $"Pokémon: {(Species)offered.Species}";
                         msg += $"\nPokémon OT: {offered.OT_Name}";
-                        msg += $"\nUser: {partner.TrainerName}";
+                        msg += $"\nUser: {user}";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -640,7 +640,7 @@ namespace SysBot.Pokemon
                         {
                             msg = $"Pokémon: {(Species)offered.Species}";
                             msg += $"\nPokémon OT: {offered.OT_Name}";
-                            msg += $"\nUser: {partner.TrainerName}";
+                            msg += $"\nUser: {user}";
                             await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                             DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                             return (toSend, PokeTradeResult.IllegalTrade);
@@ -665,8 +665,7 @@ namespace SysBot.Pokemon
                 else if (toSend.Generation != 8)
                 {
                     not8 = $"Pokémon: {(Species)offered.Species}";
-                    not8 += $"\nUser: {partner.TrainerName}";
-                    not8 += $"\nUser is attempting to Ballswap non Gen 8 ";
+                    not8 += $"\n{user} is attempting to Ballswap non Gen 8";
                     not8 += $"\nDue to Home Tracker, bot is unable to do so";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not8, "Bad Ball Swap:").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
@@ -677,7 +676,7 @@ namespace SysBot.Pokemon
                 if (!la.Valid)
                 {
                     not8 = $"Pokémon: {(Species)offered.Species}";
-                    not8 += $"\nUser: {partner.TrainerName}";
+                    not8 += $"\nUser: {user}";
                     not8 += $"\nPokémon shown is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not8, "Bad Ball Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -702,7 +701,7 @@ namespace SysBot.Pokemon
                     }
                     else
                     {
-                        not8 = $"{partner.TrainerName}, {(Species)offered.Species} cannot be in that ball";
+                        not8 = $"{user}, {(Species)offered.Species} cannot be in that ball";
                         not8 += $"\nThe ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not8, "Bad Ball Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", cln);
@@ -731,7 +730,7 @@ namespace SysBot.Pokemon
                     else
                     {
                         var msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nUser: {partner.TrainerName}";
+                        msg += $"\nUser: {user}";
                         msg += $"\nEquip an Everstone to allow trade";
                         msg += $"\nLeaving Trade...";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
@@ -741,7 +740,7 @@ namespace SysBot.Pokemon
                         
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
-                    var msg = $"Found {partner.TrainerName} has been detected for abusing Ledy trades.";
+                    var msg = $"Found {user} has been detected for abusing Ledy trades.";
                     if (AbuseSettings.EchoNintendoOnlineIDLedy)
                         msg += $"\nID: {partner.TrainerOnlineID}";
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.LedyAbuseEchoMention))
@@ -766,7 +765,7 @@ namespace SysBot.Pokemon
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"Pokémon: {(Species)offered.Species}";
                 msg += $"\nNickname: {offered.Nickname}";
-                msg += $"\nUser: {partner.TrainerName}";
+                msg += $"\nUser: {user}";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }

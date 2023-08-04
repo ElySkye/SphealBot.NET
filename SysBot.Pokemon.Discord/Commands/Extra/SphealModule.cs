@@ -434,7 +434,11 @@ namespace SysBot.Pokemon.Discord
             {
                 var pla = "**__Trilogy Swap__**\n";
                 pla += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
-                pla += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nUrsaring | Hisui Qwilfish | Scyther\r\nStantler | Hisui Sliggoo | White Basculin\r\n```";
+                pla += $"```• Have the Pokémon be named evo & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nUrsaring | Hisui Qwilfish | Scyther\r\nStantler | Hisui Sliggoo | White Basculin\r\n```";
+
+                pla += "**__Pokéball Swap__**\n";
+                pla += "Function: Allows Ball swap for existing Pokémon\n";
+                pla += "```• Have the Pokémon be nicknamed either of these:\r\nPoke ➜ LAPoke | Great ➜ LAGreat | Ultra ➜ LAUltra\r\nFeat ➜ Feather | Wing ➜ Wing | Jet ➜ Jet\r\nHeavy ➜ LAHeavy | Lead ➜ Leaden | Giga ➜ Gigaton\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non PLA / Event mons cannot be ball swapped```\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(pla, "Special Features - PLA");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);

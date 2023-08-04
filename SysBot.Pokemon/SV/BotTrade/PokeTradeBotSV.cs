@@ -1022,8 +1022,7 @@ namespace SysBot.Pokemon
                 else if (toSend.Generation != 9)
                 {
                     not9 = $"Pokémon: {(Species)offered.Species}";
-                    not9 += $"\nUser: {user}";
-                    not9 += $"\nUser is attempting to Ballswap non Gen 9 ";
+                    not9 += $"\n{user} is attempting to Ballswap non Gen 9";
                     not9 += $"\nDue to Home Tracker, bot is unable to do so";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
@@ -1076,8 +1075,8 @@ namespace SysBot.Pokemon
                 if (!la.Valid)
                 {
                     msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nPokémon OT: {offered.OT_Name}";
                     msg += $"\nUser: {user}";
+                    msg += $"\nPokémon shown is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
