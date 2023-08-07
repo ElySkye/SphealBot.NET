@@ -427,6 +427,14 @@ namespace SysBot.Pokemon.Discord
                 swsh += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
                 swsh += "```• Receive a random shiny egg\r\n• Eggs will be in your OT and met in daycare```\n";
 
+                swsh += "**__Trilogy Swap__**\n";
+                swsh += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
+                swsh += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFarfetch'd (Galar) | Yamask (Galar) | Sliggoo (Kalos)```\n";
+
+                swsh += "**__Trade Evo <Purifier>__**\n";
+                swsh += "Function: Evolve Basic Trade Evolutions\n";
+                swsh += "```• Have the Pokémon hold an Everstone & show bot\r\n• Your choice if you want to press B (optional)\r\n\r\n[Species List]\r\nKadabra | Machoke | Gurdurr\r\nHaunter | Phantump| Pumpkaboo\r\nBoldore | Feebas\r\nShelmet | Karrablast```\n";
+
                 Embed? embed = Sphealcl.EmbedSFList(swsh, "Special Features - SWSH");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
@@ -438,7 +446,7 @@ namespace SysBot.Pokemon.Discord
 
                 pla += "**__Pokéball Swap__**\n";
                 pla += "Function: Allows Ball swap for existing Pokémon\n";
-                pla += "```• Have the Pokémon be nicknamed either of these:\r\nPoke ➜ LAPoke | Great ➜ LAGreat | Ultra ➜ LAUltra\r\nFeat ➜ Feather | Wing ➜ Wing | Jet ➜ Jet\r\nHeavy ➜ LAHeavy | Lead ➜ Leaden | Giga ➜ Gigaton\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non PLA / Event mons cannot be ball swapped```\n";
+                pla += "```• Have the Pokémon be nicknamed either of these:\r\nPoke ➜ LAPoke | Great ➜ LAGreat | Ultra ➜ LAUltra\r\nFeat ➜ Feather | Wing ➜ Wing | Jet ➜ Jet\r\nHeavy ➜ LAHeavy | Lead ➜ Leaden | Giga ➜ Gigaton\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball you chose\r\nAny non PLA / Event mons cannot be ball swapped```\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(pla, "Special Features - PLA");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);

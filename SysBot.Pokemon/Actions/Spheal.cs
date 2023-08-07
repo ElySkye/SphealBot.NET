@@ -264,7 +264,7 @@ namespace SysBot.Pokemon
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
-            if (toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
+            if (toSend.RibbonMarkMisty == true || toSend.RibbonMarkFishing == true || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
                 || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
             {
                 if (toSend.IsShiny)

@@ -709,6 +709,138 @@ namespace SysBot.Pokemon
                     }
                 }
             }
+            else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
+            {
+                toSend = offered.Clone();
+                Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                string? msg;
+
+                var la = new LegalityAnalysis(offered);
+                if (!la.Valid)
+                {
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nUser: {user}";
+                    msg += $"\nPokémon shown is not legal";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
+                    if (swap == 229)
+                    {
+                        Log($"Evo Species is holding an Everstone");
+
+                        switch (toSend.Species)
+                        {
+                            case (ushort)Species.Kadabra:
+                                toSend.Species = (ushort)Species.Alakazam;
+                                break;
+                            case (ushort)Species.Machoke:
+                                toSend.Species = (ushort)Species.Machamp;
+                                break;
+                            case (ushort)Species.Gurdurr:
+                                toSend.Species = (ushort)Species.Conkeldurr;
+                                break;
+                            case (ushort)Species.Haunter:
+                                toSend.Species = (ushort)Species.Gengar;
+                                break;
+                            case (ushort)Species.Graveler:
+                                toSend.Species = (ushort)Species.Golem;
+                                break;
+                            case (ushort)Species.Phantump:
+                                toSend.Species = (ushort)Species.Trevenant;
+                                break;
+                            case (ushort)Species.Pumpkaboo:
+                                toSend.Species = (ushort)Species.Gourgeist;
+                                break;
+                            case (ushort)Species.Boldore:
+                                toSend.Species = (ushort)Species.Gigalith;
+                                break;
+                            case (ushort)Species.Feebas:
+                                toSend.Species = (ushort)Species.Milotic;
+                                break;
+                            case (ushort)Species.Shelmet:
+                                toSend.Species = (ushort)Species.Accelgor;
+                                break;
+                            case (ushort)Species.Karrablast:
+                                toSend.Species = (ushort)Species.Escavalier;
+                                break;
+                        }
+                        toSend.HeldItem = 1882;
+                    }
+                    else
+                    {
+                        //#2 Evolve difficult to evolve Species (Evo Swap) - todofuture (PLA/SWSH evos)
+                        switch (toSend.Species)
+                        {
+                            case (ushort)Species.Farfetchd:
+                                if (toSend.Form == 1)
+                                    toSend.Species = (ushort)Species.Sirfetchd;
+                                break;
+                            case (ushort)Species.Yamask:
+                                if (toSend.Form == 1)
+                                {
+                                    toSend.Species = (ushort)Species.Runerigus;
+                                    toSend.FormArgument = 50;
+                                }
+                                break;
+                            case (ushort)Species.Sliggoo:
+                                if (toSend.Form == 0) //Kalos
+                                    toSend.Species = (ushort)Species.Goodra;
+                                break;
+                        }
+                    }
+                    if (toSend.AbilityNumber == 1)
+                        toSend.RefreshAbility(0);
+                    else if (toSend.AbilityNumber == 2)
+                        toSend.RefreshAbility(1);
+                    else if (toSend.AbilityNumber == 3 || toSend.AbilityNumber == 4)
+                        toSend.RefreshAbility(2);
+                    //#3 Clear Nicknames
+                    if (!toSend.FatefulEncounter || toSend.Met_Location != 30001)
+                        toSend.ClearNickname();
+                    toSend.RefreshChecksum();
+
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        if (toSend.HeldItem == 1882)
+                            Log($"Purification Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        else
+                            Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                        poke.TradeData = toSend;
+                        counts.AddCompletedTrilogySwaps();
+                        DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
+                        await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else //Safety Net incase something slips through
+                    {
+                        if (toSend.HeldItem == 1882)
+                        {
+                            msg = $"{user}, {(Species)toSend.Species} has failed to purify";
+                            msg += $"\nPls refer to LA report";
+                            await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Trade Evo Purification:").ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            msg = $"{user}, {(Species)toSend.Species} has a problem";
+                            msg += $"\nPls refer to LA report";
+                            await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+                        }
+                        msg = la2.Report();
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
             if (trade != null)
             {
                 var tradeevo = new List<ushort>
@@ -723,21 +855,19 @@ namespace SysBot.Pokemon
                     (ushort)Species.Boldore,
                 };
                 var evo = offered.Species;
-                if (evo != 0 && tradeevo.Contains(evo))
+                if (evo > 0 && tradeevo.Contains(evo))
                 {
-                    if (offered.HeldItem == 229)
-                        Log($"Trade Evo Species is holding everstone, Allow trading");
-                    else
+                    if (swap != 229)
                     {
                         var msg = $"Pokémon: {(Species)offered.Species}";
                         msg += $"\nUser: {user}";
                         msg += $"\nEquip an Everstone to allow trade";
-                        msg += $"\nLeaving Trade...";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
+                        msg += $"\nGiven a ticket for Unauthorised goods";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade evolution sent by:").ConfigureAwait(false);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
                     }
                 }
-                        
+
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
                     var msg = $"Found {user} has been detected for abusing Ledy trades.";

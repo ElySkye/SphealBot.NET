@@ -741,8 +741,8 @@ namespace SysBot.Pokemon
                         toSend.RefreshAbility(0);
                     else if (toSend.AbilityNumber == 2)
                         toSend.RefreshAbility(1);
-                    else if (toSend.AbilityNumber == 3)
-                        toSend.RefreshAbility(4);
+                    else if (toSend.AbilityNumber == 3 || toSend.AbilityNumber == 4)
+                        toSend.RefreshAbility(2);
                     toSend.HeightAbsolute = toSend.CalcHeightAbsolute;
                     toSend.WeightAbsolute = toSend.CalcWeightAbsolute;
                     //#3 Clear Nicknames
