@@ -642,7 +642,7 @@ namespace SysBot.Pokemon
                             msg += $"\nPokémon OT: {offered.OT_Name}";
                             msg += $"\nUser: {user}";
                             await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                            DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                            DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                             return (toSend, PokeTradeResult.IllegalTrade);
                         }
                         else
@@ -771,7 +771,7 @@ namespace SysBot.Pokemon
                                 toSend.Species = (ushort)Species.Escavalier;
                                 break;
                         }
-                        toSend.HeldItem = 1882;
+                        toSend.HeldItem = 224;
                     }
                     else
                     {
@@ -809,7 +809,7 @@ namespace SysBot.Pokemon
                     var la2 = new LegalityAnalysis(toSend);
                     if (la2.Valid)
                     {
-                        if (toSend.HeldItem == 1882)
+                        if (toSend.HeldItem == 224)
                             Log($"Purification Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
                         else
                             Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");

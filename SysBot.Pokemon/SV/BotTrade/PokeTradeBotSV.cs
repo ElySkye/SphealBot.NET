@@ -1004,7 +1004,7 @@ namespace SysBot.Pokemon
                         msg += $"\nPokémon OT: {offered.OT_Name}";
                         msg += $"\nUser: {user}";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);
                     }
                     poke.TradeData = toSend;

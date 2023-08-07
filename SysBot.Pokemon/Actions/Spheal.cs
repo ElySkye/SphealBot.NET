@@ -23,27 +23,6 @@ namespace SysBot.Pokemon
             var Violet = (ushort)Species.Miraidon;
             var version = tradepartner.Game;
 
-            switch (cln.Species) //OT for Academy Meowth on the other version
-            {
-                case (ushort)Species.Meowth:
-                    {
-                        if (version == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
-                        {
-                            cln.Met_Location = 130;//Naranja Academy
-                            cln.Version = (int)GameVersion.SL;//Ensure correct Version
-                        }
-                        else if (version == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
-                        {
-                            cln.Met_Location = 131;//Uva Academy
-                            cln.Version = (int)GameVersion.VL;//Ensure correct Version
-                        }
-                        cln.SetShiny();
-                        cln.SetUnshiny();
-                        cln.SetRandomEC();
-                        cln.RefreshChecksum();
-                        break;
-                    }
-            }
             if (changeallowed)
             {
                 cln.OT_Name = tradepartner.TrainerName;
@@ -89,6 +68,11 @@ namespace SysBot.Pokemon
                         };
                     }
                 }
+                //This is for eggs hatched in the Academy/Academy Meowth gift
+                if (version == (int)GameVersion.SL && toSend.Met_Location == 131) //Scarlet
+                    cln.Met_Location = 130;//Naranja Academy
+                else if (version == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
+                    cln.Met_Location = 131;//Uva Academy
 
                 if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector
                 {
