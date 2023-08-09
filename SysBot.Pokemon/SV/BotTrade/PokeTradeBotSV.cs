@@ -914,6 +914,16 @@ namespace SysBot.Pokemon
                 (int)custom.EVGenDEFItem,
                 (int)custom.EVGenSPDItem,
             };
+
+            var svEvents = new List<ushort>
+            {
+                (ushort)Species.Pikachu,
+                (ushort)Species.Gyarados,
+                (ushort)Species.Zoroark,
+                (ushort)Species.Lechonk,
+                (ushort)Species.Mew,
+            };
+
             string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
             var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {user} <\r\n======";
 
@@ -975,14 +985,31 @@ namespace SysBot.Pokemon
                 if (toSend.Tracker != 0 && toSend.Generation == 9)
                     toSend.Tracker = 0;
                 var la = new LegalityAnalysis(offered);
-                if (toSend.FatefulEncounter || toSend.Generation != 9 && la.Valid)
+                if (toSend.FatefulEncounter && la.Valid)
                 {
-                    DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
-                    Log($"Sending a clone as I'm not able to OTSwap that");
-                    counts.AddCompletedClones();
-                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                    await Task.Delay(2_500, token).ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.Success);
+                    if (toSend.Generation == 9 && svEvents.Contains(offered.Species))
+                    {
+                        if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
+                        {
+                            msg = $"Pokémon: {(Species)offered.Species}";
+                            msg += $"\nPokémon OT: {offered.OT_Name}";
+                            msg += $"\nUser: {user}";
+                            await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
+                            DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                            return (toSend, PokeTradeResult.IllegalTrade);
+                        }
+                        poke.TradeData = toSend;
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else
+                    {
+                        DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
+                        Log($"Sending a clone as I'm not able to OTSwap that");
+                        counts.AddCompletedClones();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
                 }
                 else
                 {

@@ -162,7 +162,7 @@ namespace SysBot.Pokemon.Discord
                 "PB8" => "BDSP",
                 _ => "LGPE",
             };
-            await ReplyAsync($"<:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
+            await ReplyAsync($"# <:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
         }
 
         [Command("cooldown")]
