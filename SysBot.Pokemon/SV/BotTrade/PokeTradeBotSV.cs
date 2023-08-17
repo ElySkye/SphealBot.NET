@@ -364,7 +364,7 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             }
 
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} TID: {tradePartner.TID7} SID: {tradePartner.SID7} (NID: {trainerNID}). Waiting for a Pokémon...");
+            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} TID: {tradePartner.TID7} SID: {tradePartner.SID7}\n(NID: {trainerNID}).\nWaiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
             {
@@ -840,6 +840,7 @@ namespace SysBot.Pokemon
                 PokeTradeType.Random => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 PokeTradeType.Clone => await HandleClone(sav, poke, offered, oldEC, token).ConfigureAwait(false),
                 PokeTradeType.LinkSV => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
+                PokeTradeType.EggSV => await HandleMysteryEggs(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 _ => (toSend, PokeTradeResult.Success),
             };
         }
@@ -915,15 +916,6 @@ namespace SysBot.Pokemon
                 (int)custom.EVGenSPDItem,
             };
 
-            var svEvents = new List<ushort>
-            {
-                (ushort)Species.Pikachu,
-                (ushort)Species.Gyarados,
-                (ushort)Species.Zoroark,
-                (ushort)Species.Lechonk,
-                (ushort)Species.Mew,
-            };
-
             string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
             var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {user} <\r\n======";
 
@@ -934,48 +926,12 @@ namespace SysBot.Pokemon
             }
             //Mystery Eggs
             if (nick == custom.MysteryEgg)
-            {
-                string? myst;
-                PK9? rnd;
-                do
-                {
-                    rnd = Hub.Ledy.Pool.GetRandomTrade();
-                } while (!rnd.IsEgg);
-                toSend = rnd;
-
-                var Size = toSend.Scale switch
-                {
-                    255 => "Jumbo",
-                    0 => "Tiny",
-                    _ => "Average",
-                };
-                var Shiny = toSend.IsShiny switch
-                {
-                    true => "Shiny",
-                    false => "Non-Shiny",
-                };
-
-                Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
-                await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
-                poke.TradeData = toSend;
-
-                myst = $"**{user}** has received a Mystery Egg !\n";
-                myst += $"**Don't reveal if you want the surprise**\n\n";
-                myst += $"**Pokémon**: ||**{GameInfo.GetStrings(1).Species[toSend.Species]}**||\n";
-                myst += $"**Gender**: ||**{(Gender)toSend.Gender}**||\n";
-                myst += $"**Shiny**: ||**{Shiny}**||\n";
-                myst += $"**Size**: ||**{Size}**||\n";
-                myst += $"**Nature**: ||**{(Nature)toSend.Nature}**||\n";
-                myst += $"**Ability**: ||**{(Ability)toSend.Ability}**||\n";
-                myst += $"**IVs**: ||**{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**||\n";
-                myst += $"**Language**: ||**{(LanguageID)toSend.Language}**||";
-
-                EchoUtil.EchoEmbed(Sphealcl.EmbedEggMystery(toSend, myst, $"{user}'s Mystery Egg"));
-                counts.AddCompletedMystery();
-                return (toSend, PokeTradeResult.Success);
-            }
+                await HandleMysteryEggs(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
+            //Custom Swaps
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
+            /*else if (swap != 0)
+                await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);*/
             else if (swap == (int)custom.OTSwapItem) //OT Swap for existing mons
             {
                 toSend = offered.Clone();
@@ -985,9 +941,21 @@ namespace SysBot.Pokemon
                 if (toSend.Tracker != 0 && toSend.Generation == 9)
                     toSend.Tracker = 0;
                 var la = new LegalityAnalysis(offered);
-                if (toSend.FatefulEncounter && la.Valid)
+                if (!la.Valid)
                 {
-                    if (toSend.Generation == 9 && svEvents.Contains(offered.Species))
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nPokémon OT: {offered.OT_Name}";
+                    msg += $"\nUser: {partner.TrainerName}";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else if (la.Valid)
+                {
+                    if (toSend.Generation == 9)
                     {
                         if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
                         {
@@ -1001,7 +969,7 @@ namespace SysBot.Pokemon
                         poke.TradeData = toSend;
                         return (toSend, PokeTradeResult.Success);
                     }
-                    else
+                    else if (toSend.Generation != 9)
                     {
                         DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
                         Log($"Sending a clone as I'm not able to OTSwap that");
@@ -1010,32 +978,6 @@ namespace SysBot.Pokemon
                         await Task.Delay(2_500, token).ConfigureAwait(false);
                         return (toSend, PokeTradeResult.Success);
                     }
-                }
-                else
-                {
-                    if (!la.Valid)
-                    {
-                        msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nPokémon OT: {offered.OT_Name}";
-                        msg += $"\nUser: {partner.TrainerName}";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
-
-                        msg = la.Report();
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
-                        return (offered, PokeTradeResult.IllegalTrade);
-                    }
-                    else if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
-                    {
-                        msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nPokémon OT: {offered.OT_Name}";
-                        msg += $"\nUser: {user}";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                        return (toSend, PokeTradeResult.IllegalTrade);
-                    }
-                    poke.TradeData = toSend;
-                    return (toSend, PokeTradeResult.Success);
                 }
             }
             //Ball Swapper
@@ -1084,7 +1026,7 @@ namespace SysBot.Pokemon
                     }
                     else
                     {
-                        not9 = $"{user}, {(Species)offered.Species} cannot be in that ball";
+                        not9 = $"{user}, {(Species)offered.Species} cannot be in {toSend.Ball}";
                         not9 += $"\nThe ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -1228,18 +1170,10 @@ namespace SysBot.Pokemon
                     }
                     else //Safety Net incase something slips through
                     {
-                        if (toSend.HeldItem == 1882)
-                        {
-                            msg = $"{user}, {(Species)toSend.Species} has failed to purify";
-                            msg += $"\nPls refer to LA report";
-                            await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Trade Evo Purification:").ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            msg = $"{user}, {(Species)toSend.Species} has a problem";
-                            msg += $"\nPls refer to LA report";
-                            await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
-                        }
+                        msg = $"{user}, {(Species)toSend.Species} has a problem";
+                        msg += $"\nPls refer to LA report";
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
+
                         msg = la2.Report();
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);

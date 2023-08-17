@@ -12,6 +12,56 @@ namespace SysBot.Pokemon
 {
     public partial class PokeTradeBotSV : PokeRoutineExecutor9SV, ICountBot
     {
+        private async Task<(PK9 toSend, PokeTradeResult check)> HandleMysteryEggs(SAV9SV sav, PokeTradeDetail<PK9> poke, PK9 offered, PK9 toSend, PartnerDataHolder partner, CancellationToken token)
+        {
+            var counts = TradeSettings;
+            var user = partner.TrainerName;
+
+            string? myst;
+            PK9? rnd;
+            do
+            {
+                rnd = Hub.Ledy.Pool.GetRandomTrade();
+            } while (!rnd.IsEgg);
+            toSend = rnd;
+
+            var Size = toSend.Scale switch
+            {
+                255 => "Jumbo",
+                0 => "Tiny",
+                _ => "Average",
+            };
+            var Shiny = toSend.IsShiny switch
+            {
+                true => "Shiny",
+                false => "Non-Shiny",
+            };
+
+            Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
+            await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
+            poke.TradeData = toSend;
+
+            myst = $"**{user}** has received a Mystery Egg !\n";
+            myst += $"**Don't reveal if you want the surprise**\n\n";
+            myst += $"||**Pokémon**: **{GameInfo.GetStrings(1).Species[toSend.Species]}**\n";
+            myst += $"**Gender**: **{(Gender)toSend.Gender}**\n";
+            myst += $"**Shiny**: **{Shiny}**\n";
+            myst += $"**Size**: **{Size}**\n";
+            myst += $"**Nature**: **{(Nature)toSend.Nature}**\n";
+            myst += $"**Ability**: **{(Ability)toSend.Ability}**\n";
+            myst += $"**IVs**: **{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**\n";
+            myst += $"**Language**: **{(LanguageID)toSend.Language}**||";
+
+            EchoUtil.EchoEmbed(Sphealcl.EmbedEggMystery(toSend, myst, $"{user}'s Mystery Egg"));
+            counts.AddCompletedMystery();
+            return (toSend, PokeTradeResult.Success);
+        }
+
+        /*private async Task<(PK9 toSend, PokeTradeResult check)> HandleCustomSwaps(SAV9SV sav, PokeTradeDetail<PK9> poke, PK9 offered, PK9 toSend, PartnerDataHolder partner, CancellationToken token)
+        {
+            await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+            await Task.Delay(2_500, token).ConfigureAwait(false);
+        }*/
         private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, PK9 offered, SAV9SV sav, CancellationToken token)
         {
             var cln = (PK9)toSend.Clone();

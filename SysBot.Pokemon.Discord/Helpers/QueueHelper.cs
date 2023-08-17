@@ -5,8 +5,6 @@ using Discord.WebSocket;
 using PKHeX.Core;
 using System;
 using System.Threading.Tasks;
-using SysBot.Pokemon;
-using System.Diagnostics;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -89,15 +87,18 @@ namespace SysBot.Pokemon.Discord
                     };
 
                     Color embedMsgColor = new ();
-                    embedTitle = $"__Search once bot DMs you Initializing trade__\n";
+                    embedTitle = $"Search once bot DMs you Initializing trade\n";
                     embedAuthor = $"{trainer}'s ";
                     embedMsg = $"";
+
+                    Random luck = new();
+                    int lucky = luck.Next(0, 10);
 
                     if (routine == PokeRoutineType.SeedCheck)
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Seed Check";
-                        embedMsg += $"The current game running is **{gamever}**\n\n";
+                        embedMsg += $"Current Game: **{gamever}**\n";
                         embedMsg += $"Show a Pokémon caught from a raid to check seed\n";
                         embedMsg += $"This function only works on SWSH\n\n";
                         embedMsg += $"Enjoy & Please come again !";
@@ -106,34 +107,57 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Clone Request";
-                        embedMsg += $"The current game running is **{gamever}**\n\n";
-                        embedMsg += $"Show a Pokémon to be cloned\n";
-                        embedMsg += $"Hit B to change your offer\n";
+                        embedMsg += $"Current Game: **{gamever}**\n";
+                        embedMsg += $"Show a Pokémon to be cloned & Hit B to change your offer\n";
                         embedMsg += $"Offer a trash Pokémon to receive your clone\n\n";
-                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
+                        embedMsg += $"Current Cooldown: **{cd}** mins\n\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.Dump)
                     {
                         embedMsgColor = 0x6015F9;
                         embedAuthor += "Dump Request";
-                        embedMsg += $"The current game running is **{gamever}**\n\n";
+                        embedMsg += $"Current Game: **{gamever}**\n";
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
-                        embedMsg += $"You have **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds to show your Pokémon\n";
+                        embedMsg += $"For **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds,\n";
                         embedMsg += $"You can show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n";
                         embedMsg += $"You will be DM-ed the OT details of the Pokémon(s) shown\n\n";
-                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
+                        embedMsg += $"Current Cooldown: **{cd}** mins\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.DirectTrade)
                     {
-                        embedMsgColor = 0x6FFEEC;
-                        embedAuthor += "Direct Trade Request";
-                        embedMsg += $"Trade using the nicknames on sheet or use **Special Features**\n";
-                        embedMsg += $"The Current Game running is **{gamever}**\n\n";
-                        embedMsg += $"Commands:\n**{p}help**, **{p}rsv**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**, **{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
-                        embedMsg += $"Your cooldown of **{cd}** mins will start once the trade completes\n";
-                        embedMsg += $"Enjoy & Please come again !";
+                        if (type == PokeTradeType.EggSV)
+                        {
+                            embedMsgColor = 0x008080;
+                            embedAuthor += "Mystery Egg";
+                            embedMsg += $"{trainer} is requesting a **Mystery Egg**!\n";
+                            embedMsg += $"What will they get?\n";
+                            embedMsg += $"May the *odds* be in their favor..\n\n";
+                            embedMsg += $"Current Game: **{gamever}**\n";
+                            embedMsg += $"Current Cooldown: **{cd}** mins\n";
+                            embedMsg += $"Enjoy trading !";
+                        }
+                        else if (type == PokeTradeType.LinkSV || type == PokeTradeType.LinkSWSH || type == PokeTradeType.LinkLA || type == PokeTradeType.LinkBDSP)
+                        {
+                            if (lucky == 0 || lucky == 1 || lucky == 2 || lucky == 3 || lucky == 10)
+                                embedMsgColor = 0x6FFEEC;
+                            else if (lucky == 4 || lucky == 5)
+                                embedMsgColor = 0x00FFFF;
+                            else if (lucky == 6)
+                                embedMsgColor = 0xFFC0CB;
+                            else if (lucky == 7 || lucky == 8)
+                                embedMsgColor = 0x74BBFB;
+                            else if (lucky == 9)
+                                embedMsgColor = 0xEED2EE;
+
+                            embedAuthor += "Direct Trade Request";
+                            embedMsg += $"Nickname/Features trade using [**Click for Nicknames**](<{SysCordSettings.HubConfig.CustomSwaps.SheetLink}>)\n";
+                            embedMsg += $"Current Game: **{gamever}**\n";
+                            embedMsg += $"Current Cooldown: **{cd}** mins\n\n";
+                            embedMsg += $"Commands:\n**{p}rsv**, **{p}rme**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**, **{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
+                            embedMsg += $"Enjoy trading !";
+                        }
                     }
 
                     EmbedAuthorBuilder embedAuthorBuild = new()
@@ -146,18 +170,96 @@ namespace SysBot.Pokemon.Discord
                         Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
                         IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
                     };
+
                     Sphealcl tradespheal = new();
+                    string embedEggUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/512x512/MysteryEgg.png";
                     string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png";
-                    EmbedBuilder builder = new()
+                    string embedThumbUrl2 = "https://archives.bulbagarden.net/media/upload/0/08/GO0363Holiday2021.png";
+                    string embedThumbUrl3 = "https://archives.bulbagarden.net/media/upload/2/23/GO0363Holiday2021_s.png";
+                    string embedThumbUrl4 = "https://archives.bulbagarden.net/media/upload/0/0e/Sleep_Profile_0363.png";
+                    string embedThumbUrl5 = "https://oyster.ignimgs.com/mediawiki/apis.ign.com/pokemon-sleep/1/16/Pokemon_Sleep_Types-Spheal_Pokemon_Sleep.png";
+
+                    if (type == PokeTradeType.EggSV)
                     {
-                        Color = embedMsgColor,
-                        Author = embedAuthorBuild,
-                        Title = embedTitle,
-                        Description = embedMsg,
-                        ThumbnailUrl = embedThumbUrl,
-                        Footer = embedFtr
-                    };
-                    await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        EmbedBuilder builder = new()
+                        {
+                            Color = embedMsgColor,
+                            Author = embedAuthorBuild,
+                            Title = embedTitle,
+                            Description = embedMsg,
+                            ThumbnailUrl = embedEggUrl,
+                            Footer = embedFtr
+                        };
+                        await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        if (lucky == 0 || lucky == 1 || lucky == 2 || lucky == 3 || lucky == 10)
+                        {
+                            EmbedBuilder builder = new()
+                            {
+                                Color = embedMsgColor,
+                                Author = embedAuthorBuild,
+                                Title = embedTitle,
+                                Description = embedMsg,
+                                ThumbnailUrl = embedThumbUrl,
+                                Footer = embedFtr
+                            };
+                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        }
+                        else if (lucky == 4 || lucky == 5)
+                        {
+                            EmbedBuilder builder = new()
+                            {
+                                Color = embedMsgColor,
+                                Author = embedAuthorBuild,
+                                Title = embedTitle,
+                                Description = embedMsg,
+                                ThumbnailUrl = embedThumbUrl2,
+                                Footer = embedFtr
+                            };
+                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        }
+                        else if (lucky == 6)
+                        {
+                            EmbedBuilder builder = new()
+                            {
+                                Color = embedMsgColor,
+                                Author = embedAuthorBuild,
+                                Title = embedTitle,
+                                Description = embedMsg,
+                                ThumbnailUrl = embedThumbUrl3,
+                                Footer = embedFtr
+                            };
+                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        }
+                        else if (lucky == 7 || lucky == 8)
+                        {
+                            EmbedBuilder builder = new()
+                            {
+                                Color = embedMsgColor,
+                                Author = embedAuthorBuild,
+                                Title = embedTitle,
+                                Description = embedMsg,
+                                ThumbnailUrl = embedThumbUrl4,
+                                Footer = embedFtr
+                            };
+                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        }
+                        else if (lucky == 9)
+                        {
+                            EmbedBuilder builder = new()
+                            {
+                                Color = embedMsgColor,
+                                Author = embedAuthorBuild,
+                                Title = embedTitle,
+                                Description = embedMsg,
+                                ThumbnailUrl = embedThumbUrl5,
+                                Footer = embedFtr
+                            };
+                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
+                        }
+                    }
                 }
                 else
                 {

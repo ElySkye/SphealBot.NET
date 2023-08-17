@@ -8,6 +8,7 @@
         Clone,
         Dump,
         LinkSV,
+        EggSV,
         LinkSWSH,
         LinkLA,
         LinkBDSP

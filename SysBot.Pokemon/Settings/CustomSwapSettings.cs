@@ -11,6 +11,9 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("When set to something other than None, the Random Trades will accept this alternate species in addition to the nickname match.")]
         public Species LedySpecies2 { get; set; } = Species.None;
 
+        [Category(CustomSwap), Description("Display Google Sheets Link for Nicknames used in Direct Trades")]
+        public string SheetLink { get; set; } = "Input Link under BotTrade > Custom Swaps";
+
         [Category(CustomSwap), Description("Species selector for $it command. Default: Finizen")]
         public Species ItemTradeSpecies { get; set; } = Species.Finizen;
 

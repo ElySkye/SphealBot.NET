@@ -137,11 +137,70 @@ namespace SysBot.Pokemon.Discord
             var embed = new EmbedBuilder();
             embed.AddField(s =>
             {
-                s.Name = "Direct Trade Queue";
+                s.Name = "Queue List";
                 s.Value = msg;
                 s.IsInline = false;
             });
             await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
+        }
+
+        [Command("mysteryEgg")]
+        [Alias("myst", "rme")]
+        [Summary("Request a Mystery Egg through Discord - Pool from distribution folder")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task myst()
+        {
+            var code = Info.GetRandomTradeCode();
+            var sig = Context.User.GetFavor();
+            var me = SysCord<T>.Runner;
+            string botversion;
+            if (me is not null)
+            {
+                botversion = me.ToString()!.Substring(46, 3);
+                switch (botversion)
+                {
+                    case "PK9":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSV).ConfigureAwait(false);
+                        break;
+                    case "PK8":
+                        await ReplyAsync($"Command not configured for SWSH yet.").ConfigureAwait(false); break;
+                    case "PA8":
+                        await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
+                        break;
+                    case "PB8":
+                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        break;
+                }
+            }
+        }
+
+        [Command("mysteryEgg")]
+        [Alias("myst", "rme")]
+        [Summary("Request a Mystery Egg through Discord - Pool from distribution folder")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task MRE([Summary("Trade Code")] int code)
+        {
+            var sig = Context.User.GetFavor();
+            var me = SysCord<T>.Runner;
+            string botversion;
+            if (me is not null)
+            {
+                botversion = me.ToString()!.Substring(46, 3);
+                switch (botversion)
+                {
+                    case "PK9":
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSV).ConfigureAwait(false);
+                        break;
+                    case "PK8":
+                        await ReplyAsync($"Command not configured for SWSH yet.").ConfigureAwait(false); break;
+                    case "PA8":
+                        await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
+                        break;
+                    case "PB8":
+                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        break;
+                }
+            }
         }
 
         [Command("checkgame")]
@@ -272,8 +331,10 @@ namespace SysBot.Pokemon.Discord
                 wlRef = GetReference(wlParams[1], Convert.ToUInt64(wlParams[0]), wlExpires, wlParams[2]);
             }
             SysCordSettings.HubConfig.TradeAbuse.WhiteListedIDs.AddIfNew(new[] { wlRef });
-            msg += $"{wlParams[1]}({wlParams[0]}) added to the whitelist";
-            await ReplyAsync(Format.Code(msg)).ConfigureAwait(false);
+            msg += $"{wlParams[1]} has been added to the whitelist\nExpires: {wlExpires}";
+            await ReplyAsync(Format.Code(msg, "cs")).ConfigureAwait(false);
+            if (!Context.IsPrivate)
+                await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
         private RemoteControlAccess GetReference(string name, ulong id, DateTime expiration, string comment) => new()
         {
