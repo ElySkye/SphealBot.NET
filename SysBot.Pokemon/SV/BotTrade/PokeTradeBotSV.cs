@@ -1274,6 +1274,145 @@ namespace SysBot.Pokemon
                     }
                 }
             }
+            //Gender Swap - Only SV Natives
+            else if (swap == (int)custom.GenderSwapItem)
+            {
+                toSend = offered.Clone();
+                Log($"User's request is for Gender Swap using: {(Gender)offered.Gender} {GameInfo.GetStrings(1).Species[offered.Species]}");
+                string? msg;
+                var la = new LegalityAnalysis(offered);
+
+                if (!la.Valid || offered.Gender == 2)
+                {
+                    msg = $"Pokémon: {(Gender)offered.Gender} {(Species)offered.Species}";
+                    msg += $"\nUser: {user}";
+                    if (offered.Gender == 2)
+                        msg += $"\nWhy are you trying to Swap a Genderless?";
+                    else
+                        msg += $"\nPokémon shown is not legal";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    if (toSend.Gender == 0) //Male to Female
+                        toSend.Gender = 1;
+                    else if (toSend.Gender == 1) //Female to Male
+                        toSend.Gender = 0;
+
+                    if (toSend.IsShiny)
+                    {
+                        if (toSend.Met_Location == 30024)
+                        {
+                            if (toSend.ShinyXor != 0)
+                                toSend.PID = (((uint)(toSend.TID16 ^ toSend.SID16) ^ (toSend.PID & 0xFFFF) ^ 1u) << 16) | (toSend.PID & 0xFFFF); //Star
+                            else
+                                toSend.PID = (((uint)(toSend.TID16 ^ toSend.SID16) ^ (toSend.PID & 0xFFFF) ^ 0) << 16) | (toSend.PID & 0xFFFF); //Square
+                        }
+                        else
+                            toSend.SetShiny();
+                    }
+                    else
+                    if (toSend.Met_Location != 30024)
+                    {
+                        toSend.SetShiny();
+                        toSend.SetUnshiny();
+                    }
+                    if (toSend.Species == (ushort)Species.Dunsparce || toSend.Species == (ushort)Species.Tandemaus) //Keep EC to maintain form
+                    {
+                        if (toSend.EncryptionConstant % 100 == 0)
+                            toSend = KeepECModable(toSend);
+                    }
+                    else
+                        if (toSend.Met_Location != 30024) toSend.SetRandomEC();
+
+                    toSend.RefreshChecksum();
+
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        Log($"Gender swapped to: {(Gender)toSend.Gender}");
+                        poke.TradeData = toSend;
+                        counts.AddCompletedGenderSwaps();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else
+                    {
+                        msg = $"{user}, {(Species)offered.Species} cannot be that Gender";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap:").ConfigureAwait(false);
+
+                        msg = la2.Report();
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
+            //Power Swap - Max all moves PP & Gives relearn TMs
+            else if (swap == (int)custom.PowerSwapItem)
+            {
+                toSend = offered.Clone();
+                Log($"User's request is for Power Swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                string? msg;
+                var la = new LegalityAnalysis(offered);
+
+                if (!la.Valid)
+                {
+                    msg = $"Pokémon: {(Species)offered.Species}";
+                    msg += $"\nUser: {user}";
+                    msg += $"\nPokémon shown is not legal";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Power Swap:").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
+                }
+                else
+                {
+                    //Max PP Ups
+                    if (toSend.Move1 != 0)
+                        toSend.Move1_PPUps = 3;
+                    if (toSend.Move2 != 0)
+                        toSend.Move2_PPUps = 3;
+                    if (toSend.Move3 != 0)
+                        toSend.Move3_PPUps = 3;
+                    if (toSend.Move4 != 0)
+                        toSend.Move4_PPUps = 3;
+
+                    toSend.HealPP();
+                    toSend.SetRecordFlagsAll(); //TM Relearns (Only learnable ones)
+                    toSend.RefreshChecksum();
+
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        Log($"Power Swap Success.");
+                        poke.TradeData = toSend;
+                        counts.AddCompletedGenderSwaps();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else //Safety Net incase something slips through
+                    {
+                        msg = $"{user}, {(Species)offered.Species} has a problem";
+                        msg += $"\nPls refer to LA report";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Power Swap:").ConfigureAwait(false);
+
+                        msg = la2.Report();
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
+                    }
+                }
+            }
             //Tera Swapper
             else if (teraItem.Length > 1)
             {

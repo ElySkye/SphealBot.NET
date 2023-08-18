@@ -23,6 +23,12 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Held item used to trigger Trilogy Swap.")]
         public SwapItem TrilogySwapItem { get; set; } = SwapItem.Awakening;
 
+        [Category(CustomSwap), Description("Held item used to trigger Gender Swap.")]
+        public SwapItem GenderSwapItem { get; set; } = SwapItem.DestinyKnot;
+
+        [Category(CustomSwap), Description("Held item used to trigger Power Swap.")]
+        public SwapItem PowerSwapItem { get; set; } = SwapItem.EnergyPowder;
+
         [Category(CustomSwap), Description("Held item used to trigger EV Reset")]
         public SwapItem EVResetItem { get; set; } = SwapItem.TinyMushroom;
 

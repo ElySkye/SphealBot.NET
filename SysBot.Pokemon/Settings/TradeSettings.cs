@@ -50,6 +50,7 @@ namespace SysBot.Pokemon
         private int _completedBallSwaps;
         private int _completedTeraSwaps;
         private int _completedTrilogySwaps;
+        private int _completedGenderSwaps;
         private int _completedEVSwaps;
         private int _completedMystery;
         private int _completedSeedChecks;
@@ -105,6 +106,13 @@ namespace SysBot.Pokemon
             set => _completedTrilogySwaps = value;
         }
 
+        [Category(Counts), Description("Completed Gender Swap Trades")]
+        public int CompletedGenderSwaps
+        {
+            get => _completedGenderSwaps;
+            set => _completedGenderSwaps = value;
+        }
+
         [Category(Counts), Description("Completed EV Swap Trades")]
         public int CompletedEVSwaps
         {
@@ -151,6 +159,7 @@ namespace SysBot.Pokemon
         public void AddCompletedBallSwaps() => Interlocked.Increment(ref _completedBallSwaps);
         public void AddCompletedTeraSwaps() => Interlocked.Increment(ref _completedTeraSwaps);
         public void AddCompletedTrilogySwaps() => Interlocked.Increment(ref _completedTrilogySwaps);
+        public void AddCompletedGenderSwaps() => Interlocked.Increment(ref _completedGenderSwaps);
         public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
@@ -178,6 +187,8 @@ namespace SysBot.Pokemon
                 yield return $"Tera Swaps: {CompletedTeraSwaps}";
             if (CompletedTrilogySwaps != 0)
                 yield return $"Trilogy Swaps: {CompletedTrilogySwaps}";
+            if (CompletedGenderSwaps != 0)
+                yield return $"Gender Swaps: {CompletedGenderSwaps}";
             if (CompletedEVSwaps != 0)
                 yield return $"EV Swaps: {CompletedEVSwaps}";
             if (CompletedMystery != 0)

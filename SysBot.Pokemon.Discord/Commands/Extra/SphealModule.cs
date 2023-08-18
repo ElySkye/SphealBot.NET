@@ -467,6 +467,14 @@ namespace SysBot.Pokemon.Discord
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";
                 sv += $"```• Bot will reset or apply 252 EVs in 2 stats, last 6 EVs are done yourself\r\n• Raid Presets are minted to Adamant/Modest respectively\r\n• Do the thing like other swaps, follow held items as below:\r\n\r\nEV Reset ➜ {swap.EVResetItem} [Resets ALL EVs]\r\n\r\nEV Raid Atk ➜ {swap.EVRaidAtkItem} [Reset ALL EVs, Apply ATK/HP]\r\nEV Raid SP Atk ➜ {swap.EVRaidSPAItem} [Reset, Apply SPAtk/HP]\r\n\r\nEV Comp Atk ➜ {swap.EVCompAtkItem} [Reset, Atk/Speed]\r\nEV Comp SP Atk ➜ {swap.EVCompSPAItem} [Reset, SPAtk/Speed]\r\n\r\nEV Def Tank ➜ {swap.EVGenDEFItem} [Reset, HP/Def]\r\nEV Sp Def Tank ➜ {swap.EVGenSPDItem} [Reset, HP/SPDef]```\n";
 
+                sv += "**__Gender Swap__**\n";
+                sv += "Function: Allows Gender swap for existing Pokémon\n";
+                sv += $"```• Have the Pokémon hold {swap.GenderSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the opposite Gender```\n";
+
+                sv += "**__Power Swap__**\n";
+                sv += "Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\n";
+                sv += $"```• Have the Pokémon hold {swap.PowerSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon with maxed out PPs & relearn moves```\n";
+
                 Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
