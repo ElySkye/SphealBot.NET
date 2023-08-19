@@ -97,7 +97,6 @@ namespace SysBot.Pokemon.Discord
                     x.IsInline = false;
                 });
             }
-            await ReplyAsync("https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411").ConfigureAwait(false);
             await ReplyAsync("", false, builder.Build()).ConfigureAwait(false);
         }
 

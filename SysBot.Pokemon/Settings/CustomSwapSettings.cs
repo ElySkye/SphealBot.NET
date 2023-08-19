@@ -14,6 +14,9 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Display Google Sheets Link for Nicknames used in Direct Trades")]
         public string SheetLink { get; set; } = "Input Link under BotTrade > Custom Swaps";
 
+        [Category(CustomSwap), Description("Toggle Sheet Link Display for distribution trades through Discord")]
+        public bool SheetToggle { get; set; }
+
         [Category(CustomSwap), Description("Species selector for $it command. Default: Finizen")]
         public Species ItemTradeSpecies { get; set; } = Species.Finizen;
 

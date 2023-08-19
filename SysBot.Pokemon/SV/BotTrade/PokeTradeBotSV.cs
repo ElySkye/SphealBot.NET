@@ -363,8 +363,8 @@ namespace SysBot.Pokemon
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return PokeTradeResult.TrainerTooSlow;
             }
-
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} TID: {tradePartner.TID7} SID: {tradePartner.SID7}\n(NID: {trainerNID}).\nWaiting for a Pokémon...");
+            if (poke.Type == PokeTradeType.LinkSV)
+                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {tradePartner.TrainerName}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
 
             if (poke.Type == PokeTradeType.Dump)
             {
@@ -929,13 +929,13 @@ namespace SysBot.Pokemon
                 await HandleMysteryEggs(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
             //Custom Swaps
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
-                Log($"User's request is for {offered.Nickname}");
+                Log($"{user} is requesting for {offered.Nickname}");
             /*else if (swap != 0)
                 await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);*/
             else if (swap == (int)custom.OTSwapItem) //OT Swap for existing mons
             {
                 toSend = offered.Clone();
-                Log($"User's request is for OT swap using: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
+                Log($"{user} is requesting OT swap for: {GameInfo.GetStrings(1).Species[offered.Species]} with OT Name: {offered.OT_Name}");
                 string? msg;
 
                 if (toSend.Tracker != 0 && toSend.Generation == 9)
@@ -943,9 +943,8 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                    msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nPokémon OT: {offered.OT_Name}";
-                    msg += $"\nUser: {partner.TrainerName}";
+                    msg = $"{user}, {(Species)offered.Species} is not legal";
+                    msg += $"\nOriginal OT: {offered.OT_Name}";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -959,9 +958,9 @@ namespace SysBot.Pokemon
                     {
                         if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
                         {
-                            msg = $"Pokémon: {(Species)offered.Species}";
-                            msg += $"\nPokémon OT: {offered.OT_Name}";
-                            msg += $"\nUser: {user}";
+                            msg = $"{user}, {(Species)offered.Species} cannot be OT swap";
+                            msg += "\nPlease re-read exceptions";
+                            msg += $"\nOriginal OT: {offered.OT_Name}";
                             await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
                             DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                             return (toSend, PokeTradeResult.IllegalTrade);
@@ -972,7 +971,7 @@ namespace SysBot.Pokemon
                     else if (toSend.Generation != 9)
                     {
                         DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
-                        Log($"Sending a clone as I'm not able to OTSwap that");
+                        Log($"Not SV native, so here's a clone");
                         counts.AddCompletedClones();
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                         await Task.Delay(2_500, token).ConfigureAwait(false);
@@ -983,16 +982,14 @@ namespace SysBot.Pokemon
             //Ball Swapper
             else if (BallSwap(swap) != 0)
             {
-                Log($"User's request is for Ball swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 toSend = offered.Clone();
                 string? not9;
                 if (toSend.Tracker != 0 && toSend.Generation == 9)
                     toSend.Tracker = 0;
                 else if (toSend.Generation != 9)
                 {
-                    not9 = $"Pokémon: {(Species)offered.Species}";
-                    not9 += $"\n{user} is attempting to Ballswap non Gen 9";
-                    not9 += $"\nDue to Home Tracker, bot is unable to do so";
+                    not9 = $"{user}, {(Species)offered.Species} is not SV native & cannot be swapped due to Home Tracker";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
@@ -1000,9 +997,7 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                    not9 = $"Pokémon: {(Species)offered.Species}";
-                    not9 += $"\nUser: {user}";
-                    not9 += $"\nPokémon shown is not legal";
+                    not9 = $"{user}, {(Species)offered.Species} is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1026,7 +1021,7 @@ namespace SysBot.Pokemon
                     }
                     else
                     {
-                        not9 = $"{user}, {(Species)offered.Species} cannot be in {toSend.Ball}";
+                        not9 = $"{user}, {(Species)offered.Species} cannot be in {(Ball)toSend.Ball}";
                         not9 += $"\nThe ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, not9, "Bad Ball Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -1037,15 +1032,13 @@ namespace SysBot.Pokemon
             else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
             {
                 toSend = offered.Clone();
-                Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Trilogy swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 string? msg;
 
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                    msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nUser: {user}";
-                    msg += $"\nPokémon shown is not legal";
+                    msg = $"{user}, {(Species)offered.Species} is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Trilogy Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1111,6 +1104,7 @@ namespace SysBot.Pokemon
                                     toSend.Species = (ushort)Species.Goodra;
                                 break;
                             case (ushort)Species.Gimmighoul:
+                                toSend.Form = 0; //Account for POGO Gimmighoul
                                 toSend.Species = (ushort)Species.Gholdengo;
                                 toSend.FormArgument = 999;
                                 break;
@@ -1184,15 +1178,13 @@ namespace SysBot.Pokemon
             else if (swap > 0 && evSwap.Contains(swap)) //EV Presets Swap
             {
                 toSend = offered.Clone();
-                Log($"User's request is for EV swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting EV swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 string? EVS;
 
                 var la = new LegalityAnalysis(offered);
                 if (!la.Valid)
                 {
-                    EVS = $"Pokémon: {(Species)offered.Species}";
-                    EVS += $"\nUser: {user}";
-                    EVS += $"\nPokémon shown is not legal";
+                    EVS = $"{user}, {(Species)offered.Species} is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, EVS, "Bad EV Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1254,7 +1246,7 @@ namespace SysBot.Pokemon
                     var la2 = new LegalityAnalysis(toSend);
                     if (la2.Valid)
                     {
-                        Log($"EV Swap Success.");
+                        Log($"EV Swap Success");
                         poke.TradeData = toSend;
                         counts.AddCompletedEVSwaps();
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
@@ -1278,18 +1270,17 @@ namespace SysBot.Pokemon
             else if (swap == (int)custom.GenderSwapItem)
             {
                 toSend = offered.Clone();
-                Log($"User's request is for Gender Swap using: {(Gender)offered.Gender} {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Gender Swap for: {(Gender)offered.Gender} {GameInfo.GetStrings(1).Species[offered.Species]}");
                 string? msg;
                 var la = new LegalityAnalysis(offered);
 
                 if (!la.Valid || offered.Gender == 2)
                 {
-                    msg = $"Pokémon: {(Gender)offered.Gender} {(Species)offered.Species}";
-                    msg += $"\nUser: {user}";
+                    msg = $"{user}, ";
                     if (offered.Gender == 2)
-                        msg += $"\nWhy are you trying to Swap a Genderless?";
+                        msg += $"Why are you trying to Swap a {(Gender)offered.Gender} {(Species)offered.Species}?";
                     else
-                        msg += $"\nPokémon shown is not legal";
+                        msg += $"{(Gender)offered.Gender} {(Species)offered.Species} is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1358,15 +1349,13 @@ namespace SysBot.Pokemon
             else if (swap == (int)custom.PowerSwapItem)
             {
                 toSend = offered.Clone();
-                Log($"User's request is for Power Swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Power Swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
                 string? msg;
                 var la = new LegalityAnalysis(offered);
 
                 if (!la.Valid)
                 {
-                    msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nUser: {user}";
-                    msg += $"\nPokémon shown is not legal";
+                    msg = $"{user}, {(Species)offered.Species} is not legal";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Power Swap:").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1419,15 +1408,13 @@ namespace SysBot.Pokemon
                 if (teraItem[1] == "Tera")
                 {
                     toSend = offered.Clone();
-                    Log($"User's request is for Tera swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                    Log($"{user} is requesting Tera swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
                     string? msg9;
 
                     var la = new LegalityAnalysis(offered);
                     if (!la.Valid)
                     {
-                        msg9 = $"Pokémon: {(Species)offered.Species}";
-                        msg9 += $"\nUser: {user}";
-                        msg9 += $"\nPokémon shown is not legal";
+                        msg9 = $"{user}, {(Species)offered.Species} is not legal";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg9, "Bad Tera Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
 
@@ -1466,11 +1453,9 @@ namespace SysBot.Pokemon
                 {
                     if (swap != 229)
                     {
-                        var msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nUser: {user}";
-                        msg += $"\nEquip an Everstone to allow trade";
-                        msg += $"\nGiven a ticket for Unauthorised goods";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade evolution sent by:").ConfigureAwait(false);
+                        var msg = $"\n{user} has been given a ticket for Unauthorised goods";
+                        msg += $"\nEquip an Everstone on {(Species)offered.Species} to allow trade";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Activity").ConfigureAwait(false);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
                     }
                 }
@@ -1505,22 +1490,20 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Pokémon: {(Species)offered.Species}";
-                msg += $"\nNickname: {offered.Nickname}";
-                msg += $"\nUser: {partner.TrainerName}";
+                var msg = $"{user} has offered {(Species)offered.Species}\n";
+                msg += $"Nickname: {nick}";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
             else if (Hub.Config.CustomSwaps.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
             {
-                var counts1 = TradeSettings;
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
                 if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
                 {
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                     await Task.Delay(2_500, token).ConfigureAwait(false);
                 }
-                counts1.AddCompletedDistribution();
+                counts.AddCompletedDistribution();
                 return (toSend, PokeTradeResult.Success);
             }
             return (toSend, PokeTradeResult.Success);

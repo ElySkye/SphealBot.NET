@@ -110,7 +110,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"Current Game: **{gamever}**\n";
                         embedMsg += $"Show a Pokémon to be cloned & Hit B to change your offer\n";
                         embedMsg += $"Offer a trash Pokémon to receive your clone\n\n";
-                        embedMsg += $"Current Cooldown: **{cd}** mins\n\n";
+                        embedMsg += $"Current Cooldown: **{cd}** mins\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.Dump)
@@ -140,9 +140,7 @@ namespace SysBot.Pokemon.Discord
                         }
                         else if (type == PokeTradeType.LinkSV || type == PokeTradeType.LinkSWSH || type == PokeTradeType.LinkLA || type == PokeTradeType.LinkBDSP)
                         {
-                            if (lucky == 0 || lucky == 1 || lucky == 2 || lucky == 3 || lucky == 10)
-                                embedMsgColor = 0x6FFEEC;
-                            else if (lucky == 4 || lucky == 5)
+                            if (lucky == 4 || lucky == 5)
                                 embedMsgColor = 0x00FFFF;
                             else if (lucky == 6)
                                 embedMsgColor = 0xFFC0CB;
@@ -150,9 +148,14 @@ namespace SysBot.Pokemon.Discord
                                 embedMsgColor = 0x74BBFB;
                             else if (lucky == 9)
                                 embedMsgColor = 0xEED2EE;
+                            else //0,1,2,3,10
+                                embedMsgColor = 0x6FFEEC;
 
                             embedAuthor += "Direct Trade Request";
-                            embedMsg += $"Nickname/Features trade using [**Click for Nicknames**](<{SysCordSettings.HubConfig.CustomSwaps.SheetLink}>)\n";
+                            if (SysCordSettings.HubConfig.CustomSwaps.SheetToggle)
+                                embedMsg += $"Nickname/Features trade using [**Click for Nicknames**](<{SysCordSettings.HubConfig.CustomSwaps.SheetLink}>)\n";
+                            else
+                                embedMsg += $"Features can be viewed with **{p}spf** command\n";
                             embedMsg += $"Current Game: **{gamever}**\n";
                             embedMsg += $"Current Cooldown: **{cd}** mins\n\n";
                             embedMsg += $"Commands:\n**{p}rsv**, **{p}rme**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**, **{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
@@ -194,71 +197,27 @@ namespace SysBot.Pokemon.Discord
                     }
                     else
                     {
-                        if (lucky == 0 || lucky == 1 || lucky == 2 || lucky == 3 || lucky == 10)
+                        var ETU = lucky switch
                         {
-                            EmbedBuilder builder = new()
-                            {
-                                Color = embedMsgColor,
-                                Author = embedAuthorBuild,
-                                Title = embedTitle,
-                                Description = embedMsg,
-                                ThumbnailUrl = embedThumbUrl,
-                                Footer = embedFtr
-                            };
-                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
-                        }
-                        else if (lucky == 4 || lucky == 5)
+                            4 => embedThumbUrl2,
+                            5 => embedThumbUrl2,
+                            6 => embedThumbUrl3,
+                            7 => embedThumbUrl4,
+                            8 => embedThumbUrl4,
+                            9 => embedThumbUrl5,
+                            _ => embedThumbUrl,
+                        };
+
+                        EmbedBuilder builder = new()
                         {
-                            EmbedBuilder builder = new()
-                            {
-                                Color = embedMsgColor,
-                                Author = embedAuthorBuild,
-                                Title = embedTitle,
-                                Description = embedMsg,
-                                ThumbnailUrl = embedThumbUrl2,
-                                Footer = embedFtr
-                            };
-                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
-                        }
-                        else if (lucky == 6)
-                        {
-                            EmbedBuilder builder = new()
-                            {
-                                Color = embedMsgColor,
-                                Author = embedAuthorBuild,
-                                Title = embedTitle,
-                                Description = embedMsg,
-                                ThumbnailUrl = embedThumbUrl3,
-                                Footer = embedFtr
-                            };
-                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
-                        }
-                        else if (lucky == 7 || lucky == 8)
-                        {
-                            EmbedBuilder builder = new()
-                            {
-                                Color = embedMsgColor,
-                                Author = embedAuthorBuild,
-                                Title = embedTitle,
-                                Description = embedMsg,
-                                ThumbnailUrl = embedThumbUrl4,
-                                Footer = embedFtr
-                            };
-                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
-                        }
-                        else if (lucky == 9)
-                        {
-                            EmbedBuilder builder = new()
-                            {
-                                Color = embedMsgColor,
-                                Author = embedAuthorBuild,
-                                Title = embedTitle,
-                                Description = embedMsg,
-                                ThumbnailUrl = embedThumbUrl5,
-                                Footer = embedFtr
-                            };
-                            await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
-                        }
+                            Color = embedMsgColor,
+                            Author = embedAuthorBuild,
+                            Title = embedTitle,
+                            Description = embedMsg,
+                            ThumbnailUrl = ETU,
+                            Footer = embedFtr
+                        };
+                        await context.Channel.SendMessageAsync("", false, builder.Build()).ConfigureAwait(false);
                     }
                 }
                 else

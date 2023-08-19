@@ -344,8 +344,8 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
-
-            poke.SendNotification(this, $"Found Trainer: {trainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
+            if (poke.Type == PokeTradeType.LinkSWSH)
+                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
 
             if (poke.Type == PokeTradeType.Dump)
                 return await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
