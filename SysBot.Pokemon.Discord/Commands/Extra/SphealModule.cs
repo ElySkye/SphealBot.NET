@@ -469,7 +469,7 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Gender Swap__**\n";
                 sv += "Function: Allows Gender swap for existing Pokémon\n";
-                sv += $"```• Have the Pokémon hold {swap.GenderSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the opposite Gender```\n";
+                sv += $"```• Have the Pokémon hold {swap.GenderSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the opposite Gender\n• ONLY works for SV natives```\n";
 
                 sv += "**__Power Swap__**\n";
                 sv += "Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\n";

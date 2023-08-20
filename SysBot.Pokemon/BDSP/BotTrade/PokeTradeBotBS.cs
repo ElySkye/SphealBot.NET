@@ -322,8 +322,8 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
-
-            poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
+            if (poke.Type != PokeTradeType.Random)
+                poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
 
             // Requires at least one trade for this pointer to make sense, so cache it here.
             LinkTradePokemonOffset = await SwitchConnection.PointerAll(Offsets.LinkTradePartnerPokemonPointer, token).ConfigureAwait(false);
@@ -775,9 +775,8 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Pokémon: {(Species)offered.Species}";
-                msg += $"\nNickname: {offered.Nickname}";
-                msg += $"\nUser: {partner.TrainerName}";
+                var msg = $"**{partner.TrainerName}** has offered **{(Species)offered.Species}**\n";
+                msg += $"Nickname: **{offered.Nickname}**";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 await ExitBoxToUnionRoom(token).ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);

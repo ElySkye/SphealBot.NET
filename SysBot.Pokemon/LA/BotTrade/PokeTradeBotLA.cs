@@ -301,7 +301,7 @@ namespace SysBot.Pokemon
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
             var listCool = UserCooldowns;
-            if (poke.Type == PokeTradeType.LinkLA)
+            if (poke.Type != PokeTradeType.Random)
                 poke.SendNotification(this, $"Found Trainer: {tradePartner.TrainerName} (NID: {trainerNID}). Waiting for a Pokémon...");
 
             if (poke.Type == PokeTradeType.Dump)
@@ -894,9 +894,8 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Pokémon: {(Species)offered.Species}";
-                msg += $"\nNickname: {offered.Nickname}";
-                msg += $"\nUser: {partner.TrainerName}";
+                var msg = $"**{user}** has offered **{(Species)offered.Species}**\n";
+                msg += $"Nickname: **{offered.Nickname}**";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }

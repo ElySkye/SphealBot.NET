@@ -344,7 +344,7 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
-            if (poke.Type == PokeTradeType.LinkSWSH)
+            if (poke.Type != PokeTradeType.Random)
                 poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
 
             if (poke.Type == PokeTradeType.Dump)
@@ -556,15 +556,16 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
+            var nick = offered.Nickname;
             var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {user} <\r\n============";
 
-            if (offered.Nickname == custom.SphealEvent)
+            if (nick == custom.SphealEvent)
             {
                 EchoUtil.Echo(Format.Code(eventmsg, "cs"));
                 EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
             }
             //Mystery Trades - Default (Eggs)
-            if (offered.Nickname == custom.MysteryEgg)
+            if (nick == custom.MysteryEgg)
             {
                 string? myst;
                 PK8? rnd;
@@ -612,44 +613,34 @@ namespace SysBot.Pokemon
                     toSend.Tracker = 0;
                 var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 var la = new LegalityAnalysis(offered);
-                if (toSend.FatefulEncounter || toSend.Generation != 8 && la.Valid)
+
+                if (!la.Valid)
                 {
-                    DumpPokemon(DumpSetting.DumpFolder, "clone", toSend);
-                    counts.AddCompletedClones();
-                    await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
-                    await Task.Delay(2_500, token).ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.Success);
+                    msg = $"{user}, {(Species)offered.Species} is not legal";
+                    msg += $"Features cannot be used";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Illegal Request").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+
+                    msg = la.Report();
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.IllegalTrade);
                 }
                 else
                 {
-                    if (!la.Valid)
+                    if (result.Item2 == false)
                     {
                         msg = $"Pokémon: {(Species)offered.Species}";
                         msg += $"\nPokémon OT: {offered.OT_Name}";
                         msg += $"\nUser: {user}";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
-
-                        msg = la.Report();
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Legality Report:").ConfigureAwait(false);
-                        return (offered, PokeTradeResult.IllegalTrade);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.IllegalTrade);
                     }
                     else
-                    {
-                        if (result.Item2 == false)
-                        {
-                            msg = $"Pokémon: {(Species)offered.Species}";
-                            msg += $"\nPokémon OT: {offered.OT_Name}";
-                            msg += $"\nUser: {user}";
-                            await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap:").ConfigureAwait(false);
-                            DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                            return (toSend, PokeTradeResult.IllegalTrade);
-                        }
-                        else
-                            toSend = result.Item1;
-                        poke.TradeData = toSend;
-                    }
+                        toSend = result.Item1;
+                    poke.TradeData = toSend;
                 }
+
                 await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
                 return (toSend, PokeTradeResult.Success);
@@ -859,11 +850,9 @@ namespace SysBot.Pokemon
                 {
                     if (swap != 229)
                     {
-                        var msg = $"Pokémon: {(Species)offered.Species}";
-                        msg += $"\nUser: {user}";
-                        msg += $"\nEquip an Everstone to allow trade";
-                        msg += $"\nGiven a ticket for Unauthorised goods";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade evolution sent by:").ConfigureAwait(false);
+                        var msg = $"\n{user} has been given a ticket for Unauthorised goods";
+                        msg += $"\nEquip an Everstone on **{(Species)offered.Species}** to allow trade";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Activity").ConfigureAwait(false);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
                     }
                 }
@@ -893,9 +882,8 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"Pokémon: {(Species)offered.Species}";
-                msg += $"\nNickname: {offered.Nickname}";
-                msg += $"\nUser: {user}";
+                var msg = $"**{user}** has offered **{(Species)offered.Species}**\n";
+                msg += $"Nickname: **{offered.Nickname}**";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
