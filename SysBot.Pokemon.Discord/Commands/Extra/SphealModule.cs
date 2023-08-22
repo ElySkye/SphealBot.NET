@@ -451,6 +451,10 @@ namespace SysBot.Pokemon.Discord
                 sv += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
                 sv += "```• Receive a random egg which can be shiny or non shiny & either Jumbo or Tiny size\r\n• Eggs will be in your OT and met in picnic```\n";
 
+                sv += "**__Tera Select__**\n";
+                sv += "Function: Allows Tera selection on nicknamed mons holding the respective Tera Shard\n";
+                sv += "```• Have the nicknamed Pokémon hold a Tera Shard of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the shard\r\n• Eggs can only be in their base or secondary types\r\n• Can only be done on SV native as it's sent via OTSwap```\n";
+
                 sv += "**__Tera Swap__**\n";
                 sv += "Function: Allows Tera type swap for existing Pokémon\n";
                 sv += "```• Have the Pokémon hold a Tera Shard of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the New Tera type according to what shard it was holding```\n";

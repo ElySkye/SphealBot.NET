@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
@@ -674,7 +675,7 @@ namespace SysBot.Pokemon
             };
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else if (sf == "evo" || sf == "Evo" || sf == "EVO") //Account for lower/uppercase
+            else if (Regex.IsMatch(sf, "evo", RegexOptions.IgnoreCase))
             {
                 toSend = offered.Clone();
                 Log($"User's request is for Trilogy swap using: {GameInfo.GetStrings(1).Species[offered.Species]}");
@@ -860,10 +861,9 @@ namespace SysBot.Pokemon
                 var evo = offered.Species;
                 if (evo != 0 && tradeevo.Contains(evo))
                 {
-                    var msg = $"Pokémon: {(Species)offered.Species}";
-                    msg += $"\nUser: {partner.TrainerName}";
+                    var msg = $"{partner.TrainerName} offered **{(Species)offered.Species}**";
                     msg += $"\nLeaving Trade...";
-                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Trade evolution attempted by:").ConfigureAwait(false);
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade Evolution").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
