@@ -893,6 +893,8 @@ namespace SysBot.Pokemon
             }
             else if (config.LedyQuitIfNoMatch)
             {
+                if (poke.Type == PokeTradeType.LinkLA)
+                    poke.SendNotification(this, $"```Invalid Request: {(Species)offered.Species} named {offered.Nickname}```");
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
                 var msg = $"**{user}** has offered **{(Species)offered.Species}**\n";
                 msg += $"Nickname: **{offered.Nickname}**";

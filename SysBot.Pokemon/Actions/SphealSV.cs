@@ -119,7 +119,7 @@ namespace SysBot.Pokemon
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```{user}, **{(Species)offer}** cannot be Ball Swap\nReason: Not from SV```");
-                    msg = $"{user}, {(Species)offer} is not SV native & cannot be swapped due to Home Tracker";
+                    msg = $"{user}, **{(Species)offer}** is not SV native & cannot be swapped due to Home Tracker";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
@@ -142,8 +142,8 @@ namespace SysBot.Pokemon
                 else
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, **{(Species)offer}** cannot be in {(Ball)toSend.Ball}```");
-                    msg = $"{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}";
+                        poke.SendNotification(this, $"```{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**```");
+                    msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**";
                     msg += $"\nThe ball cannot be swapped";
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -360,8 +360,18 @@ namespace SysBot.Pokemon
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
+                else if (toSend.Generation != 9)
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```{user}, **{(Species)offer}** cannot be Gender Swap\nReason: Not from SV```");
+                    msg = $"{user}, **{(Species)offer}** is not SV native & cannot be swapped due to Home Tracker";
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.TrainerRequestBad);
+                }
                 else
                 {
+                    toSend.Tracker = 0;
                     if (toSend.Gender == 0) //Male to Female
                         toSend.Gender = 1;
                     else if (toSend.Gender == 1) //Female to Male
@@ -407,9 +417,10 @@ namespace SysBot.Pokemon
                     else
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be that Gender```");
-                        msg = $"{user}, {(Species)offer} cannot be that Gender";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
+                            poke.SendNotification(this, $"```{user}, **{(Species)toSend.Species}** cannot be that Gender```");
+                        msg = $"{user}, {(Species)toSend.Species} cannot be that Gender";
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);
                     }
                 }
