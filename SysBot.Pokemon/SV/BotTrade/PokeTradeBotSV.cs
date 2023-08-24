@@ -903,6 +903,7 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
             var nick = offered.Nickname;
             var user = partner.TrainerName;
+            var spec = offered.Species;
 
             if (Regex.IsMatch(nick, custom.SphealEvent, RegexOptions.IgnoreCase))
             {
@@ -936,14 +937,14 @@ namespace SysBot.Pokemon
                     (ushort)Species.Pumpkaboo,
                     (ushort)Species.Boldore,
                 };
-                var evo = offered.Species;
-                if (evo > 0 && tradeevo.Contains(evo))
+                if (spec > 0 && tradeevo.Contains(spec))
                 {
                     if (offered.HeldItem != 229)
                     {
-                        poke.SendNotification(this, $"```Attach an everstone to allow trading```");
-                        var msg = $"\n{partner.TrainerName} has been given a ticket for Unauthorised goods";
-                        msg += $"\nEquip an Everstone on **{(Species)offered.Species}** to allow trade";
+                        if (poke.Type == PokeTradeType.LinkSV)
+                            poke.SendNotification(this, $"```No Trade Evolutions\nAttach an everstone to allow trading```");
+                        var msg = $"\n{user} has been given a ticket for Unauthorised goods";
+                        msg += $"\nEquip an Everstone on **{(Species)spec}** to allow trade";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Activity").ConfigureAwait(false);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
                     }
@@ -979,9 +980,9 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 if (poke.Type == PokeTradeType.LinkSV)
-                    poke.SendNotification(this, $"```Invalid Request: {(Species)offered.Species} named {nick}```");
+                    poke.SendNotification(this, $"```Invalid Request: {(Species)spec} named {nick}```");
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"**{user}** has offered **{(Species)offered.Species}**\n";
+                var msg = $"**{user}** has offered **{(Species)spec}**\n";
                 msg += $"Nickname: **{nick}**";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);

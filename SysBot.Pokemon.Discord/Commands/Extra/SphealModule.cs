@@ -420,6 +420,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task SpecialFeatures()
         {
+            var p = SysCordSettings.Settings.CommandPrefix;
             var swap = SysCordSettings.HubConfig.CustomSwaps;
             var me = SysCord<T>.Runner;
             string botversion = "";
@@ -435,101 +436,104 @@ namespace SysBot.Pokemon.Discord
             };
             if (gamever == "SV")
             {
-                var sv = "**__OT Swap__**\n";
-                sv += "Function: Changes existing Pokémon OT to yours\n";
-                sv += $"```• Have the Pokémon hold {swap.OTSwapItem}\r\n• Show it to the bot\r\n• Your choice if you want to press B (optional)\r\n• Exceptions are listed in \"Instructions\" tab\r\non what can be OT swapped```\n";
+                var sv = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                sv += "**__OT Swap__**\n";
+                sv += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
+                sv += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
                 
                 sv += "**__Pokéball Select__**\n";
-                sv += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
-                sv += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+                sv += $"Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
+                sv += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n\n";
                 
                 sv += "**__Pokéball Swap__**\n";
-                sv += "Function: Allows Ball swap for existing Pokémon\n";
-                sv += "```• Have the Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non Gen 9 / Event mons cannot be ball swapped```\n";
+                sv += $"Function: Allows Ball swap for existing Pokémon\nSwap Item: **Pokéball of choice**\n";
+                sv += $"> • Receive the offered Pokémon in the ball it was holding\n> • Any non {gamever} / Event mons cannot be ball swapped\n\n";
 
                 sv += "**__Mystery Eggs__**\n";
-                sv += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
-                sv += "```• Receive a random egg which can be shiny or non shiny & either Jumbo or Tiny size\r\n• Eggs will be in your OT and met in picnic```\n";
+                sv += $"Function: Receive a **Mystery Egg** [Command: **{p}rme**]\n";
+                sv += $"> Alternate Method:\n> • Trade a Pokémon nicknamed **{swap.MysteryEgg}** via {p}rsv\n> • Receive a random egg\n> • Eggs will be in your OT and met in picnic\n\n";
 
                 sv += "**__Tera Select__**\n";
-                sv += "Function: Allows Tera selection on nicknamed mons holding the respective Tera Shard\n";
-                sv += "```• Have the nicknamed Pokémon hold a Tera Shard of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the shard\r\n• Eggs can only be in their base or secondary types\r\n• Can only be done on SV native as it's sent via OTSwap```\n";
+                sv += $"Function: Allows Tera selection on nicknamed mons holding the respective Tera Shard\nSwap Item: **Tera Shard of choice**\n";
+                sv += "> • Eggs can only be in their base or secondary types\n> • Can only be done on SV native as it's sent via OTSwap\n\n";
 
                 sv += "**__Tera Swap__**\n";
-                sv += "Function: Allows Tera type swap for existing Pokémon\n";
-                sv += "```• Have the Pokémon hold a Tera Shard of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the New Tera type according to what shard it was holding```\n";
+                sv += "Function: Allows Tera type swap for existing Pokémon\nSwap Item: **Tera Shard of choice**\n";
+                sv += "> • Receive the offered Pokémon in the New Tera type according to what shard it was holding\n\n";
 
                 sv += "**__Trilogy Swap__**\n";
-                sv += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
-                sv += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFinizen\r\nRellor | Pawmo | Bramblin\r\nKalos Sliggoo | White Basculin\r\nGimmighoul | Primeape | Bisharp```\n";
+                sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
+                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
 
                 sv += "**__Trade Evo <Purifier>__**\n";
-                sv += "Function: Evolve Basic Trade Evolutions\n";
-                sv += "```• Have the Pokémon hold an Everstone & show bot\r\n• Your choice if you want to press B (optional)\r\n\r\n[Species List]\r\nCurrently only Haunter as the rest are not in SV```\n";
+                sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
+                sv += "__**Species List**__\n```Currently only Haunter as the rest are not in SV```\n";
 
                 sv += "**__EV Swap__**\n";
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";
-                sv += $"```• Bot will reset or apply 252 EVs in 2 stats, last 6 EVs are done yourself\r\n• Raid Presets are minted to Adamant/Modest respectively\r\n• Do the thing like other swaps, follow held items as below:\r\n\r\nEV Reset ➜ {swap.EVResetItem} [Resets ALL EVs]\r\n\r\nEV Raid Atk ➜ {swap.EVRaidAtkItem} [Reset ALL EVs, Apply ATK/HP]\r\nEV Raid SP Atk ➜ {swap.EVRaidSPAItem} [Reset, Apply SPAtk/HP]\r\n\r\nEV Comp Atk ➜ {swap.EVCompAtkItem} [Reset, Atk/Speed]\r\nEV Comp SP Atk ➜ {swap.EVCompSPAItem} [Reset, SPAtk/Speed]\r\n\r\nEV Def Tank ➜ {swap.EVGenDEFItem} [Reset, HP/Def]\r\nEV Sp Def Tank ➜ {swap.EVGenSPDItem} [Reset, HP/SPDef]```\n";
+                sv += $"> • Bot will reset or apply **252** EVs in **2** stats, last **6** EVs are done yourself\n> • Raid Presets are *minted* to **Adamant/Modest** respectively\n\n__**Swap Item(s)**__\nEV Reset ➜ **{swap.EVResetItem}** [Resets ALL EVs]\n\nEV Raid Atk ➜ **{swap.EVRaidAtkItem}** [Reset ALL EVs, Apply ATK/HP]\nEV Raid SP Atk ➜ **{swap.EVRaidSPAItem}** [Reset, Apply SPAtk/HP]\n\nEV Comp Atk ➜ **{swap.EVCompAtkItem}** [Reset, Atk/Speed]\nEV Comp SP Atk ➜ **{swap.EVCompSPAItem}** [Reset, SPAtk/Speed]\n\nEV Def Tank ➜ **{swap.EVGenDEFItem}** [Reset, HP/Def]\nEV Sp Def Tank ➜ **{swap.EVGenSPDItem}** [Reset, HP/SPDef]\n\n";
 
                 sv += "**__Gender Swap__**\n";
-                sv += "Function: Allows Gender swap for existing Pokémon\n";
-                sv += $"```• Have the Pokémon hold {swap.GenderSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the opposite Gender\n• ONLY works for SV natives```\n";
+                sv += $"Function: Allows Gender swap for existing Pokémon\nSwap Item: **{swap.GenderSwapItem}**\n";
+                sv += $"> • Receive the offered Pokémon in the opposite Gender\n> • ONLY works for {gamever} natives\n\n";
 
                 sv += "**__Power Swap__**\n";
-                sv += "Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\n";
-                sv += $"```• Have the Pokémon hold {swap.PowerSwapItem}\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon with maxed out PPs & relearn moves```\n";
+                sv += $"Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\nSwap Item: **{swap.PowerSwapItem}**\n";
+                sv += $"> • Receive the offered Pokémon with maxed out PPs & relearn moves\n\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
             else if (gamever == "SWSH")
             {
-                var swsh = "**__OT Swap__**\n";
-                swsh += "Function: Changes existing Pokémon OT to yours\n";
-                swsh += $"```• Have the Pokémon hold {swap.OTSwapItem}\r\n• Show it to the bot\r\n• Your choice if you want to press B (optional)\r\n• Exceptions are listed in \"Instructions\" tab\r\non what can be OT swapped```\n";
+                var swsh = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\nShow it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                swsh += "**__OT Swap__**\n";
+                swsh += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
+                swsh += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
 
                 swsh += "**__Pokéball Select__**\n";
-                swsh += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
-                swsh += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+                swsh += $"Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
+                swsh += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n\n";
 
                 swsh += "**__Pokéball Swap__**\n";
-                swsh += "Function: Allows Ball swap for existing Pokémon\n";
-                swsh += "```• Have the Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball it was holding\r\nAny non Gen 9 / Event mons cannot be ball swapped```\n";
+                swsh += $"Function: Allows Ball swap for existing Pokémon\nSwap Item: **Pokéball of choice**\n";
+                swsh += $"> • Receive the offered Pokémon in the ball it was holding\n> • Any non {gamever} / Event mons cannot be ball swapped\n\n";
 
                 swsh += "**__Mystery Eggs__**\n";
-                swsh += $"Function: Trade a Pokémon with the nickname \"{swap.MysteryEgg}\" to get a random egg\n";
-                swsh += "```• Receive a random shiny egg\r\n• Eggs will be in your OT and met in daycare```\n";
+                swsh += $"Function: Trade a Pokémon with the nickname **{swap.MysteryEgg}** to get a random egg\n";
+                swsh += "> • Receive a random egg\n> • Eggs will be in your OT and met in daycare\n\n";
 
                 swsh += "**__Trilogy Swap__**\n";
-                swsh += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
-                swsh += $"```• Have the Pokémon hold {swap.TrilogySwapItem} & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nFarfetch'd (Galar) | Yamask (Galar) | Sliggoo (Kalos)```\n";
+                swsh += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\n";
+                swsh += "> • First two functions can be done on any legal mon\n\n**Clear Nickname** ➜ Clears the Nickname\n**Level to 1OO** ➜ Sets the Pokémon's level to 1OO\n**Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Farfetch'd (Galar) | Yamask (Galar) | Sliggoo (Kalos)```\n";
 
                 swsh += "**__Trade Evo <Purifier>__**\n";
-                swsh += "Function: Evolve Basic Trade Evolutions\n";
-                swsh += "```• Have the Pokémon hold an Everstone & show bot\r\n• Your choice if you want to press B (optional)\r\n\r\n[Species List]\r\nKadabra | Machoke | Gurdurr\r\nHaunter | Phantump| Pumpkaboo\r\nBoldore | Feebas\r\nShelmet | Karrablast```\n";
+                swsh += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
+                swsh += "__**Species List**__\n```Kadabra | Machoke | Gurdurr\nHaunter | Phantump| Pumpkaboo\nBoldore | Feebas\nShelmet | Karrablast```\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(swsh, "Special Features - SWSH");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
             else if (gamever == "PLA")
             {
-                var pla = "**__Trilogy Swap__**\n";
+                var pla = $"__**Instructions**__\n> Have the Pokémon be nicknamed as specified\nShow it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                pla += "**__Trilogy Swap__**\n";
                 pla += "Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\n";
-                pla += $"```• Have the Pokémon be named evo & show bot\r\n• Your choice if you want to press B (optional)\r\n• First two functions can be done on any legal mon\n\nClear Nickname ➜ Clears the Nickname\r\nSet Level to 1OO ➜ Sets the Pokémon's level to 1OO\r\nEvolve ➜ Evolves the Species, all of its stats/details will be cloned\n\n[Species List]\r\nUrsaring | Hisui Qwilfish | Scyther\r\nStantler | Hisui Sliggoo | White Basculin\r\n```";
+                pla += $"> • Have the Pokémon be named evo\n> • First two functions can be done on any legal mon\n\n**Clear Nickname** ➜ Clears the Nickname\n**Level to 1OO** ➜ Sets the Pokémon's level to 1OO\n**Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Ursaring | Hisui Qwilfish | Scyther\nStantler | Hisui Sliggoo | White Basculin```\n";
 
                 pla += "**__Pokéball Swap__**\n";
                 pla += "Function: Allows Ball swap for existing Pokémon\n";
-                pla += "```• Have the Pokémon be nicknamed either of these:\r\nPoke ➜ LAPoke | Great ➜ LAGreat | Ultra ➜ LAUltra\r\nFeat ➜ Feather | Wing ➜ Wing | Jet ➜ Jet\r\nHeavy ➜ LAHeavy | Lead ➜ Leaden | Giga ➜ Gigaton\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the original Pokémon\r\n• Receive the offered Pokémon in the ball you chose\r\nAny non PLA / Event mons cannot be ball swapped```\n";
+                pla += $"> • Have the Pokémon be nicknamed either of these:\n> Poke ➜ LAPoke | Great ➜ LAGreat | Ultra ➜ LAUltra\n> Feat ➜ Feather | Wing ➜ Wing | Jet ➜ Jet\n> Heavy ➜ LAHeavy | Lead ➜ Leaden | Giga ➜ Gigaton\n> • Receive the offered Pokémon in the ball you chose\nAny non {gamever} / Event mons cannot be ball swapped\n\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(pla, "Special Features - PLA");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
             else if (gamever == "BDSP")
             {
-                var bdsp = "**__Pokéball Select__**\n";
+                var bdsp = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\nShow it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
                 bdsp += "**__Pokéball Select__**\n";
-                bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\n";
-                bdsp += "```• Have the nicknamed Pokémon hold a Pokéball of choice\r\n• Show it to the bot\r\n• Press B and offer trash if you want to keep the ball (item)\r\n• If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\r\n• If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT```\n";
+                bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**";
+                bdsp += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(bdsp, "Special Features - BDSP");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);

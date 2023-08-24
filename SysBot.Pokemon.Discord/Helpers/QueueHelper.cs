@@ -22,7 +22,7 @@ namespace SysBot.Pokemon.Discord
 
             try
             {
-                const string helper = "Added you to the queue! I'll message you here when your trade is starting.";
+                const string helper = "Added you to the queue!\r\nBegin search once I tell you to.";
                 IUserMessage test = await trader.SendMessageAsync(helper).ConfigureAwait(false);
 
                 // Try adding
@@ -230,18 +230,19 @@ namespace SysBot.Pokemon.Discord
                     else if (trade.Gender == 1)
                         embedTitle += "(F)";
                     if (trade.HeldItem > 0)
-                        embedTitle += $" ➜ {HeldItem}";
+                        embedTitle += $" **➜** {HeldItem}";
 
                     embedAuthor = $"{trainer}'s ";
                     embedAuthor += trade.IsShiny ? "shiny " : "";
                     embedAuthor += "Pokémon:";
 
-                    embedMsg = $"Ability: {(Ability)trade.Ability}";
-                    embedMsg += $"\nLevel: {trade.CurrentLevel}";
-                    embedMsg += $"\nNature: {(Nature)trade.Nature}";
-                    embedMsg += $"\nIVs: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
-                    embedMsg += $"\nEVs: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
-                    embedMsg += $"\nMoves:";
+                    embedMsg = $"**Ability**: {(Ability)trade.Ability}";
+                    embedMsg += $"\n**Level**: {trade.CurrentLevel}";
+                    embedMsg += $"\n**Nature**: {(Nature)trade.Nature}";
+                    embedMsg += $"\n**IVs**: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
+                    if (trade.EVTotal != 0)
+                        embedMsg += $"\n**EVs**: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
+                    embedMsg += $"\n**Moves**:";
                     if (trade.Move1 != 0)
                         embedMsg += $"\n- {(Move)trade.Move1}";
                     if (trade.Move2 != 0)
@@ -250,7 +251,7 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"\n- {(Move)trade.Move3}";
                     if (trade.Move4 != 0)
                         embedMsg += $"\n- {(Move)trade.Move4}";
-                    embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue.";
+                    embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue";
 
                     EmbedAuthorBuilder embedAuthorBuild = new()
                     {
@@ -337,7 +338,7 @@ namespace SysBot.Pokemon.Discord
             var pokeName = "";
             if (t == PokeTradeType.Specific && pk.Species != 0)
                 pokeName = $" Receiving: {GameInfo.GetStrings(1).Species[pk.Species]}.";
-            msg = $"{user.Mention} - Added to the {type} queue{ticketID}. Current Position: {position.Position}.{pokeName}";
+            msg = $"I've added you to the queue, {user.Mention}!\r\nCurrent Position: {position.Position}.{pokeName}";
 
             var botct = Info.Hub.Bots.Count;
             if (position.Position > botct)
