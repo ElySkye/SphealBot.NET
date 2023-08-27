@@ -84,7 +84,7 @@ namespace SysBot.Pokemon
                     poke.SendNotification(this, $"__**Legality Analysis**__\n```{la.Report()}```");
                 msg = $"{user}, **{(Species)offer}** is not legal\n";
                 msg += $"Features cannot be used\n\n";
-                msg += $"\n__**Legality Analysis**__\n";
+                msg += $"__**Legality Analysis**__\n";
                 msg += la.Report();
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Illegal Request").ConfigureAwait(false);
                 DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -143,8 +143,8 @@ namespace SysBot.Pokemon
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in **{(Ball)toSend.Ball}**```");
-                    msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**";
-                    msg += $"\nThe ball cannot be swapped";
+                    msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
+                    msg += $"The ball cannot be swapped";
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -270,8 +270,8 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net incase something slips through
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem";
-                    msg += $"\n__**Legality Analysis**__\n\n";
+                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -340,8 +340,8 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net incase something slips through
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem";
-                    msg += $"\n__**Legality Analysis**__\n\n";
+                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad EV Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -418,7 +418,7 @@ namespace SysBot.Pokemon
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
                             poke.SendNotification(this, $"```{user}, {(Species)toSend.Species} cannot be that Gender```");
-                        msg = $"{user}, {(Species)toSend.Species} cannot be that Gender";
+                        msg = $"{user}, **{(Species)toSend.Species}** cannot be that Gender";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);
@@ -447,8 +447,8 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net incase something slips through
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem";
-                    msg += $"\n__**Legality Analysis**__\n\n";
+                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Power Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -475,8 +475,8 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net incase something slips through
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem";
-                    msg += $"\n__**Legality Analysis**__\n\n";
+                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Tera Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -528,8 +528,15 @@ namespace SysBot.Pokemon
                     if (toSend.IsEgg == false)
                     {
                         cln.Version = version; //Eggs should not have Origin Game on SV
-                        if (cln.HeldItem > -1 && cln.Species != (ushort)Species.Finizen) cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
-                        if (cln.HeldItem > 0 && cln.RibbonMarkDestiny == true) cln.ClearNickname();
+                        if (cln.HeldItem > 0)
+                        {
+                            if (!cln.IsNicknamed && cln.Species != (ushort)custom.ItemTradeSpecies)
+                                cln.ClearNickname();
+                            else if (cln.HeldItem == (int)custom.OTSwapItem)
+                                cln.ClearNickname();
+                        }
+                        else
+                            cln.ClearNickname();
                         if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
                             cln.Egg_Location = 30023; //Picnic
                         if (teraItem.Length > 1 && (teraItem[1] == "Tera")) //Distro Tera Selector
@@ -607,14 +614,17 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
-                Log($"OT info swapped to:");
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)cln.Language}");
-                Log($"Game: {(GameVersion)cln.Version}");
-                Log($"OT swap success.");
+                if (custom.LogTrainerDetails == false) //So it does not log twice
+                {
+                    Log($"OT info swapped to:");
+                    Log($"OT_Name: {cln.OT_Name}");
+                    Log($"TID: {cln.TrainerTID7}");
+                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"Gender: {(Gender)cln.OT_Gender}");
+                    Log($"Language: {(LanguageID)cln.Language}");
+                    Log($"Game: {(GameVersion)cln.Version}");
+                    Log($"OT swap success.");
+                }
 
                 if (toSend.HeldItem == (int)custom.OTSwapItem)
                 {

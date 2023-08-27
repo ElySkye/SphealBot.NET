@@ -25,8 +25,12 @@ namespace SysBot.Pokemon
 
             if (toSend.IsEgg == false)
             {
-                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
-                    cln.ClearNickname(); //Block nickname clear for item distro, Change Species as needed.
+                if (cln.HeldItem > 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
+                    cln.ClearNickname();
+                else if (cln.HeldItem == (int)custom.OTSwapItem)
+                    cln.ClearNickname();
+                else
+                    cln.ClearNickname();
                 if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
                     cln.Egg_Location = 60002; //Nursery (SWSH)
             }
@@ -57,8 +61,7 @@ namespace SysBot.Pokemon
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
-            if (toSend.HasMarkEncounter8 || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion
-                || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
+            if (toSend.HasMarkEncounter8 || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
             {
                 if (toSend.IsShiny)
                     cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
@@ -91,12 +94,13 @@ namespace SysBot.Pokemon
                         } while (cln.ShinyXor != 1);
                     }
                 }
-                else //reroll PID for non-shiny
+                else if (cln.Met_Location != 162 || cln.Met_Location != 244) //If not Max Raid, reroll PID for non shiny 
                 {
                     cln.SetShiny();
                     cln.SetUnshiny();
                 }
-                cln.SetRandomEC();
+                if (cln.Met_Location != 162 || cln.Met_Location != 244) //Leave Max Raid EC alone
+                    cln.SetRandomEC();
             }
             cln.RefreshChecksum();
 
