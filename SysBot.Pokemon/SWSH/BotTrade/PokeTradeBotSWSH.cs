@@ -322,6 +322,7 @@ namespace SysBot.Pokemon
 
             var trainerName = await GetTradePartnerName(TradeMethod.LinkTrade, token).ConfigureAwait(false);
             var trainerTID = await GetTradePartnerTID7(TradeMethod.LinkTrade, token).ConfigureAwait(false);
+            var trainerSID = await GetTradePartnerSID7(TradeMethod.LinkTrade, token).ConfigureAwait(false);
             var trainerNID = await GetTradePartnerNID(token).ConfigureAwait(false);
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{trainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Link Trade partner: {trainerName}-{trainerTID} (ID: {trainerNID})");
@@ -345,8 +346,9 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
+            var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
             if (poke.Type != PokeTradeType.Random)
-                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
+                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nOTGender: {(Gender)data[6]}\nTID: {trainerTID}\nSID: {trainerSID}\nLanguage: {(LanguageID)data[5]}\nGame: {(GameVersion)data[4]}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
 
             if (poke.Type == PokeTradeType.Dump)
                 return await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
@@ -566,234 +568,17 @@ namespace SysBot.Pokemon
                 EchoUtil.Echo(Format.Code(eventmsg, "cs"));
                 EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
             }
-            //Mystery Trades - Default (Eggs)
             if (Regex.IsMatch(nick, custom.MysteryEgg, RegexOptions.IgnoreCase))
             {
-                string? myst;
-                PK8? rnd;
-                do
-                {
-                    rnd = Hub.Ledy.Pool.GetRandomTrade();
-                } while (!rnd.IsEgg);
-                toSend = rnd;
-
-                var Shiny = toSend.IsShiny switch
-                {
-                    true => "Shiny",
-                    false => "Non-Shiny",
-                };
-
-                Log($"Sending Surprise Egg: {Shiny} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
-                await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
-                await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
-                await Task.Delay(2_500, token).ConfigureAwait(false);
-                poke.TradeData = toSend;
-
-                myst = $"**{user}** has received a Mystery Egg !\n";
-                myst += $"**Don't reveal if you want the surprise**\n\n";
-                myst += $"**Pokémon**: ||**{GameInfo.GetStrings(1).Species[toSend.Species]}**||\n";
-                myst += $"**Gender**: ||**{(Gender)toSend.Gender}**||\n";
-                myst += $"**Shiny**: ||**{Shiny}**||\n";
-                myst += $"**Nature**: ||**{(Nature)toSend.Nature}**||\n";
-                myst += $"**Ability**: ||**{(Ability)toSend.Ability}**||\n";
-                myst += $"**IVs**: ||**{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**||\n";
-                myst += $"**Language**: ||**{(LanguageID)toSend.Language}**||";
-
-                EchoUtil.EchoEmbed(Sphealcl.EmbedEggMystery(toSend, myst, $"{user}'s Mystery Egg"));
-                counts.AddCompletedMystery();
-                return (toSend, PokeTradeResult.Success);
+                var HME = await HandleMysteryEggs(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
+                return (HME);
             }
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
-                Log($"User's request is for {nick}");
-            else
+                Log($"{user} is requesting for {nick}");
+            else if (swap != 0)
             {
-                toSend = offered.Clone();
-                string? msg;
-                var la = new LegalityAnalysis(offered);
-
-                if (!la.Valid)
-                {
-                    if (poke.Type == PokeTradeType.LinkSWSH)
-                        poke.SendNotification(this, $"__**Legality Analysis**__\n{la.Report()}");
-                    msg = $"{user}, **{(Species)offer}** is not legal\n";
-                    msg += $"Features cannot be used\n\n";
-                    msg += $"Legality Report:\n";
-                    msg += la.Report();
-                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Illegal Request").ConfigureAwait(false);
-                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
-                    return (toSend, PokeTradeResult.IllegalTrade);
-                }
-                else if (swap == (int)custom.OTSwapItem)
-                {
-                    var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
-                    Log($"{user} is requesting OT swap for: {GameInfo.GetStrings(1).Species[offer]} with OT Name: {offered.OT_Name}");
-                    toSend.Tracker = 0; //We clean the tracker since we only do the Origin Game
-
-                    if (result.Item2 == false)
-                    {
-                        //Non SWSH should get rejected
-                        if (poke.Type == PokeTradeType.LinkSWSH)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n1) Not SWSH native\n2) SWSH Event/In-game trade with FIXED OT```");
-                        msg = $"{user}, {(Species)offer} cannot be OT swap";
-                        msg += $"\nOriginal OT: {offered.OT_Name}";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                        return (toSend, PokeTradeResult.TrainerRequestBad);
-                    }
-                    else
-                        toSend = result.Item1;
-
-                    poke.TradeData = toSend;
-                    await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
-                    await Task.Delay(2_500, token).ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.Success);
-                }
-                else if (BallSwap(swap) != 0)
-                {
-                    Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
-
-                    if ((GameVersion)toSend.Version == GameVersion.SW || (GameVersion)toSend.Version == GameVersion.SH)
-                    {
-                        toSend.Tracker = 0;
-                        toSend.Ball = BallSwap(offered.HeldItem);
-                        toSend.RefreshChecksum();
-                        Log($"Ball swapped to: {(Ball)toSend.Ball}");
-
-                        var la2 = new LegalityAnalysis(toSend);
-                        if (la2.Valid)
-                        {
-                            poke.TradeData = toSend;
-                            counts.AddCompletedBallSwaps();
-                            await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
-                            await Task.Delay(2_500, token).ConfigureAwait(false);
-                            return (toSend, PokeTradeResult.Success);
-                        }
-                        else
-                        {
-                            if (poke.Type == PokeTradeType.LinkSWSH)
-                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
-                            msg = $"{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}";
-                            msg += $"\nThe ball cannot be swapped";
-                            await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
-                            DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                            return (toSend, PokeTradeResult.TrainerRequestBad);
-                        }
-                    }
-                    else
-                    {
-                        if (poke.Type == PokeTradeType.LinkSWSH)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be Ball Swap\nReason: Not from SWSH```");
-                        msg = $"{user}, {(Species)offer} is not SWSH native & cannot be swapped due to Home Tracker";
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
-                        return (offered, PokeTradeResult.TrainerRequestBad);
-                    }
-                }
-                else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
-                {
-                    Log($"{user} is requesting Trilogy swap for: {GameInfo.GetStrings(1).Species[offer]}");
-
-                    toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
-                    if (swap == 229)
-                    {
-                        Log($"Evo Species is holding an Everstone");
-
-                        switch (toSend.Species)
-                        {
-                            case (ushort)Species.Kadabra:
-                                toSend.Species = (ushort)Species.Alakazam;
-                                break;
-                            case (ushort)Species.Machoke:
-                                toSend.Species = (ushort)Species.Machamp;
-                                break;
-                            case (ushort)Species.Gurdurr:
-                                toSend.Species = (ushort)Species.Conkeldurr;
-                                break;
-                            case (ushort)Species.Haunter:
-                                toSend.Species = (ushort)Species.Gengar;
-                                break;
-                            case (ushort)Species.Graveler:
-                                toSend.Species = (ushort)Species.Golem;
-                                break;
-                            case (ushort)Species.Phantump:
-                                toSend.Species = (ushort)Species.Trevenant;
-                                break;
-                            case (ushort)Species.Pumpkaboo:
-                                toSend.Species = (ushort)Species.Gourgeist;
-                                break;
-                            case (ushort)Species.Boldore:
-                                toSend.Species = (ushort)Species.Gigalith;
-                                break;
-                            case (ushort)Species.Feebas:
-                                toSend.Species = (ushort)Species.Milotic;
-                                break;
-                            case (ushort)Species.Shelmet:
-                                toSend.Species = (ushort)Species.Accelgor;
-                                break;
-                            case (ushort)Species.Karrablast:
-                                toSend.Species = (ushort)Species.Escavalier;
-                                break;
-                        }
-                        toSend.HeldItem = 224;
-                    }
-                    else
-                    {
-                        //#2 Evolve difficult to evolve Species (Evo Swap)
-                        switch (toSend.Species)
-                        {
-                            case (ushort)Species.Farfetchd:
-                                if (toSend.Form == 1)
-                                    toSend.Species = (ushort)Species.Sirfetchd;
-                                break;
-                            case (ushort)Species.Yamask:
-                                if (toSend.Form == 1)
-                                {
-                                    toSend.Species = (ushort)Species.Runerigus;
-                                    toSend.FormArgument = 50;
-                                }
-                                break;
-                            case (ushort)Species.Sliggoo:
-                                if (toSend.Form == 0) //Kalos
-                                    toSend.Species = (ushort)Species.Goodra;
-                                break;
-                        }
-                    }
-                    var RA = toSend.AbilityNumber switch
-                    {
-                        1 => 0,
-                        2 => 1,
-                        3 => 2,
-                        4 => 2,
-                        _ => 2,
-                    };
-                    toSend.RefreshAbility(RA);
-
-                    //#3 Clear Nicknames
-                    if (!toSend.FatefulEncounter || toSend.Met_Location != 30001)
-                        toSend.ClearNickname();
-                    toSend.RefreshChecksum();
-
-                    var la2 = new LegalityAnalysis(toSend);
-                    if (la2.Valid)
-                    {
-                        Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
-                        poke.TradeData = toSend;
-                        counts.AddCompletedTrilogySwaps();
-                        DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
-                        await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
-                        await Task.Delay(2_500, token).ConfigureAwait(false);
-                        return (toSend, PokeTradeResult.Success);
-                    }
-                    else //Safety Net incase something slips through
-                    {
-                        msg = $"{user}, {(Species)toSend.Species} has a problem";
-                        msg += $"\nLegality Analysis:\n\n";
-                        msg += la2.Report();
-                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap").ConfigureAwait(false);
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                        return (toSend, PokeTradeResult.IllegalTrade);
-                    }
-                }
+                var hcs = await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
+                return (hcs);
             }
             if (trade != null)
             {
@@ -1272,6 +1057,16 @@ namespace SysBot.Pokemon
 
             var tidsid = BitConverter.ToUInt32(data, 0);
             var tid7 = $"{tidsid % 1_000_000:000000}";
+            return tid7;
+        }
+
+        private async Task<string> GetTradePartnerSID7(TradeMethod tradeMethod, CancellationToken token)
+        {
+            var ofs = GetTrainerTIDSIDOffset(tradeMethod);
+            var data = await Connection.ReadBytesAsync(ofs, 8, token).ConfigureAwait(false);
+
+            var tidsid = BitConverter.ToUInt32(data, 0);
+            var tid7 = $"{tidsid / 1_000_000:0000}";
             return tid7;
         }
 

@@ -138,49 +138,6 @@ namespace SysBot.Pokemon
             _ => 0,
         };
     }
-    public partial class PokeTradeBotLA : PokeRoutineExecutor8LA, ICountBot
-    {
-        private async Task<bool> SetTradePartnerDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
-        {
-            var cln = (PA8)toSend.Clone();
-            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-
-            cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-            cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-            cln.Language = tradepartner.Language;
-            cln.OT_Name = tradepartner.TrainerName;
-            cln.OT_Gender = tradepartner.Gender;
-            cln.Version = tradepartner.Game;
-            cln.ClearNickname();
-
-            if (toSend.IsShiny)
-                cln.SetShiny();
-            else
-            {
-                cln.SetShiny();
-                cln.SetUnshiny();
-            }
-
-            cln.SetRandomEC();
-            cln.RefreshChecksum();
-
-            var tradela = new LegalityAnalysis(cln);
-
-            if (tradela.Valid)
-            {
-                Log($"OT info swapped to:");
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"OT Swap Success");
-                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            }
-            else Log($"Sending original Pokémon as it can't be OT swapped");
-            return tradela.Valid;
-        }
-    }
     public class Sphealcl
     {
         static readonly HttpClient client = new();

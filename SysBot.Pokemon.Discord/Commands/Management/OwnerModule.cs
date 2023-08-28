@@ -55,19 +55,7 @@ namespace SysBot.Pokemon.Discord
             await ReplyAsync("Done.").ConfigureAwait(false);
         }
 
-        [Command("leave")]
-        [Alias("bye")]
-        [Summary("Leaves the current server.")]
-        [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
-        public async Task Leave()
-        {
-            await ReplyAsync("Goodbye.").ConfigureAwait(false);
-            await Context.Guild.LeaveAsync().ConfigureAwait(false);
-        }
-
         [Command("leaveguild")]
-        [Alias("lg")]
         [Summary("Leaves guild based on supplied ID.")]
         [RequireOwner]
         // ReSharper disable once UnusedParameter.Global
@@ -101,17 +89,6 @@ namespace SysBot.Pokemon.Discord
             {
                 await guild.LeaveAsync().ConfigureAwait(false);
             }
-        }
-
-        [Command("sudoku")]
-        [Alias("kill", "shutdown")]
-        [Summary("Causes the entire process to end itself!")]
-        [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
-        public async Task ExitProgram()
-        {
-            await Context.Channel.EchoAndReply("Shutting down... goodbye! **Bot services are going offline.**").ConfigureAwait(false);
-            Environment.Exit(0);
         }
 
         private RemoteControlAccess GetReference(IUser channel) => new()
