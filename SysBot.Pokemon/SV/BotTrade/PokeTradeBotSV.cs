@@ -910,6 +910,7 @@ namespace SysBot.Pokemon
             var nick = offered.Nickname;
             var user = partner.TrainerName;
             var spec = offered.Species;
+            var swap = offered.HeldItem;
 
             if (Regex.IsMatch(nick, custom.SphealEvent, RegexOptions.IgnoreCase))
             {
@@ -924,7 +925,7 @@ namespace SysBot.Pokemon
             }
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"{user} is requesting for {nick}");
-            else if (offered.HeldItem != 0)
+            else if (swap != 0)
             {
                 var hcs = await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
                 return (hcs);
@@ -945,7 +946,7 @@ namespace SysBot.Pokemon
                 };
                 if (spec > 0 && tradeevo.Contains(spec))
                 {
-                    if (offered.HeldItem != 229)
+                    if (swap != 229)
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
                             poke.SendNotification(this, $"```No Trade Evolutions\nAttach an everstone to allow trading```");
@@ -996,6 +997,7 @@ namespace SysBot.Pokemon
             else if (Hub.Config.CustomSwaps.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
             {
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
+                Log($"Sending: {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
                 {
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);

@@ -14,7 +14,9 @@ namespace SysBot.Pokemon
         private async Task<bool> SetTradePartnerDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
         {
             var cln = (PB8)toSend.Clone();
+            var custom = Hub.Config.CustomSwaps;
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+            string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
 
             switch (cln.Species) //OT for Arceus on the other version
             {
@@ -69,9 +71,9 @@ namespace SysBot.Pokemon
                 };
             }
 
-            if (BallSwap(offered.HeldItem) != 0) //Distro Ball Selector
+            if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                cln.Ball = BallSwap(offered.HeldItem);
+                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
 
@@ -94,49 +96,23 @@ namespace SysBot.Pokemon
             var tradebdsp = new LegalityAnalysis(cln);
             if (tradebdsp.Valid)
             {
-                Log($"OT info swapped to:");
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
-                Log($"OT Swapped");
+                if (custom.LogTrainerDetails == false) //So it does not log twice
+                {
+                    Log($"OT info swapped to:");
+                    Log($"OT_Name: {cln.OT_Name}");
+                    Log($"TID: {cln.TrainerTID7}");
+                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"Gender: {(Gender)cln.OT_Gender}");
+                    Log($"Language: {(LanguageID)(cln.Language)}");
+                    Log($"Game: {(GameVersion)(cln.Version)}");
+                }
+                Log($"OT Swap Success");
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
             }   
             else
                 Log($"Sending original Pokémon as it can't be OT swapped");
             return tradebdsp.Valid;
         }
-        private static int BallSwap(int ballItem) => ballItem switch
-        {
-            1 => 1,
-            2 => 2,
-            3 => 3,
-            4 => 4,
-            5 => 5,
-            6 => 6,
-            7 => 7,
-            8 => 8,
-            9 => 9,
-            10 => 10,
-            11 => 11,
-            12 => 12,
-            13 => 13,
-            14 => 14,
-            15 => 15,
-            492 => 17,
-            493 => 18,
-            494 => 19,
-            495 => 20,
-            496 => 21,
-            497 => 22,
-            498 => 23,
-            499 => 24,
-            576 => 25,
-            851 => 26,
-            _ => 0,
-        };
     }
     public class Sphealcl
     {

@@ -547,7 +547,9 @@ namespace SysBot.Pokemon
                 var ot_gender = pk.OT_Gender == 0 ? "Male" : "Female";
                 var tid = pk.GetDisplayTID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringTID());
                 var sid = pk.GetDisplaySID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringSID());
-                msg += $"\n**Trainer Data**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}```";
+                var lang = (LanguageID)pk.Language;
+                var game = (GameVersion)pk.Version;
+                msg += $"\n**__Trainer Data__**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}\nLanguage: {lang}\nGame: {game}```";
 
                 msg += pk.IsShiny ? "\n**This Pokémon is shiny!**" : string.Empty;
                 detail.SendNotification(this, pk, msg);

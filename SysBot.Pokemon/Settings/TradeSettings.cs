@@ -53,6 +53,7 @@ namespace SysBot.Pokemon
         private int _completedGenderSwaps;
         private int _completedPowerSwaps;
         private int _completedEVSwaps;
+        private int _completedDoubleSwaps;
         private int _completedMystery;
         private int _completedSeedChecks;
         private int _completedClones;
@@ -128,6 +129,13 @@ namespace SysBot.Pokemon
             set => _completedEVSwaps = value;
         }
 
+        [Category(Counts), Description("Completed Double Swap Trades")]
+        public int CompletedDoubleSwaps
+        {
+            get => _completedDoubleSwaps;
+            set => _completedDoubleSwaps = value;
+        }
+
         [Category(Counts), Description("Completed Mystery Trades [Default: Eggs Only]")]
         public int CompletedMystery
         {
@@ -170,6 +178,7 @@ namespace SysBot.Pokemon
         public void AddCompletedGenderSwaps() => Interlocked.Increment(ref _completedGenderSwaps);
         public void AddCompletedPowerSwaps() => Interlocked.Increment(ref _completedPowerSwaps);
         public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
+        public void AddCompletedDoubleSwaps() => Interlocked.Increment(ref _completedDoubleSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);
@@ -202,6 +211,8 @@ namespace SysBot.Pokemon
                 yield return $"Power Swaps: {CompletedPowerSwaps}";
             if (CompletedEVSwaps != 0)
                 yield return $"EV Swaps: {CompletedEVSwaps}";
+            if (CompletedDoubleSwaps != 0)
+                yield return $"Double Swaps: {CompletedDoubleSwaps}";
             if (CompletedMystery != 0)
                 yield return $"Mystery Eggs: {CompletedMystery}";
             if (CompletedSurprise != 0)

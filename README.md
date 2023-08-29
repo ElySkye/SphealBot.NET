@@ -3,9 +3,23 @@
 
 ## Support Discord:
 
-This is a fork. Do not join the official PDP discord and ask for assistance.
+This is a fork of [SysBot](https://github.com/kwsch/SysBot.NET). Do not join the official PDP discord and ask for assistance.
 For any issues, wait for an update. Do not bother the devs in PDP.
-Else, feel free to join our discord for support: http://discord.gg/sphealtopia
+Else, feel free to join our discord for support:
+[<img src="https://discordapp.com/api/guilds/1078487890318860378/embed.png?style=banner2">](http://discord.gg/sphealtopia)
+
+## Special Thanks & Credits:
+
+[Kurt](https://github.com/kwsch/SysBot.NET) for making SysBot & PKHeX
+[architdate](https://github.com/architdate/PKHeX-Plugins) for PKHEX Plugins
+[Lusamine](https://github.com/Lusamine/SysBot.NET) for maintaining them
+[PDP server](https://discord.gg/tDMvSRv) I've learnt a lot from just reading some of the conversations
+[PhantomL98](https://github.com/PhantomL98/SysBot.NET) for all the guidance, teaching and collaboration help
+[Sinthrill](https://github.com/Sinthrill/SysSwapBot.NET) for getting me started in programming and all the cool tricks you taught me
+[Berichan](https://github.com/Sinthrill/SysSwapBot.NET) for OT details
+[easyworld](https://github.com/easyworld/SysBot.NET) for reference on how to do SWSH OT
+[Koi](https://github.com/Koi-3088/ForkBot.NET) & [zyro](https://github.com/zyro670/NotForkBot.NET) for the various useful discord commands
+[BakaKaito](https://github.com/BakaKaito/MergeBot.NET) for HomeImages & inspiration to do trade embeds
 
 ## SysBot.Base:
 - Base logic library to be built upon in game-specific projects.

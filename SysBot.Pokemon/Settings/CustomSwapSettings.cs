@@ -11,6 +11,9 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("When set to something other than None, the Random Trades will accept this alternate species in addition to the nickname match.")]
         public Species LedySpecies2 { get; set; } = Species.None;
 
+        [Category(CustomSwap), Description("Species selector for $it command. Default: Finizen")]
+        public Species ItemTradeSpecies { get; set; } = Species.Finizen;
+
         [Category(CustomSwap), Description("Toggle Logging of Trade Partner's FULL details upon connection")]
         public bool LogTrainerDetails { get; set; }
 
@@ -19,9 +22,6 @@ namespace SysBot.Pokemon
 
         [Category(CustomSwap), Description("Toggle Sheet Link Display for distribution trades through Discord")]
         public bool SheetToggle { get; set; }
-
-        [Category(CustomSwap), Description("Species selector for $it command. Default: Finizen")]
-        public Species ItemTradeSpecies { get; set; } = Species.Finizen;
 
         [Category(CustomSwap), Description("Held item used to trigger OT Swap.")]
         public SwapItem OTSwapItem { get; set; } = SwapItem.Antidote;

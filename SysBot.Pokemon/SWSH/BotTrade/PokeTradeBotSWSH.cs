@@ -347,8 +347,15 @@ namespace SysBot.Pokemon
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
+            var custom = Hub.Config.CustomSwaps;
             if (poke.Type != PokeTradeType.Random)
                 poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nOTGender: {(Gender)data[6]}\nTID: {trainerTID}\nSID: {trainerSID}\nLanguage: {(LanguageID)data[5]}\nGame: {(GameVersion)data[4]}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
+
+            if (custom.LogTrainerDetails)
+            {
+                Log($"Found Trainer:\r```OT: {trainerName}\rOTGender: {(Gender)data[6]}\rTID: {trainerTID}\rSID: {trainerSID}\rLanguage: {(LanguageID)data[5]}\rGame: {(GameVersion)data[4]}\rNID: {trainerNID}```");
+                Log($"Waiting for a Pokémon...");
+            }
 
             if (poke.Type == PokeTradeType.Dump)
                 return await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
@@ -718,7 +725,9 @@ namespace SysBot.Pokemon
                 var ot_gender = pk.OT_Gender == 0 ? "Male" : "Female";
                 var tid = pk.GetDisplayTID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringTID());
                 var sid = pk.GetDisplaySID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringSID());
-                msg += $"\n**Trainer Data**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}```";
+                var lang = (LanguageID)pk.Language;
+                var game = (GameVersion)pk.Version;
+                msg += $"\n**__Trainer Data__**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}\nLanguage: {lang}\nGame: {game}```";
 
                 // Extra information for shiny eggs, because of people dumping to skip hatching.
                 var eggstring = pk.IsEgg ? "Egg " : string.Empty;
@@ -1066,8 +1075,8 @@ namespace SysBot.Pokemon
             var data = await Connection.ReadBytesAsync(ofs, 8, token).ConfigureAwait(false);
 
             var tidsid = BitConverter.ToUInt32(data, 0);
-            var tid7 = $"{tidsid / 1_000_000:0000}";
-            return tid7;
+            var sid7 = $"{tidsid / 1_000_000:0000}";
+            return sid7;
         }
 
         public async Task<ulong> GetTradePartnerNID(CancellationToken token)

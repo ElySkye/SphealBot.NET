@@ -61,6 +61,7 @@ namespace SysBot.Pokemon
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
             var offer = offered.Species;
+            var nick = offered.Nickname;
             var la = new LegalityAnalysis(offered);
 
             var evSwap = new List<int>
@@ -73,11 +74,52 @@ namespace SysBot.Pokemon
                 (int)custom.EVGenDEFItem,
                 (int)custom.EVGenSPDItem,
             };
+            var PLAevo = new List<ushort>
+            {
+                (ushort)Species.Ursaluna,
+                (ushort)Species.Wyrdeer,
+                (ushort)Species.Overqwil,
+                (ushort)Species.Kleavor,
+            };
+            var Formevo = new List<ushort>
+            {
+                (ushort)Species.Typhlosion,
+                (ushort)Species.Samurott,
+                (ushort)Species.Decidueye,
+                (ushort)Species.Sliggoo,
+                (ushort)Species.Goodra,
+                (ushort)Species.Slowbro,
+                (ushort)Species.Slowking,
+                (ushort)Species.Avalugg,
+                (ushort)Species.Braviary,
+                (ushort)Species.Lilligant,
+            };
+            var notball = new List<int>
+            {
+                228, //Smoke Ball
+                236, //Light Ball
+                278, //Iron Ball
+                541, //Air Balloon
+            };
 
             string[] teraItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
+            string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             string? msg;
             toSend = offered.Clone();
 
+            if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
+            {
+                if (PLAevo.Contains(offer) || Formevo.Contains(offer) && offered.Form != 0) //Check for species that require to be moved out of SV to evolve
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```Request Denied - Bot will not swap Home Tracker Pokémon for OT/Ball/Gender```");
+                    msg = $"{user}, **{(Species)offer}** cannot be swapped due to Home Tracker\n";
+                    msg += $"Features cannot be used for OT/Ball/Gender Swap";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Invalid Request").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                }
+            }
             if (!la.Valid)
             {
                 if (poke.Type == PokeTradeType.LinkSV)
@@ -101,8 +143,8 @@ namespace SysBot.Pokemon
                     //Non SV should get rejected
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, {(Species)offer} cannot be OT swap";
-                    msg += $"\nOriginal OT: {offered.OT_Name}";
+                    msg = $"{user}, **{(Species)offer}** cannot be OT swap";
+                    msg += $"\nOriginal OT: **{offered.OT_Name}**";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -111,10 +153,8 @@ namespace SysBot.Pokemon
                 return (toSend, PokeTradeResult.Success);
             }
             //Ball Swapper
-            else if (BallSwap(swap) != 0)
+            else if (ballItem.Length > 1 && ballItem[1] == "Ball" && !notball.Contains(swap))
             {
-                Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
-
                 if (toSend.Generation != 9)
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
@@ -124,30 +164,43 @@ namespace SysBot.Pokemon
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
                 }
-
-                toSend.Tracker = 0;
-                toSend.Ball = BallSwap(swap);
-                toSend.RefreshChecksum();
-                Log($"Ball swapped to: {(Ball)toSend.Ball}");
-
-                var la2 = new LegalityAnalysis(toSend);
-                if (la2.Valid)
-                {
-                    poke.TradeData = toSend;
-                    counts.AddCompletedBallSwaps();
-                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
-                    await Task.Delay(2_500, token).ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.Success);
-                }
                 else
                 {
-                    if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in **{(Ball)toSend.Ball}**```");
-                    msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
-                    msg += $"The ball cannot be swapped";
-                    await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
-                    DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
-                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                    if (Enum.TryParse(nick, true, out MoveType _)) //Double Swap for Tera
+                    {
+                        Log($"{user} is requesting Double swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                        toSend.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), nick, true);
+                        toSend.ClearNickname();
+                        counts.AddCompletedDoubleSwaps();
+                        Log($"Tera swapped to {toSend.TeraTypeOverride}");
+                    }
+                    else
+                        Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
+
+                    toSend.Tracker = 0;
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    toSend.RefreshChecksum();
+                    Log($"Ball swapped to: {(Ball)toSend.Ball}");
+
+                    var la2 = new LegalityAnalysis(toSend);
+                    if (la2.Valid)
+                    {
+                        poke.TradeData = toSend;
+                        counts.AddCompletedBallSwaps();
+                        await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                        await Task.Delay(2_500, token).ConfigureAwait(false);
+                        return (toSend, PokeTradeResult.Success);
+                    }
+                    else
+                    {
+                        if (poke.Type == PokeTradeType.LinkSV)
+                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
+                        msg += $"The ball cannot be swapped";
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                        return (toSend, PokeTradeResult.TrainerRequestBad);
+                    }
                 }
             }
             else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
@@ -268,7 +321,7 @@ namespace SysBot.Pokemon
                     await Task.Delay(2_500, token).ConfigureAwait(false);
                     return (toSend, PokeTradeResult.Success);
                 }
-                else //Safety Net incase something slips through
+                else //Safety Net
                 {
                     msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
@@ -338,7 +391,7 @@ namespace SysBot.Pokemon
                     await Task.Delay(2_500, token).ConfigureAwait(false);
                     return (toSend, PokeTradeResult.Success);
                 }
-                else //Safety Net incase something slips through
+                else //Safety Net
                 {
                     msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
@@ -445,7 +498,7 @@ namespace SysBot.Pokemon
                     await Task.Delay(2_500, token).ConfigureAwait(false);
                     return (toSend, PokeTradeResult.Success);
                 }
-                else //Safety Net incase something slips through
+                else //Safety Net
                 {
                     msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
@@ -455,10 +508,20 @@ namespace SysBot.Pokemon
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
             }
-            //Tera Swapper
+            //Tera Swapper + Ball (if applicable)
             else if (teraItem.Length > 1 && teraItem[1] == "Tera")
             {
-                Log($"{user} is requesting Tera swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9) //Double Swap for Ball
+                {
+                    Log($"{user} is requesting Double swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                    toSend.Tracker = 0;
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), nick, true);
+                    toSend.ClearNickname();
+                    counts.AddCompletedDoubleSwaps();
+                    Log($"Ball swapped to {(Ball)toSend.Ball}");
+                }
+                else
+                    Log($"{user} is requesting Tera swap for: {GameInfo.GetStrings(1).Species[offer]}");
 
                 toSend.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), teraItem[0]);
                 toSend.RefreshChecksum();
@@ -473,12 +536,22 @@ namespace SysBot.Pokemon
                     await Task.Delay(2_500, token).ConfigureAwait(false);
                     return (toSend, PokeTradeResult.Success);
                 }
-                else //Safety Net incase something slips through
+                else //Safety Net as theres double swap for Ball now
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9)
+                    {
+                        if (poke.Type == PokeTradeType.LinkSV)
+                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in **{(Ball)toSend.Ball}**```");
+                        msg = $"{user}, **{(Species)toSend.Species}** cannot be in **{(Ball)toSend.Ball}**";
+                    }
+                    else
+                        msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
-                    await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Tera Swap").ConfigureAwait(false);
+                    if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9)
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Double Swap [Ball]").ConfigureAwait(false);
+                    else
+                        await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Tera Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
@@ -507,7 +580,9 @@ namespace SysBot.Pokemon
             var Scarlet = (ushort)Species.Koraidon;
             var Violet = (ushort)Species.Miraidon;
             var version = tradepartner.Game;
-            string[] teraItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
+            var swap = offered.HeldItem;
+            string[] teraItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
+            string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
 
             if (changeallowed)
             {
@@ -578,9 +653,9 @@ namespace SysBot.Pokemon
                 else if (version == (int)GameVersion.VL && toSend.Met_Location == 130) //Violet
                     cln.Met_Location = 131;//Uva Academy
 
-                if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector
+                if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
                 {
-                    cln.Ball = BallSwap(offered.HeldItem);
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     Log($"Ball swapped to: {(Ball)cln.Ball}");
                 }
 
@@ -611,6 +686,8 @@ namespace SysBot.Pokemon
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
                 cln.RefreshChecksum();
             }
+            else
+                Log($"Sending original Pokémon as it can't be OT swapped");
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
@@ -623,9 +700,9 @@ namespace SysBot.Pokemon
                     Log($"Gender: {(Gender)cln.OT_Gender}");
                     Log($"Language: {(LanguageID)cln.Language}");
                     Log($"Game: {(GameVersion)cln.Version}");
-                    Log($"OT swap success.");
                 }
-
+                if (changeallowed)
+                    Log($"OT swap success.");
                 if (toSend.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
@@ -651,6 +728,29 @@ namespace SysBot.Pokemon
                     else
                         changeallowed = false;
                     break;
+                //Block SV natives that required to be moved out of SV to evolve
+                case (ushort)Species.Ursaluna:
+                case (ushort)Species.Wyrdeer:
+                case (ushort)Species.Overqwil:
+                case (ushort)Species.Kleavor:
+                    changeallowed = false;
+                    break;
+                //Block SV natives but only if other forms (Hisui/Galar)
+                case (ushort)Species.Typhlosion:
+                case (ushort)Species.Samurott:
+                case (ushort)Species.Decidueye:
+                case (ushort)Species.Sliggoo:
+                case (ushort)Species.Goodra:
+                case (ushort)Species.Slowbro:
+                case (ushort)Species.Slowking:
+                case (ushort)Species.Avalugg:
+                case (ushort)Species.Braviary:
+                case (ushort)Species.Lilligant:
+                    if (mon.Form != 0)
+                        changeallowed = false;
+                    else
+                        changeallowed = true;
+                    break;
             }
             switch (mon.OT_Name) //Stops mons with Specific OT from changing to User's OT
             {
@@ -675,34 +775,5 @@ namespace SysBot.Pokemon
 
             return eckeep;
         }
-        private static int BallSwap(int ballItem) => ballItem switch
-        {
-            1 => 1,
-            2 => 2,
-            3 => 3,
-            4 => 4,
-            5 => 5,
-            6 => 6,
-            7 => 7,
-            8 => 8,
-            9 => 9,
-            10 => 10,
-            11 => 11,
-            12 => 12,
-            13 => 13,
-            14 => 14,
-            15 => 15,
-            492 => 17,
-            493 => 18,
-            494 => 19,
-            495 => 20,
-            496 => 21,
-            497 => 22,
-            498 => 23,
-            499 => 24,
-            576 => 25,
-            851 => 26,
-            _ => 0,
-        };
     }
 }

@@ -2,7 +2,7 @@
 using PKHeX.Core;
 using SysBot.Base;
 using System;
-using System.Diagnostics.Metrics;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
@@ -56,12 +56,19 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
-            var nick = offered.Nickname;
             var offer = offered.Species;
             var la = new LegalityAnalysis(offered);
+            var notball = new List<int>
+            {
+                228, //Smoke Ball
+                236, //Light Ball
+                278, //Iron Ball
+                541, //Air Balloon
+            };
 
             toSend = offered.Clone();
             string? msg;
+            string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
 
             if (!la.Valid)
             {
@@ -100,14 +107,14 @@ namespace SysBot.Pokemon
                 await Task.Delay(2_500, token).ConfigureAwait(false);
                 return (toSend, PokeTradeResult.Success);
             }
-            else if (BallSwap(swap) != 0)
+            else if (ballItem.Length > 1 && ballItem[1] == "Ball" && !notball.Contains(swap))
             {
                 Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
 
                 if ((GameVersion)toSend.Version == GameVersion.SW || (GameVersion)toSend.Version == GameVersion.SH)
                 {
                     toSend.Tracker = 0;
-                    toSend.Ball = BallSwap(offered.HeldItem);
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
 
@@ -266,6 +273,7 @@ namespace SysBot.Pokemon
             var cln = (PK8)toSend.Clone();
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
+            string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
 
             cln.TrainerTID7 = tidsid % 1_000_000;
             cln.TrainerSID7 = tidsid / 1_000_000;
@@ -306,9 +314,9 @@ namespace SysBot.Pokemon
                 };
             }
 
-            if (BallSwap(offered.HeldItem) != 0 && cln.HeldItem != (int)custom.OTSwapItem) //Distro Ball Selector
+            if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                cln.Ball = BallSwap(offered.HeldItem);
+                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
@@ -358,15 +366,17 @@ namespace SysBot.Pokemon
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
-                Log($"OT info swapped to:");
-                Log($"OT_Name: {cln.OT_Name}");
-                Log($"TID: {cln.TrainerTID7}");
-                Log($"SID: {cln.TrainerSID7}");
-                Log($"Gender: {(Gender)cln.OT_Gender}");
-                Log($"Language: {(LanguageID)(cln.Language)}");
-                Log($"Game: {(GameVersion)(cln.Version)}");
+                if (custom.LogTrainerDetails == false) //So it does not log twice
+                {
+                    Log($"OT info swapped to:");
+                    Log($"OT_Name: {cln.OT_Name}");
+                    Log($"TID: {cln.TrainerTID7}");
+                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"Gender: {(Gender)cln.OT_Gender}");
+                    Log($"Language: {(LanguageID)(cln.Language)}");
+                    Log($"Game: {(GameVersion)(cln.Version)}");
+                }
                 Log($"OT Swap success");
-
                 if (toSend.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
@@ -380,34 +390,5 @@ namespace SysBot.Pokemon
                 return (toSend, false);
             }
         }
-        private static int BallSwap(int ballItem) => ballItem switch
-        {
-            1 => 1,
-            2 => 2,
-            3 => 3,
-            4 => 4,
-            5 => 5,
-            6 => 6,
-            7 => 7,
-            8 => 8,
-            9 => 9,
-            10 => 10,
-            11 => 11,
-            12 => 12,
-            13 => 13,
-            14 => 14,
-            15 => 15,
-            492 => 17,
-            493 => 18,
-            494 => 19,
-            495 => 20,
-            496 => 21,
-            497 => 22,
-            498 => 23,
-            499 => 24,
-            576 => 25,
-            851 => 26,
-            _ => 0,
-        };
     }
 }
