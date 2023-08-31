@@ -32,7 +32,7 @@ namespace SysBot.Pokemon.Discord
                     msg = "https://thumbs.gfycat.com/CraftyEasygoingAnkole.webp";
                     break;
                 case 6:
-                    msg = "https://tenor.com/en-GB/view/cat-ping-pong-funny-animals-cats-gif-8766860";
+                    msg = "https://tenor.com/view/cat-ping-pong-funny-animals-cats-gif-8766860";
                     break;
             }
             await ReplyAsync(msg).ConfigureAwait(false);

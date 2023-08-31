@@ -486,7 +486,7 @@ namespace SysBot.Pokemon.Discord
             }
             else if (gamever == "SWSH")
             {
-                var swsh = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\nShow it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                var swsh = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
                 swsh += "**__OT Swap__**\n";
                 swsh += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
                 swsh += $"> • Only **{gamever}** natives allowed with exceptions\n\n";

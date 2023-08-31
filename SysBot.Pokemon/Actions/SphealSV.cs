@@ -194,8 +194,15 @@ namespace SysBot.Pokemon
                     else
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        {
+                            if (toSend.WasEgg && toSend.Ball == 1)
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} is from an egg & cannot be in {(Ball)toSend.Ball}```");
+                            else
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        }
                         msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
+                        if (toSend.WasEgg && toSend.Ball == 1)
+                            msg += "$Egg hatches cannot be in **Master Ball**";
                         msg += $"The ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -541,8 +548,15 @@ namespace SysBot.Pokemon
                     if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9)
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in **{(Ball)toSend.Ball}**```");
+                        {
+                            if (toSend.WasEgg && toSend.Ball == 1)
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} is from an egg & cannot be in {(Ball)toSend.Ball}```");
+                            else
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        }
                         msg = $"{user}, **{(Species)toSend.Species}** cannot be in **{(Ball)toSend.Ball}**";
+                        if (toSend.WasEgg && toSend.Ball == 1)
+                            msg += "$Egg hatches cannot be in **Master Ball**";
                     }
                     else
                         msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
@@ -605,6 +619,8 @@ namespace SysBot.Pokemon
                         cln.Version = version; //Eggs should not have Origin Game on SV
                         if (cln.HeldItem > 0)
                         {
+                            if (cln.Species != (ushort)custom.ItemTradeSpecies)
+                                cln.ClearNickname();
                             if (!cln.IsNicknamed && cln.Species != (ushort)custom.ItemTradeSpecies)
                                 cln.ClearNickname();
                             else if (cln.HeldItem == (int)custom.OTSwapItem)
@@ -691,7 +707,7 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
-                if (custom.LogTrainerDetails == false) //So it does not log twice
+                if (changeallowed && custom.LogTrainerDetails == false) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");

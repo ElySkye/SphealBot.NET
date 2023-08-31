@@ -130,8 +130,15 @@ namespace SysBot.Pokemon
                     else
                     {
                         if (poke.Type == PokeTradeType.LinkSWSH)
-                            poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        {
+                            if (toSend.WasEgg && toSend.Ball == 1)
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} is from an egg & cannot be in {(Ball)toSend.Ball}```");
+                            else
+                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                        }
                         msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
+                        if (toSend.WasEgg && toSend.Ball == 1)
+                            msg += "$Egg hatches cannot be in **Master Ball**";
                         msg += $"The ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
