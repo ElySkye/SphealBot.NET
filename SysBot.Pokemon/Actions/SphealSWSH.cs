@@ -66,9 +66,11 @@ namespace SysBot.Pokemon
                 541, //Air Balloon
             };
 
-            toSend = offered.Clone();
             string? msg;
             string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
+            toSend = offered.Clone();
+            if (swap == 4)
+                toSend.Ball = 4;
 
             if (!la.Valid)
             {
@@ -93,8 +95,9 @@ namespace SysBot.Pokemon
                     //Non SWSH should get rejected
                     if (poke.Type == PokeTradeType.LinkSWSH)
                         poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n1) Not SWSH native\n2) SWSH Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, **{(Species)offer}** cannot be OT swap";
-                    msg += $"\nOriginal OT: {offered.OT_Name}";
+                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n";
+                    msg += "Pokémon is either:\n1) Not SWSH native\n2) SWSH Event / In - game trade with FIXED OT\n";
+                    msg += $"Original OT: {offered.OT_Name}";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -114,7 +117,8 @@ namespace SysBot.Pokemon
                 if ((GameVersion)toSend.Version == GameVersion.SW || (GameVersion)toSend.Version == GameVersion.SH)
                 {
                     toSend.Tracker = 0;
-                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (toSend.Ball != 4)
+                        toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
 
@@ -138,8 +142,8 @@ namespace SysBot.Pokemon
                         }
                         msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
                         if (toSend.WasEgg && toSend.Ball == 1)
-                            msg += "$Egg hatches cannot be in **Master Ball**";
-                        msg += $"The ball cannot be swapped";
+                            msg += "Egg hatches cannot be in **Master Ball**\n";
+                        msg += "The ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -323,7 +327,10 @@ namespace SysBot.Pokemon
 
             if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                if (offered.HeldItem == 4)
+                    cln.Ball = 4;
+                else
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)

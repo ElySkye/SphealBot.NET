@@ -106,6 +106,8 @@ namespace SysBot.Pokemon
             string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             string? msg;
             toSend = offered.Clone();
+            if (swap == 4)
+                toSend.Ball = 4;
 
             if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
             {
@@ -142,9 +144,10 @@ namespace SysBot.Pokemon
                 {
                     //Non SV should get rejected
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, **{(Species)offer}** cannot be OT swap";
-                    msg += $"\nOriginal OT: **{offered.OT_Name}**";
+                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
+                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n";
+                    msg += "Pokémon is either:\n1) Not SV native\n\n2) SV Event/In-game trade with FIXED OT\n";
+                    msg += $"Original OT: **{offered.OT_Name}**";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -178,7 +181,8 @@ namespace SysBot.Pokemon
                         Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
 
                     toSend.Tracker = 0;
-                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (toSend.Ball != 4)
+                        toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
 
@@ -202,8 +206,8 @@ namespace SysBot.Pokemon
                         }
                         msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
                         if (toSend.WasEgg && toSend.Ball == 1)
-                            msg += "$Egg hatches cannot be in **Master Ball**";
-                        msg += $"The ball cannot be swapped";
+                            msg += "Egg hatches cannot be in **Master Ball**\n";
+                        msg += "The ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -554,9 +558,9 @@ namespace SysBot.Pokemon
                             else
                                 poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
                         }
-                        msg = $"{user}, **{(Species)toSend.Species}** cannot be in **{(Ball)toSend.Ball}**";
+                        msg = $"{user}, **{(Species)toSend.Species}** cannot be in **{(Ball)toSend.Ball}**\n";
                         if (toSend.WasEgg && toSend.Ball == 1)
-                            msg += "$Egg hatches cannot be in **Master Ball**";
+                            msg += "Egg hatches cannot be in **Master Ball**";
                     }
                     else
                         msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
@@ -671,7 +675,10 @@ namespace SysBot.Pokemon
 
                 if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
                 {
-                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (swap == 4)
+                        cln.Ball = 4;
+                    else
+                        cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     Log($"Ball swapped to: {(Ball)cln.Ball}");
                 }
 
@@ -702,12 +709,10 @@ namespace SysBot.Pokemon
                     if (cln.Met_Location != 30024) cln.SetRandomEC(); //Allow raidmon to OT
                 cln.RefreshChecksum();
             }
-            else
-                Log($"Sending original Pokémon as it can't be OT swapped");
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
-                if (changeallowed && custom.LogTrainerDetails == false) //So it does not log twice
+                if (changeallowed && !custom.LogTrainerDetails) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
@@ -717,6 +722,8 @@ namespace SysBot.Pokemon
                     Log($"Language: {(LanguageID)cln.Language}");
                     Log($"Game: {(GameVersion)cln.Version}");
                 }
+                else if (!changeallowed)
+                    Log($"Sending original Pokémon as it can't be OT swapped");
                 if (changeallowed)
                     Log($"OT swap success.");
                 if (toSend.HeldItem == (int)custom.OTSwapItem)

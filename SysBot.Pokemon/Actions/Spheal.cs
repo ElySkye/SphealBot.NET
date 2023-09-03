@@ -73,7 +73,10 @@ namespace SysBot.Pokemon
 
             if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                if (offered.HeldItem == 4)
+                    cln.Ball = 4;
+                else
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
 

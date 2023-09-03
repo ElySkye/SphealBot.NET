@@ -6,7 +6,7 @@
 This is a fork of [SysBot](https://github.com/kwsch/SysBot.NET). Do not join the official PDP discord and ask for assistance.
 For any issues, wait for an update. Do not bother the devs in PDP.
 Else, feel free to join our discord for support:
-[<img src="https://canary.discordapp.com/api/guilds/1078487890318860378/widget.png?style=banner2">](http://discord.gg/sphealtopia)
+[Sphealtopia](http://discord.gg/sphealtopia)
 
 ## Special Thanks & Credits:
 
