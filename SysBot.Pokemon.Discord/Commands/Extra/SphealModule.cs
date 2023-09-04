@@ -74,6 +74,7 @@ namespace SysBot.Pokemon.Discord
         {
             var code = Info.GetRandomTradeCode();
             var sig = Context.User.GetFavor();
+            var config = SysCordSettings.HubConfig.CustomSwaps;
             var me = SysCord<T>.Runner;
             string botversion;
             if (me is not null)
@@ -91,7 +92,10 @@ namespace SysBot.Pokemon.Discord
                         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
                         break;
                     case "PB8":
-                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        if (config.EnableBDSPTrades)
+                            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
+                        else
+                            await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
                         break;
                 }
             }

@@ -17,6 +17,12 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Toggle Logging of Trade Partner's FULL details upon connection")]
         public bool LogTrainerDetails { get; set; }
 
+        [Category(CustomSwap), Description("Allow BDSP $rsv commands")]
+        public bool EnableBDSPTrades { get; set; }
+
+        [Category(CustomSwap), Description("Enable/Disable Home Tracker genning warnings for users")]
+        public bool TrackerWarning { get; set; }
+
         [Category(CustomSwap), Description("Display Google Sheets Link for Nicknames used in Direct Trades")]
         public string SheetLink { get; set; } = "Input Link under BotTrade > Custom Swaps";
 

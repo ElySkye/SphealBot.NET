@@ -73,10 +73,9 @@ namespace SysBot.Pokemon
 
             if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                if (offered.HeldItem == 4)
-                    cln.Ball = 4;
-                else
-                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                    ballItem[0] = "Poke";
+                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
 

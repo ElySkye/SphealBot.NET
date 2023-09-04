@@ -69,8 +69,6 @@ namespace SysBot.Pokemon
             string? msg;
             string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             toSend = offered.Clone();
-            if (swap == 4)
-                toSend.Ball = 4;
 
             if (!la.Valid)
             {
@@ -94,9 +92,9 @@ namespace SysBot.Pokemon
                 {
                     //Non SWSH should get rejected
                     if (poke.Type == PokeTradeType.LinkSWSH)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n1) Not SWSH native\n2) SWSH Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n";
-                    msg += "Pokémon is either:\n1) Not SWSH native\n2) SWSH Event / In - game trade with FIXED OT\n";
+                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\n\nPokémon is either:\n1) Not SWSH native\n2) SWSH Event/In-game trade with FIXED OT```");
+                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n\n";
+                    msg += "Pokémon is either:\n1) Not SWSH native\n2) SWSH Event / In - game trade with FIXED OT\n\n";
                     msg += $"Original OT: {offered.OT_Name}";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -117,8 +115,9 @@ namespace SysBot.Pokemon
                 if ((GameVersion)toSend.Version == GameVersion.SW || (GameVersion)toSend.Version == GameVersion.SH)
                 {
                     toSend.Tracker = 0;
-                    if (toSend.Ball != 4)
-                        toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                        ballItem[0] = "Poke";
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
 
@@ -327,10 +326,9 @@ namespace SysBot.Pokemon
 
             if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                if (offered.HeldItem == 4)
-                    cln.Ball = 4;
-                else
-                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                    ballItem[0] = "Poke";
+                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                 Log($"Ball swapped to: {(Ball)cln.Ball}");
             }
             //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
@@ -380,7 +378,7 @@ namespace SysBot.Pokemon
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
-                if (custom.LogTrainerDetails == false) //So it does not log twice
+                if (!custom.LogTrainerDetails) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");

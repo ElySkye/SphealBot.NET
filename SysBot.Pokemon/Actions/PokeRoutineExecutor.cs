@@ -21,7 +21,6 @@ namespace SysBot.Pokemon
         public abstract Task<T> ReadPokemon(ulong offset, int size, CancellationToken token);
         public abstract Task<T> ReadPokemonPointer(IEnumerable<long> jumps, int size, CancellationToken token);
         public abstract Task<T> ReadBoxPokemon(int box, int slot, CancellationToken token);
-        readonly Sphealcl SphealEmbed = new();
 
         public async Task<T?> ReadUntilPresent(ulong offset, int waitms, int waitInterval, int size, CancellationToken token)
         {
@@ -141,7 +140,7 @@ namespace SysBot.Pokemon
             bool quit = false;
             var user = poke.Trainer;
             bool isDistribution = false;
-            if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
+            if (poke.Type == (PokeTradeType)PokeRoutineType.DirectTrade || poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.Clone)
                 isDistribution = true;
             var useridmsg = isDistribution ? "" : $" ({user.ID})";
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;

@@ -2,6 +2,7 @@
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using PKHeX.Core;
 using System;
 using System.Threading.Tasks;
@@ -34,6 +35,20 @@ namespace SysBot.Pokemon.Discord
                 string embedMsg, embedTitle, embedAuthor;
                 bool CanGMax = false;
                 uint FormArgument = 0;
+                var config = SysCordSettings.HubConfig.CustomSwaps;
+                var me = SysCord<T>.Runner;
+                string botversion = "";
+
+                if (me is not null)
+                    botversion = me.ToString()!.Substring(46, 3);
+                var gamever = botversion switch
+                {
+                    "PK9" => "SV",
+                    "PK8" => "SWSH",
+                    "PA8" => "PLA",
+                    "PB8" => "BDSP",
+                    _ => "LGPE",
+                };
 
                 switch (trade.Generation)
                 {
@@ -71,20 +86,8 @@ namespace SysBot.Pokemon.Discord
                 }
                 if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade || routine == PokeRoutineType.SeedCheck)
                 {
-                    var me = SysCord<T>.Runner;
                     var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
                     var p = SysCordSettings.Settings.CommandPrefix;
-                    string botversion = "";
-                    if (me is not null)
-                        botversion = me.ToString()!.Substring(46, 3);
-                    var gamever = botversion switch
-                    {
-                        "PK9" => "SV",
-                        "PK8" => "SWSH",
-                        "PA8" => "PLA",
-                        "PB8" => "BDSP",
-                        _ => "LGPE",
-                    };
 
                     Color embedMsgColor = new ();
                     embedTitle = $"Search once bot DMs you Initializing trade\n";
@@ -222,13 +225,21 @@ namespace SysBot.Pokemon.Discord
                 }
                 else
                 {
+                    PK9 tradesv = (PK9)(PKM)trade;
+                    PK8 tradeswsh = (PK8)(PKM)trade;
+                    PB8 tradebdsp = (PB8)(PKM)trade;
+                    PA8 tradepla = (PA8)(PKM)trade;
+                    var list = FormConverter.GetFormList(trade.Species, GameInfo.Strings.types, GameInfo.Strings.forms, GameInfo.GenderSymbolASCII, trade.Context);
                     string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? "★" : "";
-                    embedTitle += $" {(Species)trade.Species} ";
+                    if (trade.Form != 0)
+                        embedTitle += $"{list[trade.Form]} {(Species)trade.Species}";
+                    else
+                        embedTitle += $" {(Species)trade.Species} ";
                     if (trade.Gender == 0)
-                        embedTitle += "(M)";
+                        embedTitle += " (M)";
                     else if (trade.Gender == 1)
-                        embedTitle += "(F)";
+                        embedTitle += " (F)";
                     if (trade.HeldItem > 0)
                         embedTitle += $" **➜** {HeldItem}";
 
@@ -238,6 +249,8 @@ namespace SysBot.Pokemon.Discord
 
                     embedMsg = $"**Ability**: {(Ability)trade.Ability}";
                     embedMsg += $"\n**Level**: {trade.CurrentLevel}";
+                    if (gamever == "SV")
+                        embedMsg += $"\n**Tera**: {tradesv.TeraType}";
                     embedMsg += $"\n**Nature**: {(Nature)trade.Nature}";
                     embedMsg += $"\n**IVs**: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
                     if (trade.EVTotal != 0)
@@ -251,6 +264,33 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"\n- {(Move)trade.Move3}";
                     if (trade.Move4 != 0)
                         embedMsg += $"\n- {(Move)trade.Move4}";
+                    if (trade.EncryptionConstant == 0)
+                        embedMsg += $"\n### :bangbang: **Pokémon generated with 0 EC** :bangbang:";
+                    if (config.TrackerWarning)
+                    {
+                        if (gamever == "SV")
+                        {
+                            if (trade.Generation != 9 && tradesv.Tracker == 0)
+                                embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
+                        }
+                        else if (gamever == "PLA")
+                        {
+                            if ((GameVersion)trade.Version != GameVersion.PLA && tradepla.Tracker == 0)
+                                embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
+                        }
+                        else if (gamever == "BDSP")
+                        {
+                            if ((GameVersion)trade.Version != GameVersion.BD || (GameVersion)trade.Version != GameVersion.SP)
+                                if (tradebdsp.Tracker == 0)
+                                    embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
+                        }
+                        else if (gamever == "SWSH")
+                        {
+                            if ((GameVersion)trade.Version != GameVersion.SW || (GameVersion)trade.Version != GameVersion.SH)
+                                if (tradeswsh.Tracker == 0)
+                                    embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
+                        }
+                    }
                     embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue";
 
                     EmbedAuthorBuilder embedAuthorBuild = new()

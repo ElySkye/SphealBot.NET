@@ -106,8 +106,6 @@ namespace SysBot.Pokemon
             string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             string? msg;
             toSend = offered.Clone();
-            if (swap == 4)
-                toSend.Ball = 4;
 
             if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
             {
@@ -144,9 +142,9 @@ namespace SysBot.Pokemon
                 {
                     //Non SV should get rejected
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\nPokémon is either:\n\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n";
-                    msg += "Pokémon is either:\n1) Not SV native\n\n2) SV Event/In-game trade with FIXED OT\n";
+                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\n\nPokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
+                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n\n";
+                    msg += "Pokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT\n\n";
                     msg += $"Original OT: **{offered.OT_Name}**";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -181,8 +179,9 @@ namespace SysBot.Pokemon
                         Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
 
                     toSend.Tracker = 0;
-                    if (toSend.Ball != 4)
-                        toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                        ballItem[0] = "Poke";
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
 
@@ -522,6 +521,8 @@ namespace SysBot.Pokemon
             //Tera Swapper + Ball (if applicable)
             else if (teraItem.Length > 1 && teraItem[1] == "Tera")
             {
+                if (nick == "Poké") //Account for
+                    nick = "Poke";
                 if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9) //Double Swap for Ball
                 {
                     Log($"{user} is requesting Double swap for: {GameInfo.GetStrings(1).Species[offer]}");
@@ -563,9 +564,11 @@ namespace SysBot.Pokemon
                             msg += "Egg hatches cannot be in **Master Ball**";
                     }
                     else
+                    {
                         msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
-                    msg += $"__**Legality Analysis**__\n";
-                    msg += la2.Report();
+                        msg += $"__**Legality Analysis**__\n";
+                        msg += la2.Report();
+                    }
                     if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9)
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Double Swap [Ball]").ConfigureAwait(false);
                     else
@@ -675,10 +678,9 @@ namespace SysBot.Pokemon
 
                 if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
                 {
-                    if (swap == 4)
-                        cln.Ball = 4;
-                    else
-                        cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                        ballItem[0] = "Poke";
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     Log($"Ball swapped to: {(Ball)cln.Ball}");
                 }
 
