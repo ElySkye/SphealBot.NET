@@ -379,6 +379,14 @@ namespace SysBot.Pokemon
                 if (offered.HeldItem != 229)
                     list.TryRegister(trainerNID, trainerName);
             }
+            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
+            {
+                //Auto OT for $t command/PK files if not specified by the user
+                var config = Hub.Config.Legality;
+                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsSWSH(toSend, offered, trainerName, sav, token).ConfigureAwait(false);
+            }
+
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(trainerNID, trainerName, trainerTID);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, oldEC, toSend, trainer, token).ConfigureAwait(false);
@@ -500,6 +508,8 @@ namespace SysBot.Pokemon
                 PokeTradeType.Random => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
                 PokeTradeType.Clone => await HandleClone(sav, poke, offered, oldEC, token).ConfigureAwait(false),
                 PokeTradeType.LinkSWSH => await HandleRandomLedy(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
+                PokeTradeType.EggSWSH => await HandleMysteryEggs(sav, poke, offered, toSend, partnerID, token).ConfigureAwait(false),
+
                 _ => (toSend, PokeTradeResult.Success),
             };
         }
@@ -563,7 +573,6 @@ namespace SysBot.Pokemon
             var config = Hub.Config.Distribution;
             var custom = Hub.Config.CustomSwaps;
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
-            var counts = TradeSettings;
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
             var nick = offered.Nickname;

@@ -27,6 +27,7 @@ namespace SysBot.Pokemon.Discord
 
         [Command("pool")]
         [Summary("Displays the details of Pokémon files in the random pool.")]
+        [RequireSudo]
         public async Task DisplayPoolCountAsync()
         {
             var me = SysCord<T>.Runner;

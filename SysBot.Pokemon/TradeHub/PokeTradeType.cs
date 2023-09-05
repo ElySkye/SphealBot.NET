@@ -9,6 +9,7 @@
         Dump,
         LinkSV,
         EggSV,
+        EggSWSH,
         LinkSWSH,
         LinkLA,
         LinkBDSP

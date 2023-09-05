@@ -2,7 +2,6 @@
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Newtonsoft.Json;
 using PKHeX.Core;
 using System;
 using System.Threading.Tasks;
@@ -226,9 +225,6 @@ namespace SysBot.Pokemon.Discord
                 else
                 {
                     PK9 tradesv = (PK9)(PKM)trade;
-                    PK8 tradeswsh = (PK8)(PKM)trade;
-                    PB8 tradebdsp = (PB8)(PKM)trade;
-                    PA8 tradepla = (PA8)(PKM)trade;
                     var list = FormConverter.GetFormList(trade.Species, GameInfo.Strings.types, GameInfo.Strings.forms, GameInfo.GenderSymbolASCII, trade.Context);
                     string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? "★" : "";
@@ -272,23 +268,6 @@ namespace SysBot.Pokemon.Discord
                         {
                             if (trade.Generation != 9 && tradesv.Tracker == 0)
                                 embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
-                        }
-                        else if (gamever == "PLA")
-                        {
-                            if ((GameVersion)trade.Version != GameVersion.PLA && tradepla.Tracker == 0)
-                                embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
-                        }
-                        else if (gamever == "BDSP")
-                        {
-                            if ((GameVersion)trade.Version != GameVersion.BD || (GameVersion)trade.Version != GameVersion.SP)
-                                if (tradebdsp.Tracker == 0)
-                                    embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
-                        }
-                        else if (gamever == "SWSH")
-                        {
-                            if ((GameVersion)trade.Version != GameVersion.SW || (GameVersion)trade.Version != GameVersion.SH)
-                                if (tradeswsh.Tracker == 0)
-                                    embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
                         }
                     }
                     embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue";

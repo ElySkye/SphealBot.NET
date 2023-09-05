@@ -68,7 +68,7 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Input Nickname for Spheal Event.")]
         public string SphealEvent { get; set; } = "SphealEventPlaceholder";
 
-        [Category(CustomSwap), Description("Enable OT Changing")]
+        [Category(CustomSwap), Description("Enable Automatic OT Changing on Distribution/Specific Trades")]
         public bool AllowTraderOTInformation { get; set; } = true;
 
         [Category(CustomSwap), Description("Enable Non Ledy OT, Requires config <LedyQuitIfNoMatch> to be false")]

@@ -342,6 +342,14 @@ namespace SysBot.Pokemon
                 return PokeTradeResult.TrainerTooSlow;
             lastOffered = await SwitchConnection.ReadBytesAbsoluteAsync(LinkTradePokemonOffset, 8, token).ConfigureAwait(false);
 
+            if (poke.Type == PokeTradeType.Specific)
+            {
+                //Auto OT for $t command/PK files if not specified by the user
+                var config = Hub.Config.Legality;
+                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false);
+            }
+
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, toSend, trainer, token).ConfigureAwait(false);

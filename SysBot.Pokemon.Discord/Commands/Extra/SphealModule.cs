@@ -167,7 +167,8 @@ namespace SysBot.Pokemon.Discord
                         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSV).ConfigureAwait(false);
                         break;
                     case "PK8":
-                        await ReplyAsync($"Command not configured for SWSH yet.").ConfigureAwait(false); break;
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSWSH).ConfigureAwait(false);
+                        break;
                     case "PA8":
                         await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
                         break;
@@ -196,7 +197,8 @@ namespace SysBot.Pokemon.Discord
                         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSV).ConfigureAwait(false);
                         break;
                     case "PK8":
-                        await ReplyAsync($"Command not configured for SWSH yet.").ConfigureAwait(false); break;
+                        await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.EggSWSH).ConfigureAwait(false);
+                        break;
                     case "PA8":
                         await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
                         break;
@@ -242,9 +244,7 @@ namespace SysBot.Pokemon.Discord
                 await ReplyAsync($"Cooldown has been updated to {cooldown} minutes.").ConfigureAwait(false);
             }
             else
-            {
                 await ReplyAsync("Please enter a valid number of minutes.").ConfigureAwait(false);
-            }
         }
 
         [Command("checkcd")]

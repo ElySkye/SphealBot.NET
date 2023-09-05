@@ -259,7 +259,7 @@ namespace SysBot.Pokemon
 
             var toSend = poke.TradeData;
             if (toSend.Species != 0)
-                await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+               await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
 
             // Assumes we're freshly in the Portal and the cursor is over Link Trade.
             Log("Selecting Link Trade.");
@@ -401,6 +401,43 @@ namespace SysBot.Pokemon
             {
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return update;
+            }
+            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
+            {
+                //Auto OT for $t command/PK files if not specified by the user
+                var config = Hub.Config.Legality;
+                if (toSend.Generation != 9 && toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                {
+                    var cln = toSend.Clone();
+                    var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+                    cln.OT_Name = tradepartner.TrainerName;
+                    cln.OT_Gender = tradepartner.Gender;
+                    cln.Language = tradepartner.Language;
+                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
+                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+                    cln.HT_Name = tradepartner.TrainerName;
+                    cln.ClearNickname();
+
+                    if (toSend.IsShiny)
+                        cln.SetShiny();
+                    cln.RefreshChecksum();
+
+                    var la = new LegalityAnalysis(cln);
+                    if (!la.Valid)
+                    {
+                        poke.SendNotification(this, "Illegal Request.");
+                        DumpPokemon(DumpSetting.DumpFolder, "hacked", cln);
+                        var msg = $"**{tradepartner.TrainerName}** is trying to generate **{(Species)cln.Species}**\n";
+                        msg += $"Illegal Request";
+                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gen").ConfigureAwait(false);
+                        return (PokeTradeResult.TrainerRequestBad);
+                    }
+                }
+                else if (toSend.OT_Name == config.GenerateOT)
+                {
+                    if (toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                        await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
+                }
             }
 
             Log("Confirming trade.");

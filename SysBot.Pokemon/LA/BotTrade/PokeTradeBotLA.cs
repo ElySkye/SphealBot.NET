@@ -1,6 +1,4 @@
-﻿using Discord;
-using PKHeX.Core;
-using PKHeX.Core.AutoMod;
+﻿using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -302,9 +300,15 @@ namespace SysBot.Pokemon
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
             var listCool = UserCooldowns;
+            var custom = Hub.Config.CustomSwaps;
+
             if (poke.Type != PokeTradeType.Random)
                 poke.SendNotification(this, $"__**Found Trainer**__\n```OT: {tradePartner.TrainerName}\nOTGender: {(Gender)tradePartner.Gender}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nLanguage:{(LanguageID)tradePartner.Language}\nGame:{(GameVersion)tradePartner.Game}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
-
+            if (custom.LogTrainerDetails)
+            {
+                Log($"Found Trainer:\r```OT: {tradePartner.TrainerName}\rOTGender: {(Gender)tradePartner.Gender}\rTID: {tradePartner.TID7}\rSID: {tradePartner.SID7}\rLanguage:{(LanguageID)tradePartner.Language}\rGame:{(GameVersion)tradePartner.Game}\rNID: {trainerNID}```");
+                Log($"Waiting for a Pokémon...");
+            }
             if (poke.Type == PokeTradeType.Dump)
             {
                 var result = await ProcessDumpTradeAsync(poke, token).ConfigureAwait(false);
@@ -341,7 +345,13 @@ namespace SysBot.Pokemon
                 await ExitTrade(false, token).ConfigureAwait(false);
                 return update;
             }
-
+            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
+            {
+                //Auto OT for $t command/PK files if not specified by the user
+                var config = Hub.Config.Legality;
+                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false);
+            }
             Log("Confirming trade.");
             var tradeResult = await ConfirmAndStartTrading(poke, token).ConfigureAwait(false);
             if (tradeResult != PokeTradeResult.Success)
