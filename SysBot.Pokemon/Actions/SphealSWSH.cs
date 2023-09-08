@@ -295,7 +295,7 @@ namespace SysBot.Pokemon
             {
                 if (cln.HeldItem > 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
                     cln.ClearNickname();
-                else if (cln.HeldItem == (int)custom.OTSwapItem)
+                else if (offered.HeldItem == (int)custom.OTSwapItem)
                     cln.ClearNickname();
                 else
                     cln.ClearNickname();
@@ -388,7 +388,7 @@ namespace SysBot.Pokemon
                     Log($"Game: {(GameVersion)(cln.Version)}");
                 }
                 Log($"OT Swap success");
-                if (toSend.HeldItem == (int)custom.OTSwapItem)
+                if (offered.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
                     counts.AddCompletedOTSwaps();

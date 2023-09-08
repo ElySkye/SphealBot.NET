@@ -430,13 +430,15 @@ namespace SysBot.Pokemon
                         var msg = $"**{tradepartner.TrainerName}** is trying to generate **{(Species)cln.Species}**\n";
                         msg += $"Illegal Request";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gen").ConfigureAwait(false);
-                        return (PokeTradeResult.TrainerRequestBad);
+                        return PokeTradeResult.TrainerRequestBad;
                     }
+                    else
+                        toSend = cln;
                 }
                 else if (toSend.OT_Name == config.GenerateOT)
                 {
                     if (toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
-                        await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
+                        await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
                 }
             }
 
@@ -1011,7 +1013,7 @@ namespace SysBot.Pokemon
                 poke.SendNotification(this, "Injecting the requested Pokémon.");
                 if (Hub.Config.CustomSwaps.AllowTraderOTInformation)
                 {
-                    if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
+                    if (!await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false))
                     {
                         await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                         await Task.Delay(2_500, token).ConfigureAwait(false);
@@ -1035,7 +1037,7 @@ namespace SysBot.Pokemon
             {
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
                 Log($"Sending: {GameInfo.GetStrings(1).Species[toSend.Species]}");
-                if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
+                if (!await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false))
                 {
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
                     await Task.Delay(2_500, token).ConfigureAwait(false);

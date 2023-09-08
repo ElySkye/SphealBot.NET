@@ -35,7 +35,7 @@ namespace SysBot.Pokemon
             };
 
             Log($"Sending Surprise Egg: {Shiny} {Size} {(Gender)toSend.Gender} {GameInfo.GetStrings(1).Species[toSend.Species]}");
-            await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false);
+            await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
             poke.TradeData = toSend;
 
             myst = $"**{user}** has received a Mystery Egg !\n";
@@ -138,7 +138,7 @@ namespace SysBot.Pokemon
 
                 toSend.Tracker = 0; //We clean the tracker since we only do the Origin Game
 
-                if (!await SetTradePartnerDetailsSV(toSend, offered, sav, token).ConfigureAwait(false))
+                if (!await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false))
                 {
                     //Non SV should get rejected
                     if (poke.Type == PokeTradeType.LinkSV)
@@ -591,11 +591,11 @@ namespace SysBot.Pokemon
             return (toSend, PokeTradeResult.Success);
         }
 
-        private async Task<bool> SetTradePartnerDetailsSV(PK9 toSend, PK9 offered, SAV9SV sav, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsSV(PokeTradeDetail<PK9> poke, PK9 toSend, PK9 offered, SAV9SV sav, CancellationToken token)
         {
             var cln = (PK9)toSend.Clone();
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-            var changeallowed = OTChangeAllowed(toSend);
+            var changeallowed = OTChangeAllowed(toSend, poke);
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
             var Scarlet = (ushort)Species.Koraidon;
@@ -630,7 +630,7 @@ namespace SysBot.Pokemon
                                 cln.ClearNickname();
                             if (!cln.IsNicknamed && cln.Species != (ushort)custom.ItemTradeSpecies)
                                 cln.ClearNickname();
-                            else if (cln.HeldItem == (int)custom.OTSwapItem)
+                            else if (offered.HeldItem == (int)custom.OTSwapItem)
                                 cln.ClearNickname();
                         }
                         else
@@ -728,7 +728,7 @@ namespace SysBot.Pokemon
                     Log($"Sending original Pokémon as it can't be OT swapped");
                 if (changeallowed)
                     Log($"OT swap success.");
-                if (toSend.HeldItem == (int)custom.OTSwapItem)
+                if (offered.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
                     counts.AddCompletedOTSwaps();
@@ -739,7 +739,7 @@ namespace SysBot.Pokemon
                 Log($"Sending original Pokémon as it can't be OT swapped");
             return tradesv.Valid;
         }
-        private bool OTChangeAllowed(PK9 mon)
+        private bool OTChangeAllowed(PK9 mon, PokeTradeDetail<PK9> poke)
         {
             var changeallowed = true;
             var custom = Hub.Config.CustomSwaps;
@@ -758,7 +758,10 @@ namespace SysBot.Pokemon
                 case (ushort)Species.Wyrdeer:
                 case (ushort)Species.Overqwil:
                 case (ushort)Species.Kleavor:
-                    changeallowed = false;
+                    if (poke.Type == PokeTradeType.Specific)
+                        changeallowed = true;
+                    else
+                        changeallowed = false;
                     break;
                 //Block SV natives but only if other forms (Hisui/Galar)
                 case (ushort)Species.Typhlosion:
@@ -774,6 +777,8 @@ namespace SysBot.Pokemon
                     if (mon.Form != 0)
                         changeallowed = false;
                     else
+                        changeallowed = true;
+                    if (poke.Type == PokeTradeType.Specific)
                         changeallowed = true;
                     break;
             }
