@@ -303,10 +303,10 @@ namespace SysBot.Pokemon
             var custom = Hub.Config.CustomSwaps;
 
             if (poke.Type != PokeTradeType.Random)
-                poke.SendNotification(this, $"__**Found Trainer**__\n```OT: {tradePartner.TrainerName}\nOTGender: {(Gender)tradePartner.Gender}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nLanguage:{(LanguageID)tradePartner.Language}\nGame:{(GameVersion)tradePartner.Game}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
+                poke.SendNotification(this, $"__**Found Trainer**__\n```OT: {tradePartner.TrainerName}\nOTGender: {(Gender)tradePartner.Gender}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nLanguage:{(LanguageID)tradePartner.Language}\nGame: {(GameVersion)tradePartner.Game}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
             if (custom.LogTrainerDetails)
             {
-                Log($"Found Trainer:\r```OT: {tradePartner.TrainerName}\rOTGender: {(Gender)tradePartner.Gender}\rTID: {tradePartner.TID7}\rSID: {tradePartner.SID7}\rLanguage:{(LanguageID)tradePartner.Language}\rGame:{(GameVersion)tradePartner.Game}\rNID: {trainerNID}```");
+                Log($"Found Trainer:\r```OT: {tradePartner.TrainerName}\rOTGender: {(Gender)tradePartner.Gender}\rTID: {tradePartner.TID7}\rSID: {tradePartner.SID7}\rLanguage:{(LanguageID)tradePartner.Language}\rGame: {(GameVersion)tradePartner.Game}\rNID: {trainerNID}```");
                 Log($"Waiting for a Pokémon...");
             }
             if (poke.Type == PokeTradeType.Dump)
@@ -672,21 +672,10 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             var sf = offered.Nickname;
             var user = partner.TrainerName;
-            var ballSwap = new List<string>
-            {
-                "Poke",
-                "Great",
-                "Ultra",
-                "Feat",
-                "Wing",
-                "Jet",
-                "Heavy",
-                "Lead",
-                "Giga",
-            };
+
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else if (Regex.IsMatch(sf, "evo", RegexOptions.IgnoreCase) || ballSwap.Contains(sf))
+            else if (Regex.IsMatch(sf, "evo", RegexOptions.IgnoreCase) || Enum.TryParse(sf, true, out Ball _))
             {
                 var HCS = await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
                 return (HCS);

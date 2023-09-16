@@ -282,102 +282,105 @@ namespace SysBot.Pokemon
             var cln = (PK8)toSend.Clone();
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
+            var PIDla = new LegalityAnalysis(offered);
             string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
 
-            cln.TrainerTID7 = tidsid % 1_000_000;
-            cln.TrainerSID7 = tidsid / 1_000_000;
-            cln.OT_Name = trainerName;
-            cln.Version = data[4];
-            cln.Language = data[5];
-            cln.OT_Gender = data[6];
+            if (toSend.Species != (ushort)Species.Ditto)
+            {
+                cln.TrainerTID7 = tidsid % 1_000_000;
+                cln.TrainerSID7 = tidsid / 1_000_000;
+                cln.OT_Name = trainerName;
+                cln.Version = data[4];
+                cln.Language = data[5];
+                cln.OT_Gender = data[6];
 
-            if (toSend.IsEgg == false)
-            {
-                if (cln.HeldItem > 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
-                    cln.ClearNickname();
-                else if (offered.HeldItem == (int)custom.OTSwapItem)
-                    cln.ClearNickname();
-                else
-                    cln.ClearNickname();
-                if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
-                    cln.Egg_Location = 60002; //Nursery (SWSH)
-            }
-            else //Set eggs received in Daycare, instead of received in Link Trade
-            {
-                cln.HT_Name = "";
-                cln.HT_Language = 0;
-                cln.HT_Gender = 0;
-                cln.CurrentHandler = 0;
-                cln.Met_Location = 0;
-                cln.IsNicknamed = true;
-                cln.Nickname = cln.Language switch
+                if (toSend.IsEgg == false)
                 {
-                    1 => "タマゴ",
-                    3 => "Œuf",
-                    4 => "Uovo",
-                    5 => "Ei",
-                    7 => "Huevo",
-                    8 => "알",
-                    9 or 10 => "蛋",
-                    _ => "Egg",
-                };
-            }
-
-            if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
-            {
-                if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
-                    ballItem[0] = "Poke";
-                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
-                Log($"Ball swapped to: {(Ball)cln.Ball}");
-            }
-            //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons)
-            if (toSend.HasMarkEncounter8 || toSend.Species == (ushort)Species.Keldeo || toSend.Species == (ushort)Species.Cobalion || toSend.Species == (ushort)Species.Terrakion || toSend.Species == (ushort)Species.Virizion || toSend.Species == (ushort)Species.Zapdos && toSend.Form == 1 || toSend.Species == (ushort)Species.Moltres && toSend.Form == 1 || toSend.Species == (ushort)Species.Articuno && toSend.Form == 1)
-            {
-                if (toSend.IsShiny)
-                    cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
-                else
-                    cln.PID = cln.PID; //Do nothing as non shiny
-            }
-            else
-            {
-                if (toSend.IsShiny)
-                {
-                    if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 0);
-                    }
+                    if (cln.HeldItem > 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
+                        cln.ClearNickname();
+                    else if (offered.HeldItem == (int)custom.OTSwapItem)
+                        cln.ClearNickname();
                     else
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 1);
-                    }
-                    if (toSend.Met_Location == 244)  //Dynamax Adventures
-                    {
-                        do
-                        {
-                            cln.SetShiny();
-                        } while (cln.ShinyXor != 1);
-                    }
+                        cln.ClearNickname();
+                    if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
+                        cln.Egg_Location = 60002; //Nursery (SWSH)
                 }
-                else if (cln.Met_Location != 162 || cln.Met_Location != 244) //If not Max Raid, reroll PID for non shiny 
+                else //Set eggs received in Daycare, instead of received in Link Trade
                 {
-                    cln.SetShiny();
-                    cln.SetUnshiny();
+                    cln.HT_Name = "";
+                    cln.HT_Language = 0;
+                    cln.HT_Gender = 0;
+                    cln.CurrentHandler = 0;
+                    cln.Met_Location = 0;
+                    cln.IsNicknamed = true;
+                    cln.Nickname = cln.Language switch
+                    {
+                        1 => "タマゴ",
+                        3 => "Œuf",
+                        4 => "Uovo",
+                        5 => "Ei",
+                        7 => "Huevo",
+                        8 => "알",
+                        9 or 10 => "蛋",
+                        _ => "Egg",
+                    };
                 }
-                if (cln.Met_Location != 162 || cln.Met_Location != 244) //Leave Max Raid EC alone
-                    cln.SetRandomEC();
-            }
-            cln.RefreshChecksum();
 
+                if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
+                {
+                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                        ballItem[0] = "Poke";
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    Log($"Ball swapped to: {(Ball)cln.Ball}");
+                }
+                //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons/Wild Grass)
+                if (PIDla.Info.PIDIV.Type == PIDType.Overworld8)
+                {
+                    if (toSend.IsShiny)
+                        cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 0) << 16) | (cln.PID & 0xFFFF);
+                    else
+                        cln.PID = cln.PID; //Do nothing as non shiny
+                }
+                else
+                {
+                    if (toSend.IsShiny)
+                    {
+                        if (toSend.ShinyXor == 0) //Ensure proper shiny type is rerolled
+                        {
+                            do
+                            {
+                                cln.SetShiny();
+                            } while (cln.ShinyXor != 0);
+                        }
+                        else
+                        {
+                            do
+                            {
+                                cln.SetShiny();
+                            } while (cln.ShinyXor != 1);
+                        }
+                        if (toSend.Met_Location == 244)  //Dynamax Adventures
+                        {
+                            do
+                            {
+                                cln.SetShiny();
+                            } while (cln.ShinyXor != 1);
+                        }
+                    }
+                    else if (cln.Met_Location != 162 || cln.Met_Location != 244) //If not Max Raid, reroll PID for non shiny 
+                    {
+                        cln.SetShiny();
+                        cln.SetUnshiny();
+                    }
+                    if (cln.Met_Location != 162 || cln.Met_Location != 244) //Leave Max Raid EC alone
+                        cln.SetRandomEC();
+                }
+                cln.RefreshChecksum();
+            }
             var tradeswsh = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK8 instead
             if (tradeswsh.Valid)
             {
-                if (!custom.LogTrainerDetails) //So it does not log twice
+                if (cln.Species != (ushort)Species.Ditto && !custom.LogTrainerDetails) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");

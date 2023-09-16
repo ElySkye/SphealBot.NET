@@ -444,7 +444,11 @@ namespace SysBot.Pokemon.Discord
                 sv += "**__OT Swap__**\n";
                 sv += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
                 sv += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
-                
+
+                sv += "**__Double Swap__**\n";
+                sv += $"Function: Ball + Tera can be done in a single trade\n";
+                sv += $"> • Eg. Nickname Level, Hold Grass Tera Shard OR\r\nNickname Grass, Hold Level Ball\n\n";
+
                 sv += "**__Pokéball Select__**\n";
                 sv += $"Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
                 sv += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n\n";

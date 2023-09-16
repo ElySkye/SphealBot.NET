@@ -224,7 +224,6 @@ namespace SysBot.Pokemon.Discord
                 }
                 else
                 {
-                    PK9 tradesv = (PK9)(PKM)trade;
                     var list = FormConverter.GetFormList(trade.Species, GameInfo.Strings.types, GameInfo.Strings.forms, GameInfo.GenderSymbolASCII, trade.Context);
                     string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? "★" : "";
@@ -246,12 +245,15 @@ namespace SysBot.Pokemon.Discord
                     embedMsg = $"**Ability**: {(Ability)trade.Ability}";
                     embedMsg += $"\n**Level**: {trade.CurrentLevel}";
                     if (gamever == "SV")
+                    {
+                        PK9 tradesv = (PK9)(PKM)trade;
                         embedMsg += $"\n**Tera**: {tradesv.TeraType}";
+                    }
                     embedMsg += $"\n**Nature**: {(Nature)trade.Nature}";
                     embedMsg += $"\n**IVs**: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
                     if (trade.EVTotal != 0)
                         embedMsg += $"\n**EVs**: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
-                    embedMsg += $"\n**Moves**:";
+                    embedMsg += $"\n**__Moves__**";
                     if (trade.Move1 != 0)
                         embedMsg += $"\n- {(Move)trade.Move1}";
                     if (trade.Move2 != 0)
@@ -262,13 +264,11 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"\n- {(Move)trade.Move4}";
                     if (trade.EncryptionConstant == 0)
                         embedMsg += $"\n### :bangbang: **Pokémon generated with 0 EC** :bangbang:";
-                    if (config.TrackerWarning)
+                    if (gamever == "SV")
                     {
-                        if (gamever == "SV")
-                        {
-                            if (trade.Generation != 9 && tradesv.Tracker == 0)
-                                embedMsg += $"\n### :bangbang: **Pokémon generated with NO HOME Tracker** :bangbang:\n\n";
-                        }
+                        PK9 tradesv = (PK9)(PKM)trade;
+                        if (trade.Generation != 9 && tradesv.Tracker == 0 && !trade.IsEgg)
+                            embedMsg += $"\n## :bangbang: **Pokémon has NO HOME Tracker** :bangbang:\n\n";
                     }
                     embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue";
 

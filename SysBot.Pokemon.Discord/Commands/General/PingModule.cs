@@ -29,7 +29,7 @@ namespace SysBot.Pokemon.Discord
                     msg = "https://68.media.tumblr.com/b2a0199a8d8898cc3b308722aa7ad32a/tumblr_os6whlXFce1vbdodoo1_1280.gif";
                     break;
                 case 5:
-                    msg = "https://thumbs.gfycat.com/CraftyEasygoingAnkole.webp";
+                    msg = "https://media.tenor.com/6Wu-MMdSdu8AAAAC/officer-dogdog-capoo.gif";
                     break;
                 case 6:
                     msg = "https://tenor.com/view/cat-ping-pong-funny-animals-cats-gif-8766860";

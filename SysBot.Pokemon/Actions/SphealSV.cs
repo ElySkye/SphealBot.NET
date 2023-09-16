@@ -480,8 +480,14 @@ namespace SysBot.Pokemon
                     else
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
+                        {
                             poke.SendNotification(this, $"```{user}, {(Species)toSend.Species} cannot be that Gender```");
+                            if (toSend.FatefulEncounter)
+                                poke.SendNotification(this, $"```{user}, {(Species)toSend.Species} gender is locked by the Event it's from```");
+                        }
                         msg = $"{user}, **{(Species)toSend.Species}** cannot be that Gender";
+                        if (toSend.FatefulEncounter)
+                            msg+= $"Gender is locked by the Event it's from";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                         return (toSend, PokeTradeResult.IllegalTrade);

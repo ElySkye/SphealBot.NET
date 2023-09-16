@@ -366,10 +366,10 @@ namespace SysBot.Pokemon
             }
             var custom = Hub.Config.CustomSwaps;
             if (poke.Type != PokeTradeType.Random)
-                poke.SendNotification(this, $"__**Found Trainer**__\n```OT: {tradePartner.TrainerName}\nOTGender: {(Gender)tradePartner.Gender}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nLanguage:{(LanguageID)tradePartner.Language}\nGame:{(GameVersion)tradePartner.Game}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
+                poke.SendNotification(this, $"__**Found Trainer**__\n```OT: {tradePartner.TrainerName}\nOTGender: {(Gender)tradePartner.Gender}\nTID: {tradePartner.TID7}\nSID: {tradePartner.SID7}\nLanguage:{(LanguageID)tradePartner.Language}\nGame: {(GameVersion)tradePartner.Game}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
             if (custom.LogTrainerDetails)
             {
-                Log($"Found Trainer:\r```OT: {tradePartner.TrainerName}\rOTGender: {(Gender)tradePartner.Gender}\rTID: {tradePartner.TID7}\rSID: {tradePartner.SID7}\rLanguage:{(LanguageID)tradePartner.Language}\rGame:{(GameVersion)tradePartner.Game}\rNID: {trainerNID}```");
+                Log($"Found Trainer:\r```OT: {tradePartner.TrainerName}\rOTGender: {(Gender)tradePartner.Gender}\rTID: {tradePartner.TID7}\rSID: {tradePartner.SID7}\rLanguage:{(LanguageID)tradePartner.Language}\rGame: {(GameVersion)tradePartner.Game}\rNID: {trainerNID}```");
                 Log($"Waiting for a Pokémon...");
             }
 
