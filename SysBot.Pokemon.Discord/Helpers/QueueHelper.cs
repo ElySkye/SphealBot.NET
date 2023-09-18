@@ -230,7 +230,7 @@ namespace SysBot.Pokemon.Discord
                     if (trade.Form != 0)
                         embedTitle += $"{list[trade.Form]} {(Species)trade.Species}";
                     else
-                        embedTitle += $" {(Species)trade.Species} ";
+                        embedTitle += $"{(Species)trade.Species}";
                     if (trade.Gender == 0)
                         embedTitle += " (M)";
                     else if (trade.Gender == 1)

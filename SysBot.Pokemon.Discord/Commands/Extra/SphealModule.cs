@@ -471,11 +471,11 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trilogy Swap__**\n";
                 sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
-                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
+                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen | Milotic\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
 
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                sv += "__**Species List**__\n```Currently only Haunter as the rest are not in SV```\n";
+                sv += "__**Species List**__\n```Haunter | Graveler | Phantump```\n";
 
                 sv += "**__EV Swap__**\n";
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";

@@ -406,7 +406,7 @@ namespace SysBot.Pokemon
             {
                 //Auto OT for $t command/PK files if not specified by the user
                 var config = Hub.Config.Legality;
-                if (toSend.Generation != 9 && toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                if (toSend.Generation != 9 && toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16 && !toSend.IsEgg)
                 {
                     var cln = toSend.Clone();
                     var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);

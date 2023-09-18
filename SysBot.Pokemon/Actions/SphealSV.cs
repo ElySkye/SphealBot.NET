@@ -93,6 +93,7 @@ namespace SysBot.Pokemon
                 (ushort)Species.Avalugg,
                 (ushort)Species.Braviary,
                 (ushort)Species.Lilligant,
+                (ushort)Species.Weezing,
             };
             var notball = new List<int>
             {
@@ -302,6 +303,9 @@ namespace SysBot.Pokemon
                                 }
                                 toSend.FormArgument = 300;
                             }
+                            break;
+                        case (ushort)Species.Feebas:
+                            toSend.Species = (ushort)Species.Milotic;
                             break;
                     }
                 }
@@ -720,6 +724,8 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
+                if (poke.Type == PokeTradeType.Specific)
+                    toSend = cln.Clone();
                 if (changeallowed && !custom.LogTrainerDetails) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
@@ -780,6 +786,7 @@ namespace SysBot.Pokemon
                 case (ushort)Species.Avalugg:
                 case (ushort)Species.Braviary:
                 case (ushort)Species.Lilligant:
+                case (ushort)Species.Weezing:
                     if (mon.Form != 0)
                         changeallowed = false;
                     else
