@@ -43,7 +43,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var la = new LegalityAnalysis(pkm);
-            if (await ItemTrade(Context, pkm is not T || !la.Valid, pkm, true).ConfigureAwait(false))
+            if (await ItemTrade(pkm is not T || !la.Valid, pkm, true).ConfigureAwait(false))
                 return;
 
             if (pkm is not T pk || !la.Valid)
@@ -58,7 +58,7 @@ namespace SysBot.Pokemon.Discord
             var sig = Context.User.GetFavor();
             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, pk, PokeRoutineType.LinkTrade, PokeTradeType.Specific).ConfigureAwait(false);
         }
-        public static Task<bool> ItemTrade(SocketCommandContext context, bool invalid, PKM pkm, bool itemTrade = false)
+        public static Task<bool> ItemTrade(bool invalid, PKM pkm, bool itemTrade = false)
         {
             bool noItem = pkm.HeldItem == 0 && itemTrade;
             if (invalid || !ItemRestrictions.IsHeldItemAllowed(pkm) || noItem || (pkm.Nickname.ToLower() == "egg" && !Breeding.CanHatchAsEgg(pkm.Species)))
@@ -221,13 +221,13 @@ namespace SysBot.Pokemon.Discord
                 botversion = me.ToString()!.Substring(46, 3);
             var gamever = botversion switch
             {
-                "PK9" => "SV",
-                "PK8" => "SWSH",
-                "PA8" => "PLA",
-                "PB8" => "BDSP",
-                _ => "LGPE",
+                "PK9" => "Scarlet & Violet",
+                "PK8" => "Sword & Shield",
+                "PA8" => "Legends Arceus",
+                "PB8" => "Brilliant Diamond & Shining Pearl",
+                _ => "Let's Go Pikachu & Eevee",
             };
-            await ReplyAsync($"# <:SphealBusiness:1115571136466526279> Current Game: {gamever} <:SphealBusinessBack:1094637950689615912>").ConfigureAwait(false);
+            await ReplyAsync($"# Current Game running is **{gamever}**").ConfigureAwait(false);
         }
 
         [Command("cooldown")]
@@ -471,11 +471,11 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trilogy Swap__**\n";
                 sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
-                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen | Milotic\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
+                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen | Milotic | Scyther\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp\nDusclops```\n";
 
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                sv += "__**Species List**__\n```Haunter | Graveler | Phantump```\n";
+                sv += "__**Species List**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke```\n";
 
                 sv += "**__EV Swap__**\n";
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";

@@ -1,5 +1,7 @@
 ﻿using PKHeX.Core;
 using System;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,8 +14,21 @@ namespace SysBot.Pokemon
         {
             var counts = TradeSettings;
             var sf = offered.Nickname;
+            var sf2 = toSend.Nickname;
             var user = partner.TrainerName;
             var evolve = "evo";
+            var ballSwap = new List<string>
+            {
+                "Poke",
+                "Great",
+                "Ultra",
+                "Feat",
+                "Wing",
+                "Jet",
+                "Heavy",
+                "Lead",
+                "Giga",
+            };
 
             toSend = offered.Clone();
             string? msg;
@@ -118,7 +133,7 @@ namespace SysBot.Pokemon
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
             }
-            else if (Enum.TryParse(sf, true, out Ball _))
+            else if (ballSwap.Contains(sf))
             {
                 Log($"{user} is requesting Ball Swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
 
@@ -135,7 +150,20 @@ namespace SysBot.Pokemon
                 }
                 else
                 {
-                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), sf, true);
+                    sf2 = sf switch
+                    {
+                        "Poke" => "LAPoke",
+                        "Great" => "LAGreat",
+                        "Ultra" => "LAUltra",
+                        "Feat" => "LAFeather",
+                        "Wing" => "LAWing",
+                        "Jet" => "LAJet",
+                        "Heavy" => "LAHeavy",
+                        "Lead" => "LALeaden",
+                        "Giga" => "LAGigaton",
+                        _ => "LAPoke"
+                    };
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), sf2, true);
                     toSend.ClearNickname();
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");

@@ -514,7 +514,14 @@ namespace SysBot.Pokemon
         DreadPlate = 312,
         IronPlate = 313,
         PixiePlate = 644,
-        //DLC - todo future
+        //DLC 1
+        SyrupyApple = 2402,
+        UnremarkableTeacup = 2403,
+        MasterpieceTeacup = 2404,
+        CornerstoneMask = 2406,
+        WellspringMask = 2407,
+        HearthflameMask = 2408,
+        //DLC 2 - todo
         MAX_COUNT,
     }
     public enum EmbedColor : uint

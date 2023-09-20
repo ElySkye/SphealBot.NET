@@ -672,10 +672,23 @@ namespace SysBot.Pokemon
             var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             var sf = offered.Nickname;
             var user = partner.TrainerName;
+            var evolve = "evo";
+            var ballSwap = new List<string>
+            {
+                "Poke",
+                "Great",
+                "Ultra",
+                "Feat",
+                "Wing",
+                "Jet",
+                "Heavy",
+                "Lead",
+                "Giga",
+            };
 
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else if (Regex.IsMatch(sf, "evo", RegexOptions.IgnoreCase) || Enum.TryParse(sf, true, out Ball _))
+            else if (Regex.IsMatch(sf, evolve, RegexOptions.IgnoreCase) || ballSwap.Contains(sf))
             {
                 var HCS = await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
                 return (HCS);

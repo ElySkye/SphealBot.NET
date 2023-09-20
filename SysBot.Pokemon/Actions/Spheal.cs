@@ -166,6 +166,7 @@ namespace SysBot.Pokemon
         public static Embed EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
         {
             string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+            string embedImageURL = "https://media.tenor.com/6Wu-MMdSdu8AAAAC/officer-dogdog-capoo.gif";
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -181,6 +182,7 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Blue,
                 ThumbnailUrl = embedThumbUrl,
+                ImageUrl = embedImageURL,
                 Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr
@@ -212,9 +214,14 @@ namespace SysBot.Pokemon
             };
             return embedBuilder;
         }
-        public static Embed EmbedBanMessage(string msg, string msgTitle)
+        public static Embed EmbedBanMessage(string msg, string msgTitle, bool banned = false)
         {
             string embedThumbUrl = "https://www.serebii.net/scarletviolet/ribbons/alphamark.png";
+            string embedImageURL;
+            if (banned)
+                embedImageURL = "https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504";
+            else
+                embedImageURL = "https://tenor.com/view/sirius-sirius-black-harry-potter-twelveyears-12years-gif-4994520";
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -230,6 +237,7 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Red,
                 ThumbnailUrl = embedThumbUrl,
+                ImageUrl = embedImageURL,
                 Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr

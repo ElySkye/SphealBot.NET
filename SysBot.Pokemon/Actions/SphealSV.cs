@@ -110,7 +110,8 @@ namespace SysBot.Pokemon
 
             if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
             {
-                if (PLAevo.Contains(offer) || Formevo.Contains(offer) && offered.Form != 0) //Check for species that require to be moved out of SV to evolve
+                //Allow Ursaluna Bloodmoon
+                if (PLAevo.Contains(offer) && offered.Form == 0 || Formevo.Contains(offer) && offered.Form != 0) //Check for species that require to be moved out of SV to evolve
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```Request Denied - Bot will not swap Home Tracker Pokémon for OT/Ball/Gender```");
@@ -239,6 +240,10 @@ namespace SysBot.Pokemon
                             break;
                         case (ushort)Species.Graveler:
                             toSend.Species = (ushort)Species.Golem;
+                            if (offered.Form == 0)
+                                toSend.Form = 0;
+                            else if (offered.Form == 1)
+                                toSend.Form = 1;
                             break;
                         case (ushort)Species.Phantump:
                             toSend.Species = (ushort)Species.Trevenant;
@@ -248,6 +253,12 @@ namespace SysBot.Pokemon
                             break;
                         case (ushort)Species.Boldore:
                             toSend.Species = (ushort)Species.Gigalith;
+                            break;
+                        case (ushort)Species.Poliwhirl:
+                            toSend.Species = (ushort)Species.Politoed;
+                            break;
+                        case (ushort)Species.Slowpoke:
+                            toSend.Species = (ushort)Species.Slowking;
                             break;
                     }
                     toSend.HeldItem = 1882;
@@ -270,7 +281,7 @@ namespace SysBot.Pokemon
                             toSend.Species = (ushort)Species.Brambleghast;
                             break;
                         case (ushort)Species.Sliggoo:
-                            if (toSend.Form == 0) //Kalos
+                            if (offered.Form == 0) //Kalos
                                 toSend.Species = (ushort)Species.Goodra;
                             break;
                         case (ushort)Species.Gimmighoul:
@@ -287,25 +298,31 @@ namespace SysBot.Pokemon
                             toSend.FormArgument = 3;
                             break;
                         case (ushort)Species.Basculin:
-                            if (toSend.Form == 2) //White
+                            if (offered.Form == 2) //White
                             {
-                                if (toSend.Gender == 0) //Male
+                                toSend.Species = (ushort)Species.Basculegion;
+                                if (offered.Gender == 0) //Male
                                 {
-                                    toSend.Species = (ushort)Species.Basculegion;
                                     toSend.Form = 0;
                                     toSend.Gender = 0;
                                 }
-                                else if (toSend.Gender == 1) //Female
+                                else if (offered.Gender == 1) //Female
                                 {
-                                    toSend.Species = (ushort)Species.Basculegion;
                                     toSend.Form = 1;
                                     toSend.Gender = 1;
                                 }
                                 toSend.FormArgument = 300;
                             }
                             break;
+                            //Item Trade Evos
                         case (ushort)Species.Feebas:
                             toSend.Species = (ushort)Species.Milotic;
+                            break;
+                        case (ushort)Species.Scyther:
+                            toSend.Species = (ushort)Species.Scizor;
+                            break;
+                        case (ushort)Species.Dusclops:
+                            toSend.Species = (ushort)Species.Dusknoir;
                             break;
                     }
                 }
@@ -724,8 +741,7 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
-                if (poke.Type == PokeTradeType.Specific)
-                    toSend = cln.Clone();
+                //if (poke.Type == PokeTradeType.Specific) - todo
                 if (changeallowed && !custom.LogTrainerDetails) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
@@ -770,7 +786,7 @@ namespace SysBot.Pokemon
                 case (ushort)Species.Wyrdeer:
                 case (ushort)Species.Overqwil:
                 case (ushort)Species.Kleavor:
-                    if (poke.Type == PokeTradeType.Specific)
+                    if (poke.Type == PokeTradeType.Specific || mon.Species == (ushort)Species.Ursaluna && mon.Form == 1) //Allow Bloodmoon
                         changeallowed = true;
                     else
                         changeallowed = false;
