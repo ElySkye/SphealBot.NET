@@ -12,14 +12,14 @@
     <Description>Nintendo Switch Pokémon Bot Manager</Description>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <StartupObject>SysBot.Pokemon.WinForms.Program</StartupObject>
-    <AssemblyName>SphealBot</AssemblyName>
+    <AssemblyName>SysBot</AssemblyName>
     <Version>01.00.00</Version>
     <Platforms>x64</Platforms>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PKHeX.Core" Version="23.8.23" />
+    <PackageReference Include="PKHeX.Core" Version="23.9.25" />
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
   </ItemGroup>
 
