@@ -349,7 +349,10 @@ namespace SysBot.Pokemon
             {
                 //Auto OT for $t command/PK files if not specified by the user
                 var config = Hub.Config.Legality;
-                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                var ot = toSend.OT_Name;
+                if (ot == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false);
+                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
                     await SetTradePartnerDetailsLA(toSend, sav, token).ConfigureAwait(false);
             }
             Log("Confirming trade.");
@@ -688,7 +691,7 @@ namespace SysBot.Pokemon
 
             if (trade != null && offered.IsNicknamed && trade.Type == LedyResponseType.MatchPool)
                 Log($"User's request is for {offered.Nickname}");
-            else if (Regex.IsMatch(sf, evolve, RegexOptions.IgnoreCase) || ballSwap.Contains(sf))
+            else if (Regex.IsMatch(sf, evolve, RegexOptions.IgnoreCase) || ballSwap.Contains(sf) || Enum.TryParse(sf, true, out Ball _))
             {
                 var HCS = await HandleCustomSwaps(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
                 return (HCS);

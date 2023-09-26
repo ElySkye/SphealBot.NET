@@ -118,7 +118,7 @@ namespace SysBot.Pokemon
                         ballItem[0] = "Poke";
                     toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
                     toSend.RefreshChecksum();
-                    Log($"Ball swapped to: {(Ball)toSend.Ball}");
+                    Log($"Ball swapped to: {(Ball)toSend.Ball} Ball");
 
                     var la2 = new LegalityAnalysis(toSend);
                     if (la2.Valid)
@@ -307,11 +307,7 @@ namespace SysBot.Pokemon
                 }
                 else //Set eggs received in Daycare, instead of received in Link Trade
                 {
-                    cln.HT_Name = "";
-                    cln.HT_Language = 0;
-                    cln.HT_Gender = 0;
-                    cln.CurrentHandler = 0;
-                    cln.Met_Location = 0;
+                    cln.Egg_Location = 60002; //For people who gen on blank PK so it fixes met in Link Trade
                     cln.IsNicknamed = true;
                     cln.Nickname = cln.Language switch
                     {
@@ -326,12 +322,20 @@ namespace SysBot.Pokemon
                     };
                 }
 
-                if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
+                if (!toSend.FatefulEncounter && ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector, account for OT-able event natives
                 {
-                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
-                        ballItem[0] = "Poke";
-                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
-                    Log($"Ball swapped to: {(Ball)cln.Ball}");
+                    if (ballItem[0] == "Master")
+                    {
+                        if (toSend.IsEgg || toSend.WasEgg)
+                            Log($"Eggs (hatched or not) cannot be in Master Ball");
+                    }
+                    else
+                    {
+                        if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                            ballItem[0] = "Poke";
+                        cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                        Log($"Ball swapped to: {(Ball)cln.Ball} Ball");
+                    }
                 }
                 //OT for Overworld8 (Galar Birds/Swords of Justice/Marked mons/Wild Grass)
                 if (PIDla.Info.PIDIV.Type == PIDType.Overworld8)
@@ -401,7 +405,9 @@ namespace SysBot.Pokemon
             else
             {
                 Log($"Sending original Pokémon as it can't be OT swapped");
-                return (toSend, false);
+                if (toSend.FatefulEncounter)
+                    Log($"Reason: Fateful Encounter");
+            return (toSend, false);
             }
         }
     }

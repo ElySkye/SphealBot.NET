@@ -88,9 +88,12 @@ namespace SysBot.Pokemon.Discord
                     var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
                     var p = SysCordSettings.Settings.CommandPrefix;
 
-                    Color embedMsgColor = new ();
+                    Color embedMsgColor = new();
                     embedTitle = $"Search once bot DMs you Initializing trade\n";
-                    embedAuthor = $"{context.User.GlobalName}'s ";
+                    if (context.User.GlobalName == null)
+                        embedAuthor = $"{context.User.Username}'s ";
+                    else
+                        embedAuthor = $"{context.User.GlobalName}'s ";
                     embedMsg = $"";
 
                     Random luck = new();
@@ -229,7 +232,7 @@ namespace SysBot.Pokemon.Discord
                     var list = FormConverter.GetFormList(trade.Species, GameInfo.Strings.types, GameInfo.Strings.forms, GameInfo.GenderSymbolASCII, trade.Context);
                     string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? ":sparkles:" : "";
-                    if (trade.Form != 0)
+                    if (trade.Form != 0 && list[trade.Form] != "F")
                         embedTitle += $"{list[trade.Form]} {(Species)trade.Species}";
                     else
                         embedTitle += $"{(Species)trade.Species}";
@@ -239,8 +242,10 @@ namespace SysBot.Pokemon.Discord
                         embedTitle += " (F)";
                     if (trade.HeldItem > 0)
                         embedTitle += $" **➜** {HeldItem}";
-
-                    embedAuthor = $"{context.User.GlobalName}'s ";
+                    if(context.User.GlobalName == null)
+                        embedAuthor = $"{context.User.Username}'s ";
+                    else
+                        embedAuthor = $"{context.User.GlobalName}'s ";
                     embedAuthor += trade.IsShiny ? "Shiny " : "";
                     embedAuthor += "Pokémon:";
 

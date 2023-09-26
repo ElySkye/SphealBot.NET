@@ -52,6 +52,8 @@ namespace SysBot.Pokemon
         private int _completedTrilogySwaps;
         private int _completedGenderSwaps;
         private int _completedPowerSwaps;
+        private int _completedSizeSwaps;
+        private int _completedFriendshipSwaps;
         private int _completedEVSwaps;
         private int _completedDoubleSwaps;
         private int _completedMystery;
@@ -122,6 +124,20 @@ namespace SysBot.Pokemon
             set => _completedPowerSwaps = value;
         }
 
+        [Category(Counts), Description("Completed Size Swap Trades")]
+        public int CompletedSizeSwaps
+        {
+            get => _completedSizeSwaps;
+            set => _completedSizeSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Friendship Swap Trades")]
+        public int CompletedFriendshipSwaps
+        {
+            get => _completedFriendshipSwaps;
+            set => _completedFriendshipSwaps = value;
+        }
+
         [Category(Counts), Description("Completed EV Swap Trades")]
         public int CompletedEVSwaps
         {
@@ -177,6 +193,8 @@ namespace SysBot.Pokemon
         public void AddCompletedTrilogySwaps() => Interlocked.Increment(ref _completedTrilogySwaps);
         public void AddCompletedGenderSwaps() => Interlocked.Increment(ref _completedGenderSwaps);
         public void AddCompletedPowerSwaps() => Interlocked.Increment(ref _completedPowerSwaps);
+        public void AddCompletedSizeSwaps() => Interlocked.Increment(ref _completedSizeSwaps);
+        public void AddCompletedFriendshipSwaps() => Interlocked.Increment(ref _completedFriendshipSwaps);
         public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
         public void AddCompletedDoubleSwaps() => Interlocked.Increment(ref _completedDoubleSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
@@ -207,8 +225,12 @@ namespace SysBot.Pokemon
                 yield return $"Trilogy Swaps: {CompletedTrilogySwaps}";
             if (CompletedGenderSwaps != 0)
                 yield return $"Gender Swaps: {CompletedGenderSwaps}";
-            if (CompletedGenderSwaps != 0)
+            if (CompletedPowerSwaps != 0)
                 yield return $"Power Swaps: {CompletedPowerSwaps}";
+            if (CompletedSizeSwaps != 0)
+                yield return $"Size Swaps: {CompletedSizeSwaps}";
+            if (CompletedFriendshipSwaps != 0)
+                yield return $"Friendship Swaps: {CompletedFriendshipSwaps}";
             if (CompletedEVSwaps != 0)
                 yield return $"EV Swaps: {CompletedEVSwaps}";
             if (CompletedDoubleSwaps != 0)

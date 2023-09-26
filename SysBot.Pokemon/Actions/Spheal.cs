@@ -50,13 +50,8 @@ namespace SysBot.Pokemon
             }
             else //Set eggs received in Picnic, instead of received in Link Trade
             {
-                cln.HeightScalar = (byte)rnd.Next(0, 255);
-                cln.WeightScalar = (byte)rnd.Next(0, 255);
-                cln.HT_Name = "";
-                cln.HT_Language = 0;
-                cln.HT_Gender = 0;
-                cln.CurrentHandler = 0;
-                cln.Met_Location = 65535;
+                cln.HeightScalar = (byte)rnd.Next(0, 256);
+                cln.WeightScalar = (byte)rnd.Next(0, 256);
                 cln.IsNicknamed = true;
                 cln.Nickname = cln.Language switch
                 {
@@ -73,15 +68,28 @@ namespace SysBot.Pokemon
 
             if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
             {
-                if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
-                    ballItem[0] = "Poke";
-                cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
-                Log($"Ball swapped to: {(Ball)cln.Ball}");
+                if (ballItem[0] == "Master")
+                {
+                    if (toSend.IsEgg || toSend.WasEgg)
+                        Log($"Eggs (hatched or not) cannot be in Master Ball");
+                }
+                else
+                {
+                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
+                        ballItem[0] = "Poke";
+                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
+                    Log($"Ball swapped to: {(Ball)cln.Ball} Ball");
+                }
             }
 
             //OT for Shiny Roamers, else set shiny as normal
             if (toSend.Species == (ushort)Species.Mesprit || toSend.Species == (ushort)Species.Cresselia)
-                cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF);
+            {
+                if (toSend.IsShiny)
+                    cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF);
+                else
+                    cln.PID = cln.PID; //Do nothing since not shiny
+            }
             else
             {
                 if (toSend.IsShiny)
@@ -219,9 +227,9 @@ namespace SysBot.Pokemon
             string embedThumbUrl = "https://www.serebii.net/scarletviolet/ribbons/alphamark.png";
             string embedImageURL;
             if (banned)
-                embedImageURL = "https://tenor.com/view/bane-no-banned-and-you-are-explode-gif-16047504";
+                embedImageURL = "https://media.tenor.com/9zCgefg___cAAAAC/bane-no.gif";
             else
-                embedImageURL = "https://tenor.com/view/sirius-sirius-black-harry-potter-twelveyears-12years-gif-4994520";
+                embedImageURL = "https://media.tenor.com/EOPjsoaIVOYAAAAC/sirius-sirius-black.gif0";
 
             EmbedAuthorBuilder embedAuthor = new()
             {

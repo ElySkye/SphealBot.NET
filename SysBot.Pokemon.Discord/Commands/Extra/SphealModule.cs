@@ -473,6 +473,10 @@ namespace SysBot.Pokemon.Discord
                 sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
                 sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen | Milotic | Scyther\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp\nDusclops```\n";
 
+                sv += "**__Friendship Swap__**\n";
+                sv += $"Function: Like Trilogy, but focuses on Friendship\nSets Friendship to MAX & Gives Best Friends + Partner Ribbons (Nickname: 'null' to disable ribbons)\nSwap Item: **{swap.FriendshipSwapItem}\n**";
+                sv += "> Eevee only gets friendship, but you get a candy to evolve it\n[**Species List**](<https://pokemondb.net/evolution/friendship>)\n\n";
+
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
                 sv += "__**Species List**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke```\n";
@@ -488,6 +492,10 @@ namespace SysBot.Pokemon.Discord
                 sv += "**__Power Swap__**\n";
                 sv += $"Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\nSwap Item: **{swap.PowerSwapItem}**\n";
                 sv += $"> • Receive the offered Pokémon with maxed out PPs & relearn moves\n\n";
+
+                sv += "**__Size Swap__**\n";
+                sv += $"Function: Allows Scale customization [**ONLY SV NATIVES**]\nSwap Item: **{swap.SizeSwapItem}**\n";
+                sv += $"\n> Nickname it a number between 0 - 255 to choose Size\n> • Receive the offered Pokémon with the chosen scale you nicknamed\n> • If none defined, you get random\n> • If Jumbo or Mini, mark gets applied\n\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);

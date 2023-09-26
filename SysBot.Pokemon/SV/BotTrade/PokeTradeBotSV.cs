@@ -403,44 +403,23 @@ namespace SysBot.Pokemon
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return update;
             }
-            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
+            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation && toSend.Generation == 9)
             {
                 //Auto OT for $t command/PK files if not specified by the user
+                var ot = toSend.OT_Name;
                 var config = Hub.Config.Legality;
-                if (toSend.Generation != 9 && toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16 && !toSend.IsEgg)
-                {
-                    var cln = toSend.Clone();
-                    var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-                    cln.OT_Name = tradepartner.TrainerName;
-                    cln.OT_Gender = tradepartner.Gender;
-                    cln.Language = tradepartner.Language;
-                    cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
-                    cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
-                    cln.HT_Name = tradepartner.TrainerName;
-                    cln.ClearNickname();
-
-                    if (toSend.IsShiny)
-                        cln.SetShiny();
-                    cln.RefreshChecksum();
-
-                    var la = new LegalityAnalysis(cln);
-                    if (!la.Valid)
-                    {
-                        poke.SendNotification(this, "Illegal Request.");
-                        DumpPokemon(DumpSetting.DumpFolder, "hacked", cln);
-                        var msg = $"**{tradepartner.TrainerName}** is trying to generate **{(Species)cln.Species}**\n";
-                        msg += $"Illegal Request";
-                        await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gen").ConfigureAwait(false);
-                        return PokeTradeResult.TrainerRequestBad;
-                    }
-                    else
-                        toSend = cln;
-                }
-                else if (toSend.OT_Name == config.GenerateOT)
+                if (ot == config.GenerateOT)
                 {
                     if (toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
                         await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
                 }
+                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
+                    await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
+            }
+            else if (poke.Type == PokeTradeType.Specific && toSend.Generation != 9 && toSend.Tracker == 0) //They can't enter HOME so idk why you genning them ?
+            {
+                await ExitTradeToPortal(false, token).ConfigureAwait(false);
+                return PokeTradeResult.IllegalTrade;
             }
 
             Log("Confirming trade.");
@@ -897,7 +876,7 @@ namespace SysBot.Pokemon
                 poke.SendNotification(this, offered, "Here's what you showed me!");
 
             var la = new LegalityAnalysis(offered);
-            if (!la.Valid)
+            if (!la.Valid || offered.Generation != 9 && offered.Tracker == 0)
             {
                 Log($"Clone request (from {poke.Trainer.TrainerName}) has detected an invalid Pokémon: {GameInfo.GetStrings(1).Species[offered.Species]}.");
                 if (DumpSetting.Dump)

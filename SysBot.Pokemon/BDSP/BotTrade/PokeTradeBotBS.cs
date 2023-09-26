@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
@@ -338,15 +339,19 @@ namespace SysBot.Pokemon
 
             // If we detected a change, they offered something.
             var offered = await ReadPokemon(LinkTradePokemonOffset, BoxFormatSlotSize, token).ConfigureAwait(false);
+            var custom = Hub.Config.CustomSwaps;
             if (offered.Species == 0 || !offered.ChecksumValid)
                 return PokeTradeResult.TrainerTooSlow;
             lastOffered = await SwitchConnection.ReadBytesAbsoluteAsync(LinkTradePokemonOffset, 8, token).ConfigureAwait(false);
 
-            if (poke.Type == PokeTradeType.Specific)
+            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
             {
                 //Auto OT for $t command/PK files if not specified by the user
                 var config = Hub.Config.Legality;
-                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                var ot = toSend.OT_Name;
+                if (ot == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false);
+                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
                     await SetTradePartnerDetailsBDSP(toSend, offered, sav, token).ConfigureAwait(false);
             }
 

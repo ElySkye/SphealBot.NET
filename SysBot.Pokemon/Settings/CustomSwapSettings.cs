@@ -38,6 +38,12 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Held item used to trigger Power Swap.")]
         public SwapItem PowerSwapItem { get; set; } = SwapItem.EnergyPowder;
 
+        [Category(CustomSwap), Description("Held item used to trigger Size Swap.")]
+        public SwapItem SizeSwapItem { get; set; } = SwapItem.Calcium;
+
+        [Category(CustomSwap), Description("Held item used to trigger Friendship Swap.")]
+        public SwapItem FriendshipSwapItem { get; set; } = SwapItem.SootheBell;
+
         [Category(CustomSwap), Description("Held item used to trigger EV Reset")]
         public SwapItem EVResetItem { get; set; } = SwapItem.TinyMushroom;
 

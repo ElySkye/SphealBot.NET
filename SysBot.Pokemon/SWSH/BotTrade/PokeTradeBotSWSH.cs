@@ -382,8 +382,11 @@ namespace SysBot.Pokemon
             if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
             {
                 //Auto OT for $t command/PK files if not specified by the user
+                var ot = toSend.OT_Name;
                 var config = Hub.Config.Legality;
-                if (toSend.OT_Name == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                if (ot == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                    await SetTradePartnerDetailsSWSH(toSend, offered, trainerName, sav, token).ConfigureAwait(false);
+                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
                     await SetTradePartnerDetailsSWSH(toSend, offered, trainerName, sav, token).ConfigureAwait(false);
             }
 

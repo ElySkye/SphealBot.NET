@@ -1,7 +1,6 @@
 ﻿using PKHeX.Core;
 using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +13,6 @@ namespace SysBot.Pokemon
         {
             var counts = TradeSettings;
             var sf = offered.Nickname;
-            var sf2 = toSend.Nickname;
             var user = partner.TrainerName;
             var evolve = "evo";
             var ballSwap = new List<string>
@@ -60,13 +58,20 @@ namespace SysBot.Pokemon
                         break;
                     case (ushort)Species.Qwilfish:
                         if (toSend.Form == 1) //Hisui
+                        {
+                            toSend.FormArgument = 20;
                             toSend.Species = (ushort)Species.Overqwil;
+                            toSend.Form = 0;
+                        }
                         break;
                     case (ushort)Species.Scyther:
                         toSend.Species = (ushort)Species.Kleavor;
                         break;
                     case (ushort)Species.Stantler:
-                        toSend.Species = (ushort)Species.Wyrdeer;
+                        {
+                            toSend.FormArgument = 20;
+                            toSend.Species = (ushort)Species.Wyrdeer;
+                        }
                         break;
                     case (ushort)Species.Sliggoo:
                         if (toSend.Form == 1) //Hisui
@@ -133,7 +138,7 @@ namespace SysBot.Pokemon
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
             }
-            else if (ballSwap.Contains(sf))
+            else if (ballSwap.Contains(sf) || Enum.TryParse(sf, true, out Ball _))
             {
                 Log($"{user} is requesting Ball Swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
 
@@ -150,7 +155,7 @@ namespace SysBot.Pokemon
                 }
                 else
                 {
-                    sf2 = sf switch
+                    toSend.Nickname = sf switch
                     {
                         "Poke" => "LAPoke",
                         "Great" => "LAGreat",
@@ -163,7 +168,7 @@ namespace SysBot.Pokemon
                         "Giga" => "LAGigaton",
                         _ => "LAPoke"
                     };
-                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), sf2, true);
+                    toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), toSend.Nickname, true);
                     toSend.ClearNickname();
                     toSend.RefreshChecksum();
                     Log($"Ball swapped to: {(Ball)toSend.Ball}");
