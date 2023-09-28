@@ -64,6 +64,7 @@ namespace SysBot.Pokemon
             var offer = offered.Species;
             var nick = offered.Nickname;
             var loc = toSend.Met_Location;
+            var botot = Hub.Config.Legality.GenerateOT;
             var la = new LegalityAnalysis(offered);
 
             var evSwap = new List<int>
@@ -112,8 +113,8 @@ namespace SysBot.Pokemon
 
             if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
             {
-                //Allow Ursaluna Bloodmoon
-                if (PLAevo.Contains(offer) && offered.Form == 0 || Formevo.Contains(offer) && offered.Form != 0) //Check for species that require to be moved out of SV to evolve
+                //Allow Ursaluna Bloodmoon & 7 star Hisuian Decidueye
+                if (PLAevo.Contains(offer) && offered.Form == 0 || Formevo.Contains(offer) && offered.Form != 0 && offered.RibbonMarkMightiest != true) //Check for species that require to be moved out of SV to evolve
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```Request Denied - Bot will not swap Home Tracker Pokémon for OT/Ball/Gender```");
@@ -264,6 +265,10 @@ namespace SysBot.Pokemon
                             break;
                     }
                     toSend.HeldItem = 1882;
+                    if (botot != "SysBot")
+                        toSend.HT_Name = botot;
+                    else toSend.HT_Name = user;
+                    toSend.HT_Language = 2;
                 }
                 else
                 {
@@ -920,8 +925,8 @@ namespace SysBot.Pokemon
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
-                    Log($"TID: {cln.TrainerTID7}");
-                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"TID: {cln.TrainerTID7:000000}");
+                    Log($"SID: {cln.TrainerSID7:0000}");
                     Log($"Gender: {(Gender)cln.OT_Gender}");
                     Log($"Language: {(LanguageID)cln.Language}");
                     Log($"Game: {(GameVersion)cln.Version}");
@@ -985,7 +990,7 @@ namespace SysBot.Pokemon
                         changeallowed = false;
                     else
                         changeallowed = true;
-                    if (poke.Type == PokeTradeType.Specific)
+                    if (poke.Type == PokeTradeType.Specific || mon.RibbonMarkMightiest == true)
                         changeallowed = true;
                     break;
             }

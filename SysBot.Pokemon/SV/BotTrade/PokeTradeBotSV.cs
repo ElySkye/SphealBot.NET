@@ -263,14 +263,22 @@ namespace SysBot.Pokemon
 
             // Assumes we're freshly in the Portal and the cursor is over Link Trade.
             Log("Selecting Link Trade.");
-
-            await Click(A, 1_500, token).ConfigureAwait(false);
+            
+            await Click(A, 3_000, token).ConfigureAwait(false);
             // Make sure we clear any Link Codes if we're not in Distribution with fixed code, and it wasn't entered last round.
             if (poke.Type != PokeTradeType.Random || !LastTradeDistributionFixed)
             {
                 await Click(X, 1_000, token).ConfigureAwait(false);
                 await Click(PLUS, 1_000, token).ConfigureAwait(false);
-
+                if (await SwitchConnection.IsProgramRunning(LibAppletWeID, token).ConfigureAwait(false)) //Incase it was slow and went into news
+                {
+                    Log("News detected, will close once it's loaded!");
+                    await Task.Delay(5_000, token).ConfigureAwait(false);
+                    await Click(B, 2_000, token).ConfigureAwait(false);
+                    await Click(A, 1_500, token).ConfigureAwait(false);
+                    await Click(X, 1_000, token).ConfigureAwait(false);
+                    await Click(PLUS, 1_000, token).ConfigureAwait(false);
+                }
                 // Loading code entry.
                 if (poke.Type != PokeTradeType.Random)
                     Hub.Config.Stream.StartEnterCode(this);
@@ -289,6 +297,7 @@ namespace SysBot.Pokemon
             // Search for a trade partner for a Link Trade.
             await Click(A, 0_500, token).ConfigureAwait(false);
             await Click(A, 0_500, token).ConfigureAwait(false);
+            await Click(A, 0_500, token).ConfigureAwait(false); //Extra Click for poor wifi users
 
             // Clear it so we can detect it loading.
             await ClearTradePartnerNID(TradePartnerNIDOffset, token).ConfigureAwait(false);
@@ -418,6 +427,7 @@ namespace SysBot.Pokemon
             }
             else if (poke.Type == PokeTradeType.Specific && toSend.Generation != 9 && toSend.Tracker == 0) //They can't enter HOME so idk why you genning them ?
             {
+                poke.SendNotification(this, $"```Request Denied - Generate HOME transfers from the game they came from```");
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return PokeTradeResult.IllegalTrade;
             }

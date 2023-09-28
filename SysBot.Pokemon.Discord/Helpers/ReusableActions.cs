@@ -86,7 +86,7 @@ namespace SysBot.Pokemon.Discord
                 else newShowdown[index] = "\nShiny: Star\r";
             }
             //Added OTGender, Language, Game (Requires all 6 for true OT)
-            var extra = new string[] { $"\nOT: {pkm.OT_Name}", $"\nOTGender: {(Gender)pkm.OT_Gender}", $"\nTID: {pkm.GetDisplayTID()}", $"\nSID: {pkm.GetDisplaySID()}", $"\nLanguage: {(LanguageID)pkm.Language}", $"\nGame: {(GameVersion)pkm.Version}", $"{(pkm.IsEgg ? "\nIsEgg: Yes" : "")}" };
+            var extra = new string[] { $"\nOT: {pkm.OT_Name}", $"\nOTGender: {(Gender)pkm.OT_Gender}", $"\nTID: {pkm.GetDisplayTID().ToString(pkm.GetTrainerIDFormat().GetTrainerIDFormatStringTID())}", $"\nSID: {pkm.GetDisplaySID().ToString(pkm.GetTrainerIDFormat().GetTrainerIDFormatStringSID())}", $"\nLanguage: {(LanguageID)pkm.Language}", $"\nGame: {(GameVersion)pkm.Version}", $"{(pkm.IsEgg ? "\nIsEgg: Yes" : "")}" };
             newShowdown.InsertRange(1, extra);
             return Format.Code(string.Join("", newShowdown).Trim());
         }

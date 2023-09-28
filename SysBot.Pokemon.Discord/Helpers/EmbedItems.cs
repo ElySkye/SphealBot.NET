@@ -1457,6 +1457,8 @@ namespace SysBot.Pokemon
         Charcadet____Soot = 2157,
         Toedscool____Flaps = 2158,
         Wooper____Slime = 2159,
+        EXP____Candy____L = 1127,
+        EXP____Candy____XL = 1128,
         TM101 = 2161,
         TM102 = 2162,
         TM103 = 2163,

@@ -165,10 +165,10 @@ namespace SysBot.Pokemon.Discord
                             embedMsg += $"Enjoy trading !";
                         }
                     }
-                    var icon = context.User.GetAvatarUrl() switch
+                    var icon = trader.GetAvatarUrl() switch
                     {
-                        null => context.User.GetDefaultAvatarUrl(),
-                        _ => context.User.GetAvatarUrl(),
+                        null => trader.GetDefaultAvatarUrl(),
+                        _ => trader.GetAvatarUrl(),
                     };
                     EmbedAuthorBuilder embedAuthorBuild = new()
                     {
@@ -242,10 +242,10 @@ namespace SysBot.Pokemon.Discord
                         embedTitle += " (F)";
                     if (trade.HeldItem > 0)
                         embedTitle += $" **➜** {HeldItem}";
-                    if(context.User.GlobalName == null)
-                        embedAuthor = $"{context.User.Username}'s ";
+                    if (trader.GlobalName == null)
+                        embedAuthor = $"{trader.Username}'s ";
                     else
-                        embedAuthor = $"{context.User.GlobalName}'s ";
+                        embedAuthor = $"{trader.GlobalName}'s ";
                     embedAuthor += trade.IsShiny ? "Shiny " : "";
                     embedAuthor += "Pokémon:";
 
