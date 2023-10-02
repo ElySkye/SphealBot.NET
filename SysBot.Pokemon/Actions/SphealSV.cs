@@ -257,6 +257,16 @@ namespace SysBot.Pokemon
                         case (ushort)Species.Boldore:
                             toSend.Species = (ushort)Species.Gigalith;
                             break;
+                        //Item Trade Evos
+                        case (ushort)Species.Feebas:
+                            toSend.Species = (ushort)Species.Milotic;
+                            break;
+                        case (ushort)Species.Scyther:
+                            toSend.Species = (ushort)Species.Scizor;
+                            break;
+                        case (ushort)Species.Dusclops:
+                            toSend.Species = (ushort)Species.Dusknoir;
+                            break;
                         case (ushort)Species.Poliwhirl:
                             toSend.Species = (ushort)Species.Politoed;
                             break;
@@ -320,16 +330,6 @@ namespace SysBot.Pokemon
                                 }
                                 toSend.FormArgument = 300;
                             }
-                            break;
-                        //Item Trade Evos
-                        case (ushort)Species.Feebas:
-                            toSend.Species = (ushort)Species.Milotic;
-                            break;
-                        case (ushort)Species.Scyther:
-                            toSend.Species = (ushort)Species.Scizor;
-                            break;
-                        case (ushort)Species.Dusclops:
-                            toSend.Species = (ushort)Species.Dusknoir;
                             break;
                     }
                 }

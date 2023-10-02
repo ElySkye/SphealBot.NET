@@ -282,7 +282,7 @@ namespace SysBot.Pokemon
             var cln = (PK8)toSend.Clone();
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
-            var PIDla = new LegalityAnalysis(offered);
+            var PIDla = new LegalityAnalysis(toSend);
             string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
 
             if (toSend.Species != (ushort)Species.Ditto)
@@ -371,12 +371,12 @@ namespace SysBot.Pokemon
                             } while (cln.ShinyXor != 1);
                         }
                     }
-                    else if (cln.Met_Location != 162 || cln.Met_Location != 244) //If not Max Raid, reroll PID for non shiny 
+                    else if (toSend.Met_Location != 162 && toSend.Met_Location != 244) //If not Max Raid, reroll PID for non shiny 
                     {
                         cln.SetShiny();
                         cln.SetUnshiny();
                     }
-                    if (cln.Met_Location != 162 || cln.Met_Location != 244) //Leave Max Raid EC alone
+                    if (toSend.Met_Location != 162 && toSend.Met_Location != 244) //Leave Max Raid EC alone
                         cln.SetRandomEC();
                 }
                 cln.RefreshChecksum();

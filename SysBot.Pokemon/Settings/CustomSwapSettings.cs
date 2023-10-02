@@ -65,11 +65,8 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Held item used to trigger EV Swap : Generic Special Defence")]
         public SwapItem EVGenSPDItem { get; set; } = SwapItem.XSpDef;
 
-        [Category(CustomSwap), Description("Nickname to trigger Mystery Eggs")]
+        [Category(CustomSwap), Description("Nickname to trigger Mystery Eggs [Uses files from Distribute folder]")]
         public string MysteryEgg { get; set; } = "Mystery";
-
-        [Category(CustomSwap), Description("Input Nickname for Spheal Event.")]
-        public string SphealEvent { get; set; } = "SphealEventPlaceholder";
 
         [Category(CustomSwap), Description("Enable Automatic OT Changing on Distribution/Specific Trades")]
         public bool AllowTraderOTInformation { get; set; } = true;

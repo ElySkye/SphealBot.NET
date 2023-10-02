@@ -582,11 +582,6 @@ namespace SysBot.Pokemon
             var offer = offered.Species;
             var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {user} <\r\n============";
 
-            if (Regex.IsMatch(nick, custom.SphealEvent, RegexOptions.IgnoreCase))
-            {
-                EchoUtil.Echo(Format.Code(eventmsg, "cs"));
-                EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
-            }
             if (Regex.IsMatch(nick, custom.MysteryEgg, RegexOptions.IgnoreCase))
             {
                 var HME = await HandleMysteryEggs(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);

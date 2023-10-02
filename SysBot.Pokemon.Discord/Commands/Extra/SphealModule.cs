@@ -471,7 +471,7 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trilogy Swap__**\n";
                 sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
-                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen | Milotic | Scyther\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp\nDusclops```\n";
+                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
 
                 sv += "**__Friendship Swap__**\n";
                 sv += $"Function: Like Trilogy, but focuses on Friendship\nSets Friendship to MAX & Gives Best Friends + Partner Ribbons (Nickname: 'null' to disable ribbons)\nSwap Item: **{swap.FriendshipSwapItem}\n**";
@@ -479,7 +479,7 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                sv += "__**Species List**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke```\n";
+                sv += "__**Species List**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke\nFeebas | Scyther | Dusclops```\n";
 
                 sv += "**__EV Swap__**\n";
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";
@@ -546,9 +546,9 @@ namespace SysBot.Pokemon.Discord
             }
             else if (gamever == "BDSP")
             {
-                var bdsp = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\nShow it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                var bdsp = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
                 bdsp += "**__Pokéball Select__**\n";
-                bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**";
+                bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
                 bdsp += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(bdsp, "Special Features - BDSP");

@@ -412,24 +412,30 @@ namespace SysBot.Pokemon
                 await ExitTradeToPortal(false, token).ConfigureAwait(false);
                 return update;
             }
-            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation && toSend.Generation == 9)
+            if (poke.Type == PokeTradeType.Specific)
             {
-                //Auto OT for $t command/PK files if not specified by the user
-                var ot = toSend.OT_Name;
-                var config = Hub.Config.Legality;
-                if (ot == config.GenerateOT)
+                if (toSend.Generation == 9 || toSend.IsEgg)
                 {
-                    if (toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
-                        await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
+                    if (custom.AllowTraderOTInformation)
+                    {
+                        //Auto OT for $t command/PK files if not specified by the user
+                        var ot = toSend.OT_Name;
+                        var config = Hub.Config.Legality;
+                        if (ot == config.GenerateOT)
+                        {
+                            if (toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                                await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
+                        }
+                        else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
+                            await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
+                    }
                 }
-                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
-                    await SetTradePartnerDetailsSV(poke, toSend, offered, sav, token).ConfigureAwait(false);
-            }
-            else if (poke.Type == PokeTradeType.Specific && toSend.Generation != 9 && toSend.Tracker == 0) //They can't enter HOME so idk why you genning them ?
-            {
-                poke.SendNotification(this, $"```Request Denied - Generate HOME transfers from the game they came from```");
-                await ExitTradeToPortal(false, token).ConfigureAwait(false);
-                return PokeTradeResult.IllegalTrade;
+                else if (!toSend.IsEgg && toSend.Generation != 9 && toSend.Tracker == 0) //They can't enter HOME so idk why you genning them ?
+                {
+                    poke.SendNotification(this, $"```Request Denied - Generate HOME transfers from the game they came from```");
+                    await ExitTradeToPortal(false, token).ConfigureAwait(false);
+                    return PokeTradeResult.IllegalTrade;
+                }
             }
 
             Log("Confirming trade.");
@@ -940,12 +946,6 @@ namespace SysBot.Pokemon
             var spec = offered.Species;
             var swap = offered.HeldItem;
 
-            if (Regex.IsMatch(nick, custom.SphealEvent, RegexOptions.IgnoreCase))
-            {
-                var eventmsg = $"======\r\nSpheal Event Winner:\r\n> OT: {user} <\r\n======";
-                EchoUtil.Echo(Format.Code(eventmsg, "cs"));
-                EchoUtil.Echo("https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062");
-            }
             if (Regex.IsMatch(nick, custom.MysteryEgg, RegexOptions.IgnoreCase))
             {
                 var HME = await HandleMysteryEggs(sav, poke, offered, toSend, partner, token).ConfigureAwait(false);
