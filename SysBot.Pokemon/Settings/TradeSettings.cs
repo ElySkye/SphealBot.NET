@@ -54,6 +54,8 @@ namespace SysBot.Pokemon
         private int _completedPowerSwaps;
         private int _completedSizeSwaps;
         private int _completedFriendshipSwaps;
+        private int _completedMarkSwaps;
+        private int _completedDateSwaps;
         private int _completedEVSwaps;
         private int _completedDoubleSwaps;
         private int _completedMystery;
@@ -137,6 +139,19 @@ namespace SysBot.Pokemon
             get => _completedFriendshipSwaps;
             set => _completedFriendshipSwaps = value;
         }
+        [Category(Counts), Description("Completed Mark Swap Trades")]
+        public int CompletedMarkSwaps
+        {
+            get => _completedMarkSwaps;
+            set => _completedMarkSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Date Swap Trades")]
+        public int CompletedDateSwaps
+        {
+            get => _completedDateSwaps;
+            set => _completedDateSwaps = value;
+        }
 
         [Category(Counts), Description("Completed EV Swap Trades")]
         public int CompletedEVSwaps
@@ -195,6 +210,8 @@ namespace SysBot.Pokemon
         public void AddCompletedPowerSwaps() => Interlocked.Increment(ref _completedPowerSwaps);
         public void AddCompletedSizeSwaps() => Interlocked.Increment(ref _completedSizeSwaps);
         public void AddCompletedFriendshipSwaps() => Interlocked.Increment(ref _completedFriendshipSwaps);
+        public void AddCompletedMarkSwaps() => Interlocked.Increment(ref _completedMarkSwaps);
+        public void AddCompletedDateSwaps() => Interlocked.Increment(ref _completedDateSwaps);
         public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
         public void AddCompletedDoubleSwaps() => Interlocked.Increment(ref _completedDoubleSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
@@ -231,6 +248,10 @@ namespace SysBot.Pokemon
                 yield return $"Size Swaps: {CompletedSizeSwaps}";
             if (CompletedFriendshipSwaps != 0)
                 yield return $"Friendship Swaps: {CompletedFriendshipSwaps}";
+            if (CompletedMarkSwaps != 0)
+                yield return $"Mark Swaps: {CompletedMarkSwaps}";
+            if (CompletedDateSwaps != 0)
+                yield return $"Date Swaps: {CompletedDateSwaps}";
             if (CompletedEVSwaps != 0)
                 yield return $"EV Swaps: {CompletedEVSwaps}";
             if (CompletedDoubleSwaps != 0)

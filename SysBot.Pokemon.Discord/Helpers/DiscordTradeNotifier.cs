@@ -45,23 +45,14 @@ namespace SysBot.Pokemon.Discord
 
         public void TradeFinished(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, T result)
         {
-            /*Random rng = new();
-            int islucky = rng.Next(0, 1);*/
-
             OnFinish?.Invoke(routine);
             var tradedToUser = Data.Species;
             var message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
             Trader.SendMessageAsync(message).ConfigureAwait(false);
             if (result.Species != 0 && Hub.Config.Discord.ReturnPKMs)
                 Trader.SendPKMAsync(result, "Here's what you traded me:").ConfigureAwait(false);
-            LogUtil.LogInfo($"Finished trading {info.Trainer.TrainerName}: {GameInfo.GetStrings(1).Species[info.TradeData.Species]} for {GameInfo.GetStrings(1).Species[result.Species]}", routine.Connection.Label);
-
-           /*if (islucky == 0)
-            {
-                var msg = $"# ★LUCKY TRADE★\n```Your cooldown was not consumed for this trade. Feel free to trade again!```";
-                Trader.SendMessageAsync(msg).ConfigureAwait(false);
-            }
-            */
+            if (info.TradeData.Species != 0)
+                LogUtil.LogInfo($"Finished trading {info.Trainer.TrainerName}: {GameInfo.GetStrings(1).Species[info.TradeData.Species]} for {GameInfo.GetStrings(1).Species[result.Species]}", routine.Connection.Label);
         }
 
         public void SendNotification(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, string message)

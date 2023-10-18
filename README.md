@@ -3,7 +3,7 @@
 
 ## Support Discord:
 
-This is a fork of [SysBot](https://github.com/kwsch/SysBot.NET). Do not join the official PDP discord and ask for assistance.
+This is a fork of [SysBot](https://github.com/kwsch/SysBot.NET) with modified custom features. Do not ask official PDP discord for assistance.
 For any issues, wait for an update. Do not bother the devs in PDP.
 Else, feel free to join our discord for support:
 [Sphealtopia](http://discord.gg/sphealtopia)
@@ -18,7 +18,7 @@ Else, feel free to join our discord for support:
 - [Sinthrill](https://github.com/Sinthrill/SysSwapBot.NET) for getting me started in programming and all the cool tricks you taught me
 - [Berichan](https://github.com/Sinthrill/SysSwapBot.NET) for OT details
 - [easyworld](https://github.com/easyworld/SysBot.NET) for reference on how to do SWSH OT
-- [Koi](https://github.com/Koi-3088/ForkBot.NET) & [zyro](https://github.com/zyro670/NotForkBot.NET) for the various useful discord commands
+- [Koi](https://github.com/Koi-3088/ForkBot.NET) & [zyro](https://github.com/zyro670/NotForkBot.NET) for the various useful discord commands I've merged into my fork
 - [BakaKaito](https://github.com/BakaKaito/MergeBot.NET) for HomeImages & inspiration to do trade embeds
 
 ## SysBot.Base:

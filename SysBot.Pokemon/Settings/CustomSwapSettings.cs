@@ -8,14 +8,14 @@ namespace SysBot.Pokemon
         private const string CustomSwap = nameof(CustomSwap);
         public override string ToString() => "Custom Swap Settings";
 
-        [Category(CustomSwap), Description("When set to something other than None, the Random Trades will accept this alternate species in addition to the nickname match.")]
-        public Species LedySpecies2 { get; set; } = Species.None;
-
         [Category(CustomSwap), Description("Species selector for $it command. Default: Finizen")]
         public Species ItemTradeSpecies { get; set; } = Species.Finizen;
 
         [Category(CustomSwap), Description("Toggle Logging of Trade Partner's FULL details upon connection")]
         public bool LogTrainerDetails { get; set; }
+
+        [Category(CustomSwap), Description("Disables some unneeded logging to help rate-limited bots")]
+        public bool FilterLogging { get; set; }
 
         [Category(CustomSwap), Description("Allow BDSP $rsv commands")]
         public bool EnableBDSPTrades { get; set; }
@@ -43,6 +43,12 @@ namespace SysBot.Pokemon
 
         [Category(CustomSwap), Description("Held item used to trigger Friendship Swap.")]
         public SwapItem FriendshipSwapItem { get; set; } = SwapItem.SootheBell;
+
+        [Category(CustomSwap), Description("Held item used to trigger Mark Swap.")]
+        public SwapItem MarkSwapItem { get; set; } = SwapItem.CometShard;
+
+        [Category(CustomSwap), Description("Held item used to trigger Date Swap.")]
+        public SwapItem DateSwapItem { get; set; } = SwapItem.EjectPack;
 
         [Category(CustomSwap), Description("Held item used to trigger EV Reset")]
         public SwapItem EVResetItem { get; set; } = SwapItem.TinyMushroom;

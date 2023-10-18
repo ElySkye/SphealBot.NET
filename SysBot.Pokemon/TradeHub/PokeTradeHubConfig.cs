@@ -35,6 +35,10 @@ namespace SysBot.Pokemon
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public CustomSwapSettings CustomSwaps { get; set; } = new();
 
+        [Category(BotTrade), Description("Settings for Custom Embeds.")]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public CustomEmbedSettings CustomEmbed { get; set; } = new();
+
         [Category(BotTrade)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public SeedCheckSettings SeedCheckSWSH { get; set; } = new();

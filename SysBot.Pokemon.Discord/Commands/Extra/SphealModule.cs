@@ -5,6 +5,8 @@ using Discord;
 using System;
 using System.IO;
 using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -30,7 +32,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task ItemTrade([Summary("Trade Code")] int code, [Remainder] string item)
         {
-            Species species = Info.Hub.Config.CustomSwaps.ItemTradeSpecies is Species.None ? Species.Finizen : Info.Hub.Config.CustomSwaps.ItemTradeSpecies;
+            Species species = Info.Hub.Config.CustomSwaps.ItemTradeSpecies;
             var set = new ShowdownSet($"{SpeciesName.GetSpeciesNameGeneration((ushort)species, 2, 8)} @ {item.Trim()}");
             var template = AutoLegalityWrapper.GetTemplate(set);
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
@@ -95,7 +97,11 @@ namespace SysBot.Pokemon.Discord
                         if (config.EnableBDSPTrades)
                             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
                         else
-                            await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        {
+                            var msg = "This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                        }
                         break;
                 }
             }
@@ -109,6 +115,7 @@ namespace SysBot.Pokemon.Discord
         {
             var sig = Context.User.GetFavor();
             var me = SysCord<T>.Runner;
+            var config = SysCordSettings.HubConfig.CustomSwaps;
             string botversion;
             if (me is not null)
             {
@@ -125,7 +132,14 @@ namespace SysBot.Pokemon.Discord
                         await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkLA).ConfigureAwait(false);
                         break;
                     case "PB8":
-                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        if (config.EnableBDSPTrades)
+                            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
+                        else
+                        {
+                            var msg = "This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                        }
                         break;
                 }
             }
@@ -138,25 +152,21 @@ namespace SysBot.Pokemon.Discord
         public async Task GetDTListAsync()
         {
             string msg = Info.GetTradeList(PokeRoutineType.DirectTrade);
-            var embed = new EmbedBuilder();
-            embed.AddField(s =>
-            {
-                s.Name = "Queue List";
-                s.Value = msg;
-                s.IsInline = false;
-            });
-            await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
+
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Queue List", "");
+            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
         }
 
         [Command("mysteryEgg")]
         [Alias("myst", "rme")]
         [Summary("Request a Mystery Egg through Discord - Pool from distribution folder")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
-        public async Task myst()
+        public async Task Myst()
         {
             var code = Info.GetRandomTradeCode();
             var sig = Context.User.GetFavor();
             var me = SysCord<T>.Runner;
+            var config = SysCordSettings.HubConfig.CustomSwaps;
             string botversion;
             if (me is not null)
             {
@@ -173,7 +183,14 @@ namespace SysBot.Pokemon.Discord
                         await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
                         break;
                     case "PB8":
-                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        if (config.EnableBDSPTrades)
+                            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
+                        else
+                        {
+                            var msg = "This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                        }
                         break;
                 }
             }
@@ -187,6 +204,7 @@ namespace SysBot.Pokemon.Discord
         {
             var sig = Context.User.GetFavor();
             var me = SysCord<T>.Runner;
+            var config = SysCordSettings.HubConfig.CustomSwaps;
             string botversion;
             if (me is not null)
             {
@@ -203,7 +221,14 @@ namespace SysBot.Pokemon.Discord
                         await ReplyAsync($"PLA has no eggs. Nice try.").ConfigureAwait(false);
                         break;
                     case "PB8":
-                        await ReplyAsync($"This command is disabled for BDSP").ConfigureAwait(false);
+                        if (config.EnableBDSPTrades)
+                            await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
+                        else
+                        {
+                            var msg = "This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                        }
                         break;
                 }
             }
@@ -227,7 +252,10 @@ namespace SysBot.Pokemon.Discord
                 "PB8" => "Brilliant Diamond & Shining Pearl",
                 _ => "Let's Go Pikachu & Eevee",
             };
-            await ReplyAsync($"# Current Game running is **{gamever}**").ConfigureAwait(false);
+            var msg = $"# Current Game running is **{gamever}**";
+
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Current Game", "");
+            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
         }
 
         [Command("cooldown")]
@@ -241,7 +269,7 @@ namespace SysBot.Pokemon.Discord
             {
                 SysCordSettings.HubConfig.TradeAbuse.TradeCooldown = cooldown;
                 SysCordSettings.HubConfig.TradeAbuse.CooldownUpdate = $"{DateTime.Now:yyyy.MM.dd - HH:mm:ss}";
-                await ReplyAsync($"Cooldown has been updated to {cooldown} minutes.").ConfigureAwait(false);
+                await ReplyAsync($"Cooldown has been updated to **{cooldown}** minutes.").ConfigureAwait(false);
             }
             else
                 await ReplyAsync("Please enter a valid number of minutes.").ConfigureAwait(false);
@@ -301,7 +329,7 @@ namespace SysBot.Pokemon.Discord
             string msg = "";
             var wlParams = input.Split(", ", 4);
             DateTime wlExpires = DateTime.Now;
-            RemoteControlAccess wlRef = new ();
+            RemoteControlAccess wlRef = new();
 
             if (wlParams.Length <= 2)
             {
@@ -380,40 +408,61 @@ namespace SysBot.Pokemon.Discord
                 await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
         [Command("spheal")]
+        [Alias("sotd", "qotd")]
         [Summary("Sends random Spheals")]
         public async Task SphealAsync()
         {
-            var msg = "Placeholder";
+            string gif = "";
+            string title = "";
+            string msg = "";
             Random rndmsg = new();
             int num = rndmsg.Next(1, 9);
             switch (num)
             {
                 case 1:
-                    msg = $"https://tenor.com/view/tess-spheal-gif-22641311";
+                    gif = $"https://media.tenor.com/b6poqCTHCXkAAAAd/tess-spheal.gif";
+                    title = "Spheal in a Pool";
+                    msg = ":star::star::star:\n\nA carefree Spheal, just spinning in the pool, free of all worries";
                     break;
                 case 2:
-                    msg = $"https://tenor.com/view/spheal-pokemon-clapping-gif-25991342";
+                    gif = $"https://media.tenor.com/UfSl83Kq2ZkAAAAC/spheal-pokemon.gif";
+                    title = "Clapping Spheal";
+                    msg = ":star::star::star:\n\nA happy Spheal, hes showing great enthusiasm";
                     break;
                 case 3:
-                    msg = $"https://tenor.com/view/swoshi-swsh-spheal-dlc-pokemon-gif-18917062";
+                    gif = $"https://media.tenor.com/LeY7aqDgKrAAAAAC/swoshi-swsh.gif";
+                    title = "Crown's Tundra - A Spheal Performance";
+                    msg = ":star::star::star::star:\n\nTwo happy Spheals, showing this random adventurer how happy they are";
                     break;
                 case 4:
-                    msg = $"https://tenor.com/view/spheal-pokemon-soupokailloux-seal-gif-24173644";
+                    gif = $"https://media.tenor.com/SBZlFs2nvJEAAAAC/spheal-pokemon.gif";
+                    title = "BulbaSpheal? No, its a Spheal hiding in the Grass";
+                    msg = ":star::star::star:\n\nA Spheal whos trying to cosplay as a Bulbasaur, or simply just want to surprise you from the bushes";
                     break;
                 case 5:
-                    msg = $"https://tenor.com/view/pokemon-spheal-gif-26674053";
+                    gif = $"https://media.tenor.com/q8w8kujQeyYAAAAd/pokemon-spheal.gif";
+                    title = "Shiny Spheal rolling in Snow";
+                    msg = ":star::star::star::star::star:\n\nElusive Shiny Spheal rolling happyily in the Snow without a care in the world";
                     break;
                 case 6:
-                    msg = $"https://tenor.com/view/spheal-wake-up-gif-19887467";
+                    gif = $"https://media.tenor.com/IXLsyG9QYxcAAAAd/spheal-wake.gif";
+                    title = "Spheal about to sleep & happy";
+                    msg = ":star::star::star:\n\nSpheal who wants to sleep but is also happy";
                     break;
                 case 7:
-                    msg = $"https://tenor.com/view/on-my-way-pokemon-spheal-sphere-seal-gif-15438411";
+                    gif = $"https://media.tenor.com/wH0l_PaFRskAAAAC/on-my-way-pokemon.gif";
+                    title = "I'm on my way ! - Spheal";
+                    msg = ":star::star::star::star:\n\nWhen in trouble, Spheal always has your back";
                     break;
                 case 8:
-                    msg = $"https://tenor.com/view/pokemon-spheal-rolling-yolo-gif-24805701";
+                    gif = $"https://media.tenor.com/fY3-eIP4RfwAAAAd/pokemon-spheal.gif";
+                    title = "Pokémon Legends Spheal - Here I Roll";
+                    msg = ":star::star::star::star::star:\n\nSpheal Army on their way to the battlefield, or are they just playing";
                     break;
             }
-            await ReplyAsync(msg).ConfigureAwait(false);
+
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, title, gif, true);
+            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
             if (!Context.IsPrivate)
                 await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
@@ -426,6 +475,7 @@ namespace SysBot.Pokemon.Discord
         {
             var p = SysCordSettings.Settings.CommandPrefix;
             var swap = SysCordSettings.HubConfig.CustomSwaps;
+            var swaps = GameInfo.GetStrings(1).Item;
             var me = SysCord<T>.Runner;
             string botversion = "";
             if (me is not null)
@@ -442,60 +492,40 @@ namespace SysBot.Pokemon.Discord
             {
                 var sv = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
                 sv += "**__OT Swap__**\n";
-                sv += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
-                sv += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
+                sv += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swaps[(int)swap.OTSwapItem]}**\n";
+                sv += $"> Only **{gamever}** natives allowed with exceptions\n\n";
 
                 sv += "**__Double Swap__**\n";
                 sv += $"Function: Ball + Tera can be done in a single trade\n";
-                sv += $"> • Eg. Nickname Level, Hold Grass Tera Shard OR\r\nNickname Grass, Hold Level Ball\n\n";
+                sv += $"> Eg. Nickname Level, Hold Grass Tera Shard OR\r\nNickname Grass, Hold Level Ball\n\n";
 
                 sv += "**__Pokéball Select__**\n";
                 sv += $"Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
-                sv += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n\n";
-                
+                sv += "> If it cannot legally be in that ball, it comes in original ball without your OT\n> If no held ball, it will come in the original ball with your OT\n\n";
+
                 sv += "**__Pokéball Swap__**\n";
                 sv += $"Function: Allows Ball swap for existing Pokémon\nSwap Item: **Pokéball of choice**\n";
-                sv += $"> • Receive the offered Pokémon in the ball it was holding\n> • Any non {gamever} / Event mons cannot be ball swapped\n\n";
+                sv += $"> Pokémon gets in the ball it was holding\n> Any non {gamever} / Event mons cannot be ball swapped\n\n";
 
                 sv += "**__Mystery Eggs__**\n";
                 sv += $"Function: Receive a **Mystery Egg** [Command: **{p}rme**]\n";
-                sv += $"> Alternate Method:\n> • Trade a Pokémon nicknamed **{swap.MysteryEgg}** via {p}rsv\n> • Receive a random egg\n> • Eggs will be in your OT and met in picnic\n\n";
+                sv += $"> Alt Method:\n> Trade Pokémon nicknamed **{swap.MysteryEgg}** via {p}rsv\n> Receive a random egg\n> Eggs will be your OT and met in picnic\n\n";
 
                 sv += "**__Tera Select__**\n";
                 sv += $"Function: Allows Tera selection on nicknamed mons holding the respective Tera Shard\nSwap Item: **Tera Shard of choice**\n";
-                sv += "> • Eggs can only be in their base or secondary types\n> • Can only be done on SV native as it's sent via OTSwap\n\n";
+                sv += "> Eggs can only be in their base or secondary types\n> Can only be done on SV native as it's sent via OTSwap\n\n";
 
                 sv += "**__Tera Swap__**\n";
                 sv += "Function: Allows Tera type swap for existing Pokémon\nSwap Item: **Tera Shard of choice**\n";
-                sv += "> • Receive the offered Pokémon in the New Tera type according to what shard it was holding\n\n";
-
-                sv += "**__Trilogy Swap__**\n";
-                sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\nFirst two functions can be done on any legal mon\n";
-                sv += "> **Clear Nickname** ➜ Clears the Nickname\n> **Level 1OO** ➜ Sets the Pokémon's level to 1OO\n> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
-
-                sv += "**__Friendship Swap__**\n";
-                sv += $"Function: Like Trilogy, but focuses on Friendship\nSets Friendship to MAX & Gives Best Friends + Partner Ribbons (Nickname: 'null' to disable ribbons)\nSwap Item: **{swap.FriendshipSwapItem}\n**";
-                sv += "> Eevee only gets friendship, but you get a candy to evolve it\n[**Species List**](<https://pokemondb.net/evolution/friendship>)\n\n";
-
-                sv += "**__Trade Evo <Purifier>__**\n";
-                sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                sv += "__**Species List**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke\nFeebas | Scyther | Dusclops```\n";
+                sv += "> Pokémon gets the New Tera type according to the shard held\n\n";
 
                 sv += "**__EV Swap__**\n";
                 sv += "Function: Perform either depending on held item ➜ \nReset EVs | EV Raid Preset | EV Comp Preset | EV Tank Preset\n";
-                sv += $"> • Bot will reset or apply **252** EVs in **2** stats, last **6** EVs are done yourself\n> • Raid Presets are *minted* to **Adamant/Modest** respectively\n\n__**Swap Item(s)**__\nEV Reset ➜ **{swap.EVResetItem}** [Resets ALL EVs]\n\nEV Raid Atk ➜ **{swap.EVRaidAtkItem}** [Reset ALL EVs, Apply ATK/HP]\nEV Raid SP Atk ➜ **{swap.EVRaidSPAItem}** [Reset, Apply SPAtk/HP]\n\nEV Comp Atk ➜ **{swap.EVCompAtkItem}** [Reset, Atk/Speed]\nEV Comp SP Atk ➜ **{swap.EVCompSPAItem}** [Reset, SPAtk/Speed]\n\nEV Def Tank ➜ **{swap.EVGenDEFItem}** [Reset, HP/Def]\nEV Sp Def Tank ➜ **{swap.EVGenSPDItem}** [Reset, HP/SPDef]\n\n";
+                sv += $"> Pokémon gets resetted EVs or **252** EVs in **2** stats, last **6** EVs are done yourself\n> Raid Presets are *minted* to **Adamant/Modest** respectively\n\n";
+                sv += $"__**Swap Item(s)**__\nEV Reset ➜ **{swaps[(int)swap.EVResetItem]}** [Resets ALL EVs]\n\nEV Raid Atk ➜ **{swaps[(int)swap.EVRaidAtkItem]}** [Reset ALL EVs, Apply ATK/HP]\nEV Raid SP Atk ➜ **{swaps[(int)swap.EVRaidSPAItem]}** [Reset, Apply SPAtk/HP]\n\n";
+                sv += $"EV Comp Atk ➜ **{swaps[(int)swap.EVCompAtkItem]}** [Reset, Atk/Speed]\nEV Comp SP Atk ➜ **{swaps[(int)swap.EVCompSPAItem]}** [Reset, SPAtk/Speed]\n\nEV Def Tank ➜ **{swaps[(int)swap.EVGenDEFItem]}** [Reset, HP/Def]\nEV Sp Def Tank ➜ **{swaps[(int)swap.EVGenSPDItem]}** [Reset, HP/SPDef]\n\n";
 
-                sv += "**__Gender Swap__**\n";
-                sv += $"Function: Allows Gender swap for existing Pokémon\nSwap Item: **{swap.GenderSwapItem}**\n";
-                sv += $"> • Receive the offered Pokémon in the opposite Gender\n> • ONLY works for {gamever} natives\n\n";
-
-                sv += "**__Power Swap__**\n";
-                sv += $"Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\nSwap Item: **{swap.PowerSwapItem}**\n";
-                sv += $"> • Receive the offered Pokémon with maxed out PPs & relearn moves\n\n";
-
-                sv += "**__Size Swap__**\n";
-                sv += $"Function: Allows Scale customization [**ONLY SV NATIVES**]\nSwap Item: **{swap.SizeSwapItem}**\n";
-                sv += $"\n> Nickname it a number between 0 - 255 to choose Size\n> • Receive the offered Pokémon with the chosen scale you nicknamed\n> • If none defined, you get random\n> • If Jumbo or Mini, mark gets applied\n\n";
+                sv += $"Do {p}spf2 to view Page 2";
 
                 Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
@@ -504,7 +534,7 @@ namespace SysBot.Pokemon.Discord
             {
                 var swsh = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
                 swsh += "**__OT Swap__**\n";
-                swsh += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swap.OTSwapItem}**\n";
+                swsh += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swaps[(int)swap.OTSwapItem]}**\n";
                 swsh += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
 
                 swsh += "**__Pokéball Select__**\n";
@@ -520,7 +550,7 @@ namespace SysBot.Pokemon.Discord
                 swsh += "> • Receive a random egg\n> • Eggs will be in your OT and met in daycare\n\n";
 
                 swsh += "**__Trilogy Swap__**\n";
-                swsh += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swap.TrilogySwapItem}**\n";
+                swsh += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swaps[(int)swap.TrilogySwapItem]}**\n";
                 swsh += "> • First two functions can be done on any legal mon\n\n**Clear Nickname** ➜ Clears the Nickname\n**Level to 1OO** ➜ Sets the Pokémon's level to 1OO\n**Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species List**__\n```Farfetch'd (Galar) | Yamask (Galar) | Sliggoo (Kalos)```\n";
 
                 swsh += "**__Trade Evo <Purifier>__**\n";
@@ -546,14 +576,102 @@ namespace SysBot.Pokemon.Discord
             }
             else if (gamever == "BDSP")
             {
-                var bdsp = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Your choice if you want to press **B** (*optional*)\n\n";
+                var bdsp = $"__**Instructions**__\n> Have the Pokémon hold the **swap item**\n> Show it to the bot via **{p}rsv**\n> Pressing B is disallowed for non **Select** Swaps\n\n";
                 bdsp += "**__Pokéball Select__**\n";
                 bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
                 bdsp += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n";
 
+                bdsp += "**__OT Swap__**\n";
+                bdsp += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swaps[(int)swap.OTSwapItem]}**\n";
+                bdsp += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
+
+                bdsp += "**__Trilogy Swap__**\n";
+                bdsp += "# :bangbang: This function disallows pressing B :bangbang:";
+                bdsp += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swaps[(int)swap.TrilogySwapItem]}**\n";
+                bdsp += "> • First two functions can be done on any legal mon\n\n**Clear Nickname** ➜ Clears the Nickname\n**Level to 1OO** ➜ Sets the Pokémon's level to 1OO\n**Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n";
+                bdsp += "__**Species List**__\n```Kadabra | Machoke | Haunter\nGraveler | Clamperl (Nickname: Hunt = Huntail, Gore = Gorebyss)\nOnix\nFeebas | Electabuzz | Magmar\nPorygon | Porygon2 | Rhydon\nSeadra | Poliwhirl | Scyther\nDusclops | Slowpoke```\n";
+
                 Embed? embed = Sphealcl.EmbedSFList(bdsp, "Special Features - BDSP");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
+        }
+
+        [Command("specialfeatures2")]
+        [Alias("spf2")]
+        [Summary("Displays Special Features Page 2")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task SpecialFeatures2()
+        {
+            var p = SysCordSettings.Settings.CommandPrefix;
+            var swap = SysCordSettings.HubConfig.CustomSwaps;
+            var swaps = GameInfo.GetStrings(1).Item;
+            var me = SysCord<T>.Runner;
+            string botversion = "";
+            if (me is not null)
+                botversion = me.ToString()!.Substring(46, 3);
+            var gamever = botversion switch
+            {
+                "PK9" => "SV",
+                "PK8" => "SWSH",
+                "PA8" => "PLA",
+                "PB8" => "BDSP",
+                _ => "LGPE",
+            };
+
+            if (gamever == "SV")
+            {
+                var sv = "**__Trilogy Swap__**\n";
+                sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Level to 1OO | Evolve Species\nSwap Item: **{swaps[(int)swap.TrilogySwapItem]}**\nFirst two functions can be done on any legal mon\n";
+                sv += "> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
+
+                sv += "**__Friendship Swap__**\n";
+                sv += $"Function: Like Trilogy, but focuses on Friendship\nSets Friendship to MAX & Gives Best Friends + Partner Ribbons (Nickname: 'null' to disable ribbons)\nSwap Item: **{swaps[(int)swap.FriendshipSwapItem]}\n**";
+                sv += "> Eevee only gets friendship, but you get a candy to evolve it\n[**Species**](<https://pokemondb.net/evolution/friendship>)\n\n";
+
+                sv += "**__Trade Evo <Purifier>__**\n";
+                sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
+                sv += "__**Species**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke\nFeebas | Scyther | Dusclops```\n";
+
+                sv += "**__Gender Swap__**\n";
+                sv += $"Function: Allows Gender swap for existing Pokémon\nSwap Item: **{swaps[(int)swap.GenderSwapItem]}**\n";
+                sv += $"> Pokémon becomes opposite Gender\n> ONLY works for {gamever} natives\n\n";
+
+                sv += "**__Power Swap__**\n";
+                sv += $"Function: Maxes out all PP for moves & gives relearn TMs for existing Pokémon\nSwap Item: **{swaps[(int)swap.PowerSwapItem]}**\n";
+                sv += $"> Pokémon gets maxed out PPs & relearn moves\n\n";
+
+                sv += "**__Size Swap__**\n";
+                sv += $"Function: Allows Scale customization [**ONLY SV NATIVES**]\nSwap Item: **{swaps[(int)swap.SizeSwapItem]}**\n";
+                sv += $"> Nickname a number from 0 - 255\n> Pokémon gets the scale you nicknamed\n> If none defined, you get random\n> If Jumbo or Mini, mark gets applied\n\n";
+
+                sv += "**__Mark Swap__**\n";
+                sv += $"Function: Allows Mark customization [**Must not have entered HOME**]\nSwap Item: **{swaps[(int)swap.MarkSwapItem]}**\n";
+                sv += $"> {p}mk command to view more\n\n";
+
+                sv += "**__Date Swap__**\n";
+                sv += $"Function: Allows Date customization [**Must not have entered HOME**]\nSwap Item: **{swaps[(int)swap.DateSwapItem]}**\n";
+                sv += $"> Main purpose to fix correct date for Destiny Mark as the Bot cannot read your birthday\n> Fixed Year of 2023\n> Nickname a Pokémon in this format:\n> MM/DD\n> Make sure to not forget the / between Month & Day\n\n";
+
+                Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
+                await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+            }
+        }
+        
+        [Command("mark")]
+        [Alias("mk")]
+        [Summary("Displays Mark Swap Info")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task MarkInfo()
+        {
+            var mk = "__**Instructions**__\nOnly SV Wild encounters that have not entered HOME can use this function\nAny Mew can also use this function to get the Mightiest Mark\n\n";
+            mk += "`Bonus Feature` ➜ 1/20 chance for your swap to obtain the **ItemFinder** Mark\n";
+            mk += "Two ways to get Marks: Choose via Nickname or Random\n\n";
+            mk += "__**Nicknames**__\n```Bliz ➜ Blizzard Mark | Snow ➜ Snowy Mark\nSand ➜ Sandstorm Mark | Rain ➜ Rainy Mark\nStorm ➜ Stormy Mark | Cloud ➜ Cloudy Mark\n<These are chosen as they are situational>```\n";
+            mk += "For Random, there are **4** tiers: Common➜Epic➜Unique➜Legend (Rarest)\n";
+            mk += "View the table below for categories:";
+
+            Embed? embed = Sphealcl.EmbedSFList(mk, "Mark Info", true);
+            await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
         }
     }
 }

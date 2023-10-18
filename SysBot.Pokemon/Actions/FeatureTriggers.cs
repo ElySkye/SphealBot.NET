@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Discord;
+using PKHeX.Core;
+using PKHeX.Core.AutoMod;
+using System;
 
 namespace SysBot.Pokemon
 {
@@ -572,5 +573,63 @@ namespace SysBot.Pokemon
         LALeaden = 0x302d30,
         LAGigaton = 0x302c30,
         LAOrigin = 0xfe785a
+    }
+    public class FeatureTrigger<T> where T : PKM, new()
+    {
+        public static void AllowEggShowdown(PKM cln)
+        {
+            cln.IsEgg = true;
+            cln.IsNicknamed = true;
+            cln.Nickname = cln.Language switch
+            {
+                1 => "タマゴ",
+                3 => "Œuf",
+                4 => "Uovo",
+                5 => "Ei",
+                7 => "Huevo",
+                8 => "알",
+                9 or 10 => "蛋",
+                _ => "Egg",
+            };
+
+            cln.Egg_Location = cln switch
+            {
+                PK9 => 30023, //SV
+                PK8 => 60002, //SWSH
+                _ => 60010, //BDSP
+            };
+
+            cln.MetDate = DateOnly.FromDateTime(DateTime.Now); //Match MetDate & EggMetDate
+            cln.EggMetDate = cln.MetDate;
+
+            cln.HeldItem = 0;
+            cln.CurrentLevel = 1;
+            cln.EXP = 0;
+            cln.Met_Level = 1;
+            cln.StatNature = cln.Nature;
+            cln.OT_Friendship = 1;
+
+            if (cln is PK9 SV)
+            {
+                SV.TeraTypeOverride = (MoveType)19;
+                SV.Obedience_Level = 1;
+                SV.Version = 0; //Eggs should have no version in SV
+            }
+
+            //Merged from Koi [https://github.com/Koi-3088/ForkBot.NET]
+            var la = new LegalityAnalysis(cln);
+            var enc = la.EncounterMatch;
+            Span<ushort> relearn = stackalloc ushort[4];
+
+            cln.ClearRelearnMoves();
+            cln.SetSuggestedMoves();
+            la.GetSuggestedRelearnMoves(relearn, enc);
+            cln.SetRelearnMoves(relearn);
+            cln.Move1_PPUps = cln.Move2_PPUps = cln.Move3_PPUps = cln.Move4_PPUps = 0;
+            cln.SetSuggestedHyperTrainingData();
+            cln.CurrentFriendship = enc is IHatchCycle s ? s.EggCycles : cln.PersonalInfo.HatchCycles;
+            cln.HealPP();
+            cln.RefreshChecksum();
+        }
     }
 }

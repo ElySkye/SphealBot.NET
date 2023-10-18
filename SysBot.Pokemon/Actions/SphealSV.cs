@@ -46,7 +46,7 @@ namespace SysBot.Pokemon
             myst += $"**Shiny**: **{Shiny}**\n";
             myst += $"**Size**: **{Size}**\n";
             myst += $"**Nature**: **{(Nature)toSend.Nature}**\n";
-            myst += $"**Ability**: **{(Ability)toSend.Ability}**\n";
+            myst += $"**Ability**: **{GameInfo.GetStrings(1).Ability[toSend.Ability]}**\n";
             myst += $"**IVs**: **{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**\n";
             myst += $"**Language**: **{(LanguageID)toSend.Language}**||";
 
@@ -57,13 +57,16 @@ namespace SysBot.Pokemon
 
         private async Task<(PK9 toSend, PokeTradeResult)> HandleCustomSwaps(SAV9SV sav, PokeTradeDetail<PK9> poke, PK9 offered, PK9 toSend, PartnerDataHolder partner, CancellationToken token)
         {
+            toSend = offered.Clone();
             var custom = Hub.Config.CustomSwaps;
             var counts = TradeSettings;
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
             var offer = offered.Species;
+            var offers = GameInfo.GetStrings(1).Species[offered.Species];
+            var offerts = GameInfo.GetStrings(1).Species[toSend.Species];
             var nick = offered.Nickname;
-            var loc = toSend.Met_Location;
+            var loc = offered.Met_Location;
             var botot = Hub.Config.Legality.GenerateOT;
             var la = new LegalityAnalysis(offered);
 
@@ -109,16 +112,16 @@ namespace SysBot.Pokemon
             string[] teraItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             string[] ballItem = GameInfo.GetStrings(1).Item[swap].Split(' ');
             string? msg;
-            toSend = offered.Clone();
 
-            if (swap == (int)custom.OTSwapItem || ballItem.Length > 1 && ballItem[1] == "Ball" || swap == (int)custom.GenderSwapItem || Enum.TryParse(nick, true, out Ball _))
+            //Blocked due to tracker: OTSwap, Gender, Size, Mark, Ball
+            if (swap == (int)custom.OTSwapItem || swap == (int)custom.GenderSwapItem || swap == (int)custom.SizeSwapItem || swap == (int)custom.MarkSwapItem || Enum.TryParse(nick, true, out Ball _) || ballItem.Length > 1 && ballItem[1] == "Ball")
             {
                 //Allow Ursaluna Bloodmoon & 7 star Hisuian Decidueye
                 if (PLAevo.Contains(offer) && offered.Form == 0 || Formevo.Contains(offer) && offered.Form != 0 && offered.RibbonMarkMightiest != true) //Check for species that require to be moved out of SV to evolve
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
                         poke.SendNotification(this, $"```Request Denied - Bot will not swap Home Tracker Pokémon for OT/Ball/Gender```");
-                    msg = $"{user}, **{(Species)offer}** cannot be swapped due to Home Tracker\n";
+                    msg = $"{user}, **{offers}** cannot be swapped due to Home Tracker\n";
                     msg += $"Features cannot be used for OT/Ball/Gender Swap";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Invalid Request").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -129,7 +132,7 @@ namespace SysBot.Pokemon
             {
                 if (poke.Type == PokeTradeType.LinkSV)
                     poke.SendNotification(this, $"__**Legality Analysis**__\n```{la.Report()}```");
-                msg = $"{user}, **{(Species)offer}** is not legal\n";
+                msg = $"{user}, **{offers}** is not legal\n";
                 msg += $"Features cannot be used\n\n";
                 msg += $"__**Legality Analysis**__\n";
                 msg += la.Report();
@@ -139,7 +142,7 @@ namespace SysBot.Pokemon
             }
             else if (swap == (int)custom.OTSwapItem) //OT Swap for existing mons
             {
-                Log($"{user} is requesting OT swap for: {GameInfo.GetStrings(1).Species[offer]} with OT Name: {offered.OT_Name}");
+                Log($"{user} is requesting OT swap for: {offers} with OT Name: {offered.OT_Name}");
 
                 toSend.Tracker = 0; //We clean the tracker since we only do the Origin Game
 
@@ -147,8 +150,8 @@ namespace SysBot.Pokemon
                 {
                     //Non SV should get rejected
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be OT swap\n\nPokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
-                    msg = $"{user}, **{(Species)offer}** cannot be OT swap\n\n";
+                        poke.SendNotification(this, $"```{user}, {offers} cannot be OT swap\n\nPokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT```");
+                    msg = $"{user}, **{offers}** cannot be OT swap\n\n";
                     msg += "Pokémon is either:\n1) Not SV native\n2) SV Event/In-game trade with FIXED OT\n\n";
                     msg += $"Original OT: **{offered.OT_Name}**";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
@@ -164,24 +167,24 @@ namespace SysBot.Pokemon
                 if (toSend.Generation != 9)
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be Ball Swap\nReason: Not from SV```");
-                    msg = $"{user}, **{(Species)offer}** is not SV native & cannot be swapped due to Home Tracker";
+                        poke.SendNotification(this, $"```{user}, {offers} cannot be Ball Swap\nReason: Not from SV```");
+                    msg = $"{user}, **{offers}** is not SV native & cannot be swapped due to Home Tracker";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
                 }
                 else
                 {
-                    if (Enum.TryParse(nick, true, out MoveType _)) //Double Swap for Tera
+                    if (Enum.TryParse(nick, true, out MoveType _) && offer != (ushort)Species.Ogerpon) //Double Swap for Tera
                     {
-                        Log($"{user} is requesting Double swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                        Log($"{user} is requesting Double swap for: {offers}");
                         toSend.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), nick, true);
                         toSend.ClearNickname();
                         counts.AddCompletedDoubleSwaps();
                         Log($"Tera swapped to {toSend.TeraTypeOverride}");
                     }
                     else
-                        Log($"{user} is requesting Ball swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                        Log($"{user} is requesting Ball swap for: {offers}");
 
                     toSend.Tracker = 0;
                     if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
@@ -204,11 +207,11 @@ namespace SysBot.Pokemon
                         if (poke.Type == PokeTradeType.LinkSV)
                         {
                             if (toSend.WasEgg && toSend.Ball == 1)
-                                poke.SendNotification(this, $"```{user}, {(Species)offer} is from an egg & cannot be in {(Ball)toSend.Ball}```");
+                                poke.SendNotification(this, $"```{user}, {offers} is from an egg & cannot be in {(Ball)toSend.Ball}```");
                             else
-                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                                poke.SendNotification(this, $"```{user}, {offers} cannot be in {(Ball)toSend.Ball}```");
                         }
-                        msg = $"{user}, **{(Species)offer}** cannot be in **{(Ball)toSend.Ball}**\n";
+                        msg = $"{user}, **{offers}** cannot be in **{(Ball)toSend.Ball}**\n";
                         if (toSend.WasEgg && toSend.Ball == 1)
                             msg += "Egg hatches cannot be in **Master Ball**\n";
                         msg += "The ball cannot be swapped";
@@ -218,9 +221,10 @@ namespace SysBot.Pokemon
                     }
                 }
             }
-            else if (swap == (int)custom.TrilogySwapItem || swap == 229) //Trilogy Swap for existing mons (Level/Nickname/Evolve)
+            //Trilogy Swap for existing mons (Level/Nickname/Evolve)
+            else if (swap == (int)custom.TrilogySwapItem || swap == 229)
             {
-                Log($"{user} is requesting Trilogy swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Trilogy swap for: {offers}");
 
                 toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
                 if (swap == 229)
@@ -344,14 +348,14 @@ namespace SysBot.Pokemon
                 toSend.RefreshAbility(RA);
 
                 //#3 Clear Nicknames
-                if (!toSend.FatefulEncounter || loc != 30001)
+                if (!toSend.FatefulEncounter && loc != 30001 || toSend.Tracker == 0)
                     toSend.ClearNickname();
                 toSend.RefreshChecksum();
 
                 var la2 = new LegalityAnalysis(toSend);
                 if (la2.Valid)
                 {
-                    Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                    Log($"Swap Success. Sending back: {offerts}.");
                     poke.TradeData = toSend;
                     counts.AddCompletedTrilogySwaps();
                     DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
@@ -361,7 +365,7 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg = $"{user}, {offerts} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap").ConfigureAwait(false);
@@ -372,7 +376,7 @@ namespace SysBot.Pokemon
             else if (swap > 0 && evSwap.Contains(swap)) //EV Presets Swap
             {
                 //EVs, Either reset or apply chosen preset, totalling to 504, User can apply final 6 themself
-                Log($"{user} is requesting EV swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting EV swap for: {offers}");
                 //Format => HP/ATK/DEF/SPE/SPA/SPD (Read Carefully)
                 int[] evReset = new int[] { 0, 0, 0, 0, 0, 0 };
                 int[] RaidAtk = new int[] { 252, 252, 0, 0, 0, 0 };
@@ -431,7 +435,7 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg = $"{user}, {offerts} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad EV Swap").ConfigureAwait(false);
@@ -442,20 +446,20 @@ namespace SysBot.Pokemon
             //Gender Swap - Only SV Natives & not Tera9
             else if (swap == (int)custom.GenderSwapItem)
             {
-                Log($"{user} is requesting Gender Swap for: {(Gender)offered.Gender} {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Gender Swap for: {(Gender)offered.Gender} {offers}");
 
                 if (offered.Gender == 2)
                 {
                     msg = $"{user},\n";
-                    msg += $"Why are you trying to Swap a *{(Gender)offered.Gender}* **{(Species)offer}**?";
+                    msg += $"Why are you trying to Swap a *{(Gender)offered.Gender}* **{offers}**?";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
                 if (toSend.Generation != 9 || loc == 30024)
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be Gender Swap\nReason: Not from SV or from a Raid```");
-                    msg = $"{user}, **{(Species)offer}** is not SV native & cannot be swapped due to Home Tracker / Raidmon";
+                        poke.SendNotification(this, $"```{user}, {offers} cannot be Gender Swap\nReason: Not from SV or from a Raid```");
+                    msg = $"{user}, **{offers}** is not SV native & cannot be swapped due to Home Tracker / Raidmon";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
@@ -498,11 +502,11 @@ namespace SysBot.Pokemon
                     {
                         if (poke.Type == PokeTradeType.LinkSV)
                         {
-                            poke.SendNotification(this, $"```{user}, {(Species)toSend.Species} cannot be that Gender```");
+                            poke.SendNotification(this, $"```{user}, {offerts} cannot be that Gender```");
                             if (toSend.FatefulEncounter)
-                                poke.SendNotification(this, $"```{user}, {(Species)toSend.Species} gender is locked by the Event it's from```");
+                                poke.SendNotification(this, $"```{user}, {offerts} gender is locked by the Event it's from```");
                         }
-                        msg = $"{user}, **{(Species)toSend.Species}** cannot be that Gender";
+                        msg = $"{user}, **{offerts}** cannot be that Gender";
                         if (toSend.FatefulEncounter)
                             msg += $"Gender is locked by the Event it's from";
                         await SphealEmbed.EmbedAlertMessage(toSend, false, offered.FormArgument, msg, "Bad Gender Swap").ConfigureAwait(false);
@@ -514,7 +518,7 @@ namespace SysBot.Pokemon
             //Power Swap - Max all moves PP & Gives relearn TMs
             else if (swap == (int)custom.PowerSwapItem)
             {
-                Log($"{user} is requesting Power Swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Power Swap for: {offers}");
 
                 toSend.SetMaximumPPUps(); //Max PP Ups
                 toSend.HealPP();
@@ -533,7 +537,7 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg = $"{user}, {offerts} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Power Swap").ConfigureAwait(false);
@@ -541,15 +545,16 @@ namespace SysBot.Pokemon
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
             }
-            else if (swap == (int)custom.SizeSwapItem) //Size Swap, only SV Natives & not Tera9
+            //Size Swap, only SV Natives & not Tera9
+            else if (swap == (int)custom.SizeSwapItem)
             {
-                Log($"{user} is requesting Size Swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Size Swap for: {offers}");
 
                 if (toSend.Generation != 9 || loc == 30024 || loc == 30001 || toSend.FatefulEncounter)
                 {
                     if (poke.Type == PokeTradeType.LinkSV)
-                        poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be Size Swap\nReason: Not from SV or from a Raid```");
-                    msg = $"{user}, **{(Species)offer}** is not SV native & cannot be swapped due to Home Tracker / Raidmon";
+                        poke.SendNotification(this, $"```{user}, {offers} cannot be Size Swap\nReason: Not from SV or from a Raid```");
+                    msg = $"{user}, **{offers}** is not SV native & cannot be swapped due to Home Tracker / Raidmon";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Size Swap").ConfigureAwait(false);
                     return (offered, PokeTradeResult.TrainerRequestBad);
@@ -613,7 +618,7 @@ namespace SysBot.Pokemon
                     }
                     else //Safety Net
                     {
-                        msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                        msg = $"{user}, {offerts} has a problem\n\n";
                         msg += $"__**Legality Analysis**__\n";
                         msg += la2.Report();
                         await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Size Swap").ConfigureAwait(false);
@@ -622,9 +627,10 @@ namespace SysBot.Pokemon
                     }
                 }
             }
-            else if (swap == (int)custom.FriendshipSwapItem) //Friendship Swap
+            //Friendship Swap
+            else if (swap == (int)custom.FriendshipSwapItem)
             {
-                Log($"{user} is requesting Friendship swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Friendship swap for: {offers}");
                 var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
 
                 toSend.CurrentLevel = 100; //Mirror Trilogy
@@ -702,7 +708,7 @@ namespace SysBot.Pokemon
                 var la2 = new LegalityAnalysis(toSend);
                 if (la2.Valid)
                 {
-                    Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
+                    Log($"Swap Success. Sending back: {offerts}.");
                     poke.TradeData = toSend;
                     counts.AddCompletedFriendshipSwaps();
                     DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
@@ -712,7 +718,7 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net
                 {
-                    msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                    msg = $"{user}, {offerts} has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Friendship Swap").ConfigureAwait(false);
@@ -720,15 +726,430 @@ namespace SysBot.Pokemon
                     return (toSend, PokeTradeResult.IllegalTrade);
                 }
             }
-            
+            //Mark Swap
+            else if (swap == (int)custom.MarkSwapItem)
+            {
+                var itemf = rnd.Next(0, 21); //ItemFinder
+                var tier = rnd.Next(0, 11); //Tier - Common, Uncommon, Unique, Legend
+                var common = rnd.Next(0, 12); //T1
+                var epic = rnd.Next(0, 11); //T2
+                var unique = rnd.Next(0, 10); //T3
+                var legend = rnd.Next(0, 4); //T4
+                int selected = 0;
+                var smarks = new List<string> //Label situational marks
+                {
+                    "Bliz",
+                    "Snow",
+                    "Sand",
+                    "Rain",
+                    "Storm",
+                    "Cloud",
+                };
+
+                if (toSend.Species == (ushort)Species.Mew)
+                {
+                    toSend.RibbonMarkMightiest = true;
+                    toSend.AffixedRibbon = 108;
+                    Log($"{user}'s Mew received the Mightiest Mark");
+                }
+                //Allow only Wild Encounters in SV, disallow trackered mons to avoid complications
+                else if (toSend.Tracker != 0 || toSend.Generation != 9 || loc == 30024 || loc == 30001 || toSend.WasEgg || toSend.FatefulEncounter || toSend.RibbonMarkTitan == true || toSend.RibbonMarkMightiest == true)
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```{user}, {offers} cannot receive marks\nOnly SV wild encounters allowed```");
+                    msg = $"{user}, **{offers}** is not a SV wild encounter and cannot receive marks";
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Mark Swap").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.TrainerRequestBad);
+                }
+                else
+                {
+                    ///Clear all marks as we only want 1 mark per pokemon
+                    toSend.AffixedRibbon = -1; //Clear the equipped mark/ribbon so it's a surprise
+                    RibbonApplicator.RemoveAllValidRibbons(toSend);
+                    //Replace original ribbons/itemfinder mark
+                    if (offered.RibbonMarkItemfinder == true)
+                        toSend.RibbonMarkItemfinder = true;
+                    if (offered.RibbonChampionPaldea == true)
+                        toSend.RibbonChampionPaldea = true;
+                    if (offered.RibbonEffort == true)
+                        toSend.RibbonEffort = true;
+                    if (offered.RibbonBestFriends == true)
+                        toSend.RibbonBestFriends = true;
+                    if (offered.RibbonMasterRank == true)
+                        toSend.RibbonMasterRank = true;
+                    if (offered.RibbonMarkPartner == true)
+                        toSend.RibbonMarkPartner = true;
+                    if (offered.RibbonMarkGourmand == true)
+                        toSend.RibbonMarkGourmand = true;
+
+                    if (smarks.Contains(nick)) //Guaranteed Situational marks to avoid complications
+                    {
+                        var blsn = new List<int>
+                        {
+                            69, //Dalizapa Passage
+                            38, //Glaseado (1)
+                            42, //Glaseado (2)
+                            68, //Glaseado (3)
+                        };
+                        var indoors = new List<int> //Not Eligible for Rain/Storm/Cloud Mark
+                        {
+                            64, //Inlet Grotto
+                            67, //Alfornada Cavern
+                            124, //Area Zero (5)
+                        };
+                        switch (nick)
+                        {
+                            case "Bliz":
+                                if (blsn.Contains(loc))
+                                    toSend.RibbonMarkBlizzard = true;
+                                selected = 1;
+                                break;
+                            case "Snow":
+                                if (blsn.Contains(loc))
+                                    toSend.RibbonMarkSnowy = true;
+                                selected = 2;
+                                break;
+                            case "Sand":
+                                if (loc == 24) //Asado Desert
+                                    toSend.RibbonMarkSandstorm = true;
+                                selected = 3;
+                                break;
+                            case "Rain":
+                                if (!indoors.Contains(loc))
+                                    toSend.RibbonMarkRainy = true;
+                                selected = 4;
+                                break;
+                            case "Storm":
+                                if (!indoors.Contains(loc))
+                                    toSend.RibbonMarkStormy = true;
+                                selected = 5;
+                                break;
+                            case "Cloud":
+                                if (!indoors.Contains(loc))
+                                    toSend.RibbonMarkCloudy = true;
+                                selected = 6;
+                                break;
+                        }
+                        toSend.ClearNickname();
+                    }
+                    else //We don't want multiple marks, so either situational or random
+                    {
+                        if (tier == 10) //Legend
+                        {
+                            switch (legend)
+                            {
+                                case 0:
+                                    toSend.RibbonMarkRare = true;
+                                    selected = 7;
+                                    break;
+                                case 1:
+                                case 2:
+                                case 3:
+                                case 4:
+                                    toSend.RibbonMarkDestiny = true;
+                                    selected = 8;
+                                    break;
+                            }
+                        }
+                        else if (tier == 8 || tier == 9) //Unique
+                        {
+                            switch (unique)
+                            {
+                                case 0:
+                                case 10:
+                                    toSend.RibbonMarkAbsentMinded = true;
+                                    selected = 9;
+                                    break;
+                                case 1:
+                                    toSend.RibbonMarkCharismatic = true;
+                                    selected = 10;
+                                    break;
+                                case 2:
+                                    toSend.RibbonMarkCalmness = true;
+                                    selected = 11;
+                                    break;
+                                case 3:
+                                    toSend.RibbonMarkIntense = true;
+                                    selected = 12;
+                                    break;
+                                case 4:
+                                    toSend.RibbonMarkUpbeat = true;
+                                    selected = 13;
+                                    break;
+                                case 5:
+                                    toSend.RibbonMarkIntellectual = true;
+                                    selected = 14;
+                                    break;
+                                case 6:
+                                    toSend.RibbonMarkFerocious = true;
+                                    selected = 15;
+                                    break;
+                                case 7:
+                                    toSend.RibbonMarkCrafty = true;
+                                    selected = 16;
+                                    break;
+                                case 8:
+                                    toSend.RibbonMarkThorny = true;
+                                    selected = 17;
+                                    break;
+                                case 9:
+                                    toSend.RibbonMarkSlump = true;
+                                    selected = 18;
+                                    break;
+                            }
+                        }
+                        else if (tier == 5 || tier == 6 || tier == 7) //Epic
+                        {
+                            switch (epic)
+                            {
+                                case 0:
+                                case 11:
+                                    toSend.RibbonMarkRowdy = true;
+                                    selected = 19;
+                                    break;
+                                case 1:
+                                    toSend.RibbonMarkJittery = true;
+                                    selected = 20;
+                                    break;
+                                case 2:
+                                    toSend.RibbonMarkExcited = true;
+                                    selected = 21;
+                                    break;
+                                case 3:
+                                    toSend.RibbonMarkZonedOut = true;
+                                    selected = 22;
+                                    break;
+                                case 4:
+                                    toSend.RibbonMarkJoyful = true;
+                                    selected = 23;
+                                    break;
+                                case 5:
+                                    toSend.RibbonMarkSmiley = true;
+                                    selected = 24;
+                                    break;
+                                case 6:
+                                    toSend.RibbonMarkKindly = true;
+                                    selected = 25;
+                                    break;
+                                case 7:
+                                    toSend.RibbonMarkPumpedUp = true;
+                                    selected = 26;
+                                    break;
+                                case 8:
+                                    toSend.RibbonMarkZeroEnergy = true;
+                                    selected = 27;
+                                    break;
+                                case 9:
+                                    toSend.RibbonMarkUnsure = true;
+                                    selected = 28;
+                                    break;
+                                case 10:
+                                    toSend.RibbonMarkVigor = true;
+                                    selected = 29;
+                                    break;
+                            }
+                        }
+                        else //Commons (0 - 4 + 11)
+                        {
+                            switch (common)
+                            {
+                                case 0:
+                                case 12:
+                                    toSend.RibbonMarkDusk = true;
+                                    selected = 30;
+                                    break;
+                                case 1:
+                                    toSend.RibbonMarkLunchtime = true;
+                                    selected = 31;
+                                    break;
+                                case 2:
+                                    toSend.RibbonMarkSleepyTime = true;
+                                    selected = 32;
+                                    break;
+                                case 3:
+                                    toSend.RibbonMarkDawn = true;
+                                    selected = 33;
+                                    break;
+                                case 4:
+                                    toSend.RibbonMarkUncommon = true;
+                                    selected = 34;
+                                    break;
+                                case 5:
+                                    toSend.RibbonMarkAngry = true;
+                                    selected = 35;
+                                    break;
+                                case 6:
+                                    toSend.RibbonMarkTeary = true;
+                                    selected = 36;
+                                    break;
+                                case 7:
+                                    toSend.RibbonMarkPeeved = true;
+                                    selected = 37;
+                                    break;
+                                case 8:
+                                    toSend.RibbonMarkScowling = true;
+                                    selected = 38;
+                                    break;
+                                case 9:
+                                    toSend.RibbonMarkFlustered = true;
+                                    selected = 39;
+                                    break;
+                                case 10:
+                                    toSend.RibbonMarkPrideful = true;
+                                    selected = 40;
+                                    break;
+                                case 11:
+                                    toSend.RibbonMarkHumble = true;
+                                    selected = 41;
+                                    break;
+                            }
+                        }
+                    }
+
+                    if (itemf == 0) // 1/20
+                    {
+                        toSend.RibbonMarkItemfinder = true;
+                        Log($"{user}'s {offers} received the ItemFinder Mark");
+                    }
+                    toSend.ClearNickname();
+                }
+                toSend.RefreshChecksum();
+
+                var la2 = new LegalityAnalysis(toSend);
+                if (la2.Valid)
+                {
+                    var received = selected switch
+                    {
+                        1 => "Blizzard",
+                        2 => "Snowy",
+                        3 => "Sandstorm",
+                        4 => "Rainy",
+                        5 => "Stormy",
+                        6 => "Cloudy",
+                        7 => "Rare",
+                        8 => "Destiny",
+                        9 => "Absent Minded",
+                        10 => "Charismatic",
+                        11 => "Calmness",
+                        12 => "Intense",
+                        13 => "Upbeat",
+                        14 => "Intellectual",
+                        15 => "Ferocious",
+                        16 => "Crafty",
+                        17 => "Thorny",
+                        18 => "Slump",
+                        19 => "Rowdy",
+                        20 => "Jittery",
+                        21 => "Excited",
+                        22 => "Zoned Out",
+                        23 => "Joyful",
+                        24 => "Smiley",
+                        25 => "Kindly",
+                        26 => "Pumped Up",
+                        27 => "Zero Energy",
+                        28 => "Unsure",
+                        29 => "Vigor",
+                        30 => "Dusk",
+                        31 => "Lunchtime",
+                        32 => "Sleepytime",
+                        33 => "Dawn",
+                        34 => "Uncommon",
+                        35 => "Angry",
+                        36 => "Teary",
+                        37 => "Peeved",
+                        38 => "Scowling",
+                        39 => "Flustered",
+                        40 => "Prideful",
+                        41 => "Humble",
+                        _ => "Mightiest",
+                    };
+
+                    msg = $"**{user}** used the __**Mark Swap**__ on **{offers}** and received:\n";
+                    if (toSend.RibbonMarkRare == true)
+                        msg += ":star2: **MEGA RARE** :star2:";
+                    if (offer != (ushort)Species.Mew)
+                        msg += $"**{received}** Mark\n";
+                    else
+                        msg += ":fleur_de_lis: **Mightiest Mark** :fleur_de_lis:\n";
+                    if (itemf == 0)
+                        msg += "> Special Loot: :dizzy: **ItemFinder Mark** :dizzy: ";
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"> Received the ||{received} Mark|| on {offers}");
+                    Log($"{user} used the Mark Swap on {offers} and received: {received} Mark");
+
+                    poke.TradeData = toSend;
+                    DumpPokemon(DumpSetting.DumpFolder, "marks", toSend);
+                    counts.AddCompletedMarkSwaps();
+                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                    await SphealEmbed.EmbedMarkMessage(toSend, false, toSend.FormArgument, msg, counts.CompletedMarkSwaps, "Swap Results").ConfigureAwait(false);//change this
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
+                    return (toSend, PokeTradeResult.Success);
+                }
+                else //Safety Net
+                {
+                    msg = $"{user}, {offerts} has a problem\n\n";
+                    msg += $"__**Legality Analysis**__\n";
+                    msg += la2.Report();
+                    await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Mark Swap").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                    return (toSend, PokeTradeResult.IllegalTrade);
+                }
+            }
+            //Date Swapper
+            else if (offered.HeldItem == (int)custom.DateSwapItem)
+            {
+                Log($"{user} is requesting Date swap for {offers} with Date: {toSend.Met_Day}/{toSend.Met_Month}/{toSend.Met_Year} (DD/MM/YYYY)");
+                //SV natives only, disallow trackered mons to avoid complications
+                if (toSend.Tracker != 0 || toSend.Generation != 9 || toSend.FatefulEncounter)
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```{user}, {offerts} cannot change dates\nOnly SV natives without HOME Tracker```");
+                    msg = $"{user}, **{offers}** is not a SV native or has a HOME tracker";
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Date Swap").ConfigureAwait(false);
+                    return (offered, PokeTradeResult.TrainerRequestBad);
+                }
+                else
+                {
+                    toSend.Nickname = "2023/" + offered.Nickname; //Number limit
+                    toSend.MetDate = DateOnly.Parse(toSend.Nickname);
+                    if (toSend.WasEgg)
+                        toSend.EggMetDate = toSend.MetDate;
+                    toSend.ClearNickname();
+                    toSend.RefreshChecksum();
+                }
+
+                var la2 = new LegalityAnalysis(toSend);
+                if (la2.Valid)
+                {
+                    Log($"Date of {offerts} changed to {toSend.Met_Day}/{toSend.Met_Month}/{toSend.Met_Year} (DD/MM/YYYY)");
+                    poke.TradeData = toSend;
+                    counts.AddCompletedDateSwaps();
+                    await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
+                    await Task.Delay(2_500, token).ConfigureAwait(false);
+                    return (toSend, PokeTradeResult.Success);
+                }
+                else //Safety Net as theres double swap for Ball now
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```{user}, {offers} cannot Date Swapped to {toSend.Met_Day}/{toSend.Met_Month}/{toSend.Met_Year} (DD/MM/YYYY)```");
+                    msg = $"{user}, **{offers}** cannot Date Swapped to **{toSend.Met_Day}/{toSend.Met_Month}/{toSend.Met_Year}** (DD/MM/YYYY)\n";
+                    msg += $"__**Legality Analysis**__\n";
+                    msg += la2.Report();
+                    await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Date Swap").ConfigureAwait(false);
+                    DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
+                    return (toSend, PokeTradeResult.IllegalTrade);
+                }
+            }
             //Tera Swapper + Ball (if applicable)
-            else if (teraItem.Length > 1 && teraItem[1] == "Tera")
+            else if (teraItem.Length > 1 && teraItem[1] == "Tera" && offer != (ushort)Species.Ogerpon)
             {
                 if (nick == "Poké") //Account for
                     nick = "Poke";
                 if (Enum.TryParse(nick, true, out Ball _) && toSend.Generation == 9) //Double Swap for Ball
                 {
-                    Log($"{user} is requesting Double swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                    Log($"{user} is requesting Double swap for: {offers}");
                     toSend.Tracker = 0;
                     toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), nick, true);
                     toSend.ClearNickname();
@@ -736,7 +1157,7 @@ namespace SysBot.Pokemon
                     Log($"Ball swapped to {(Ball)toSend.Ball}");
                 }
                 else
-                    Log($"{user} is requesting Tera swap for: {GameInfo.GetStrings(1).Species[offer]}");
+                    Log($"{user} is requesting Tera swap for: {offers}");
 
                 toSend.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), teraItem[0]);
                 toSend.RefreshChecksum();
@@ -758,17 +1179,17 @@ namespace SysBot.Pokemon
                         if (poke.Type == PokeTradeType.LinkSV)
                         {
                             if (toSend.WasEgg && toSend.Ball == 1)
-                                poke.SendNotification(this, $"```{user}, {(Species)offer} is from an egg & cannot be in {(Ball)toSend.Ball}```");
+                                poke.SendNotification(this, $"```{user}, {offers} is from an egg & cannot be in {(Ball)toSend.Ball}```");
                             else
-                                poke.SendNotification(this, $"```{user}, {(Species)offer} cannot be in {(Ball)toSend.Ball}```");
+                                poke.SendNotification(this, $"```{user}, {offers} cannot be in {(Ball)toSend.Ball}```");
                         }
-                        msg = $"{user}, **{(Species)toSend.Species}** cannot be in **{(Ball)toSend.Ball}**\n";
+                        msg = $"{user}, **{offerts}** cannot be in **{(Ball)toSend.Ball}**\n";
                         if (toSend.WasEgg && toSend.Ball == 1)
                             msg += "Egg hatches cannot be in **Master Ball**";
                     }
                     else
                     {
-                        msg = $"{user}, {(Species)toSend.Species} has a problem\n\n";
+                        msg = $"{user}, {offerts} has a problem\n\n";
                         msg += $"__**Legality Analysis**__\n";
                         msg += la2.Report();
                     }
@@ -782,9 +1203,9 @@ namespace SysBot.Pokemon
             }
             else
             {
-                Log($"{user} is requesting Basic Clone for: {GameInfo.GetStrings(1).Species[offer]}");
+                Log($"{user} is requesting Basic Clone for: {offers}");
                 if (poke.Type == PokeTradeType.LinkSV)
-                    poke.SendNotification(this, $"Cloned your {GameInfo.GetStrings(1).Species[offer]}");
+                    poke.SendNotification(this, $"Cloned your {offers}");
                 toSend.RefreshChecksum();
                 counts.AddCompletedClones();
                 await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);
@@ -823,6 +1244,9 @@ namespace SysBot.Pokemon
                 {
                     cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
                     cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
+
+                    if (toSend.Egg_Location == 30002) //Link Trade
+                        cln.Egg_Location = 30023; //Picnic
                     if (toSend.IsEgg == false)
                     {
                         cln.Version = version; //Eggs should not have Origin Game on SV
@@ -837,8 +1261,8 @@ namespace SysBot.Pokemon
                         }
                         else
                             cln.ClearNickname();
-                        if (toSend.WasEgg && toSend.Egg_Location == 30002) //Hatched Eggs from Link Trade fixed via OTSwap
-                            cln.Egg_Location = 30023; //Picnic
+                        if (toSend.WasEgg) 
+                            cln.EggMetDate = cln.MetDate; //Ensure no date mismatch for users who want specifc hatch date
                         if (teraItem.Length > 1 && (teraItem[1] == "Tera")) //Distro Tera Selector
                         {
                             cln.TeraTypeOverride = (MoveType)Enum.Parse(typeof(MoveType), teraItem[0]);
@@ -853,8 +1277,6 @@ namespace SysBot.Pokemon
                             cln.TeraTypeOriginal = (MoveType)Enum.Parse(typeof(MoveType), teraItem[0]);
                             Log($"Tera swapped to: {cln.TeraTypeOverride}");
                         }
-                        if (toSend.Egg_Location == 30002)
-                            cln.Egg_Location = 30023; //For people who gen on blank PK so it fixes met in Link Trade
                         cln.IsNicknamed = true;
                         cln.Nickname = cln.Language switch
                         {
@@ -921,7 +1343,7 @@ namespace SysBot.Pokemon
             var tradesv = new LegalityAnalysis(cln); //Legality check, if fail, sends original PK9 instead
             if (tradesv.Valid)
             {
-                if (changeallowed && !custom.LogTrainerDetails) //So it does not log twice
+                if (changeallowed && !custom.LogTrainerDetails && !custom.FilterLogging) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
@@ -933,20 +1355,26 @@ namespace SysBot.Pokemon
                 }
                 else if (!changeallowed)
                     Log($"Sending original Pokémon as it can't be OT swapped");
-                if (changeallowed)
+                if (changeallowed && cln.OT_Name == tradepartner.TrainerName)
                     Log($"OT swap success.");
                 if (offered.HeldItem == (int)custom.OTSwapItem)
                 {
                     DumpPokemon(DumpSetting.DumpFolder, "OTSwaps", cln);
                     counts.AddCompletedOTSwaps();
                 }
+                poke.TradeData = cln;
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
             }
             else
             {
                 Log($"Sending original Pokémon as it can't be OT swapped");
-                if (toSend.FatefulEncounter)
-                    Log($"Reason: Fateful Encounter");
+                if (!custom.FilterLogging)
+                {
+                    if (toSend.FatefulEncounter)
+                        Log($"Reason: Fateful Encounter");
+                    else if (!changeallowed)
+                        Log($"Reason: Transfer Only Evolution/Ditto/Blocked OT filter");
+                }
             }
             return tradesv.Valid;
         }
@@ -959,7 +1387,7 @@ namespace SysBot.Pokemon
             {
                 //Ditto will not OT change unless it has Destiny Mark
                 case (ushort)Species.Ditto:
-                    if (mon.RibbonMarkDestiny == true)
+                    if (mon.RibbonMarkDestiny == true || mon.HeldItem == (int)custom.OTSwapItem)
                         changeallowed = true;
                     else
                         changeallowed = false;
@@ -997,9 +1425,13 @@ namespace SysBot.Pokemon
             switch (mon.OT_Name) //Stops mons with Specific OT from changing to User's OT
             {
                 case "Blaines":
+                case "Blainette":
+                case "Blanes":
+                case "Suarez":
                 case "New Year 23":
                 case "Valentine":
                 case "4July":
+                case "Moon2023":
                     if (mon.HeldItem == (int)custom.OTSwapItem) //Allow OT Swap if function triggered by held item only
                         changeallowed = true;
                     else

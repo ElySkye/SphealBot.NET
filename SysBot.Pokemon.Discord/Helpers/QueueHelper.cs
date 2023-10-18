@@ -35,6 +35,8 @@ namespace SysBot.Pokemon.Discord
                 bool CanGMax = false;
                 uint FormArgument = 0;
                 var config = SysCordSettings.HubConfig.CustomSwaps;
+                var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
+                var p = SysCordSettings.Settings.CommandPrefix;
                 var me = SysCord<T>.Runner;
                 string botversion = "";
 
@@ -42,11 +44,11 @@ namespace SysBot.Pokemon.Discord
                     botversion = me.ToString()!.Substring(46, 3);
                 var gamever = botversion switch
                 {
-                    "PK9" => "Scarlet & Violet",
-                    "PK8" => "Sword & Shield",
-                    "PA8" => "Legends Arceus",
-                    "PB8" => "Brilliant Diamond & Shining Pearl",
-                    _ => "Let's Go Pikachu & Eevee",
+                    "PK9" => "SV",
+                    "PK8" => "SWSH",
+                    "PA8" => "PLA",
+                    "PB8" => "BDSP",
+                    _ => "LGPE",
                 };
 
                 switch (trade.Generation)
@@ -85,11 +87,8 @@ namespace SysBot.Pokemon.Discord
                 }
                 if (routine == PokeRoutineType.Clone || routine == PokeRoutineType.Dump || routine == PokeRoutineType.DirectTrade || routine == PokeRoutineType.SeedCheck)
                 {
-                    var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
-                    var p = SysCordSettings.Settings.CommandPrefix;
-
                     Color embedMsgColor = new();
-                    embedTitle = $"Search once bot DMs you Initializing trade\n";
+                    embedTitle = $"Begin search when bot DMs Initializing trade\n";
                     if (context.User.GlobalName == null)
                         embedAuthor = $"{context.User.Username}'s ";
                     else
@@ -103,7 +102,6 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Seed Check";
-                        embedMsg += $"Current Game: **{gamever}**\n";
                         embedMsg += $"Show a Pokémon caught from a raid to check seed\n";
                         embedMsg += $"This function only works on SWSH\n\n";
                         embedMsg += $"Enjoy & Please come again !";
@@ -112,20 +110,20 @@ namespace SysBot.Pokemon.Discord
                     {
                         embedMsgColor = 0xF9F815;
                         embedAuthor += "Clone Request";
-                        embedMsg += $"Current Game: **{gamever}**\n";
+                        embedMsg += $"Game: **{gamever}**\n";
+                        embedMsg += $"Cooldown: **{cd}** mins\n";
                         embedMsg += $"Show a Pokémon to be cloned & Hit B to change your offer\n";
                         embedMsg += $"Offer a trash Pokémon to receive your clone\n\n";
-                        embedMsg += $"Current Cooldown: **{cd}** mins\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.Dump)
                     {
                         embedMsgColor = 0x6015F9;
                         embedAuthor += "Dump Request";
-                        embedMsg += $"Current Game: **{gamever}**\n";
+                        embedMsg += $"Game: **{gamever}**\n";
+                        embedMsg += $"Cooldown: **{cd}** mins\n";
                         embedMsg += $"Show Pokémon(s) to be dumped\n";
                         embedMsg += $"For **{SysCordSettings.HubConfig.Trade.MaxDumpTradeTime}** seconds, show up to **{SysCordSettings.HubConfig.Trade.MaxDumpsPerTrade}** Pokémon\n\n";
-                        embedMsg += $"Current Cooldown: **{cd}** mins\n";
                         embedMsg += $"Enjoy & Please come again !";
                     }
                     else if (routine == PokeRoutineType.DirectTrade)
@@ -137,8 +135,8 @@ namespace SysBot.Pokemon.Discord
                             embedMsg += $"{trainer} is requesting a **Mystery Egg**!\n";
                             embedMsg += $"What will they get?\n";
                             embedMsg += $"May the *odds* be in their favor..\n\n";
-                            embedMsg += $"Current Game: **{gamever}**\n";
-                            embedMsg += $"Current Cooldown: **{cd}** mins\n";
+                            embedMsg += $"Game: **{gamever}**\n";
+                            embedMsg += $"Cooldown: **{cd}** mins\n";
                             embedMsg += $"Enjoy trading !";
                         }
                         else if (type == PokeTradeType.LinkSV || type == PokeTradeType.LinkSWSH || type == PokeTradeType.LinkLA || type == PokeTradeType.LinkBDSP)
@@ -158,10 +156,10 @@ namespace SysBot.Pokemon.Discord
                             if (SysCordSettings.HubConfig.CustomSwaps.SheetToggle)
                                 embedMsg += $"Nickname/Features trade using [**Click for Nicknames**](<{SysCordSettings.HubConfig.CustomSwaps.SheetLink}>)\n";
                             else
-                                embedMsg += $"Features can be viewed with **{p}spf** command\n";
+                                embedMsg += $"View Special Features with **{p}spf**\n";
                             embedMsg += $"Game: **{gamever}**\n";
                             embedMsg += $"Cooldown: **{cd}** mins\n\n";
-                            embedMsg += $"Commands:\n**{p}rsv**, **{p}rme**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**, **{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
+                            embedMsg += $"Commands:\n**{p}rsv**, **{p}rme**, **{p}t**, **{p}it**, **{p}tc**, **{p}dump**,\n**{p}clone**, **{p}checkcd**, **{p}dtl**, **{p}spf**\n";
                             embedMsg += $"Enjoy trading !";
                         }
                     }
@@ -183,10 +181,10 @@ namespace SysBot.Pokemon.Discord
 
                     Sphealcl tradespheal = new();
                     string embedEggUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/512x512/MysteryEgg.png";
-                    string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png";
-                    string embedThumbUrl2 = "https://archives.bulbagarden.net/media/upload/0/08/GO0363Holiday2021.png";
-                    string embedThumbUrl3 = "https://archives.bulbagarden.net/media/upload/2/23/GO0363Holiday2021_s.png";
-                    string embedThumbUrl4 = "https://archives.bulbagarden.net/media/upload/0/0e/Sleep_Profile_0363.png";
+                    string embedThumbUrl = "https://media.tenor.com/IXLsyG9QYxcAAAAd/spheal-wake.gif";
+                    string embedThumbUrl2 = "https://cdn.discordapp.com/emojis/1147372476934914169.webp?size=128&quality=lossless";
+                    string embedThumbUrl3 = "https://cdn.discordapp.com/emojis/1116237525665718352.webp?size=128&quality=lossless";
+                    string embedThumbUrl4 = "https://media.tenor.com/b6poqCTHCXkAAAAd/tess-spheal.gif";
                     string embedThumbUrl5 = "https://oyster.ignimgs.com/mediawiki/apis.ign.com/pokemon-sleep/1/16/Pokemon_Sleep_Types-Spheal_Pokemon_Sleep.png";
 
                     if (type == PokeTradeType.EggSV)
@@ -230,31 +228,34 @@ namespace SysBot.Pokemon.Discord
                 else
                 {
                     var list = FormConverter.GetFormList(trade.Species, GameInfo.Strings.types, GameInfo.Strings.forms, GameInfo.GenderSymbolASCII, trade.Context);
-                    string HeldItem = Sphealcl.FixHeldItemName(((EmbedItem)trade.HeldItem).ToString());
                     embedTitle = trade.IsShiny ? ":sparkles:" : "";
                     if (trade.Form != 0 && list[trade.Form] != "F")
-                        embedTitle += $"{list[trade.Form]} {(Species)trade.Species}";
+                        embedTitle += $"{list[trade.Form]} {GameInfo.GetStrings(1).Species[trade.Species]}";
                     else
-                        embedTitle += $"{(Species)trade.Species}";
+                        embedTitle += $"{GameInfo.GetStrings(1).Species[trade.Species]}";
                     if (trade.Gender == 0)
                         embedTitle += " (M)";
                     else if (trade.Gender == 1)
                         embedTitle += " (F)";
                     if (trade.HeldItem > 0)
-                        embedTitle += $" **➜** {HeldItem}";
+                        embedTitle += $" **➜** {GameInfo.GetStrings(1).Item[trade.HeldItem]}";
                     if (trader.GlobalName == null)
                         embedAuthor = $"{trader.Username}'s ";
                     else
                         embedAuthor = $"{trader.GlobalName}'s ";
                     embedAuthor += trade.IsShiny ? "Shiny " : "";
-                    embedAuthor += "Pokémon:";
+                    embedAuthor += "Pokémon";
 
-                    embedMsg = $"**Ability**: {(Ability)trade.Ability}";
+                    embedMsg = $"**Ability**: {GameInfo.GetStrings(1).Ability[trade.Ability]}";
                     embedMsg += $"\n**Level**: {trade.CurrentLevel}";
-                    if (gamever == "SV")
+                    if (botversion == "PK9")
                     {
                         PK9 tradesv = (PK9)(PKM)trade;
                         embedMsg += $"\n**Tera**: {tradesv.TeraType}";
+                        if (tradesv.Scale == 255)
+                            embedMsg += $"\n**Size**: Jumbo";
+                        else if (tradesv.Scale == 0)
+                            embedMsg += $"\n**Size**: Mini";
                     }
                     embedMsg += $"\n**Nature**: {(Nature)trade.Nature}";
                     embedMsg += $"\n**IVs**: {trade.IV_HP}/{trade.IV_ATK}/{trade.IV_DEF}/{trade.IV_SPA}/{trade.IV_SPD}/{trade.IV_SPE}";
@@ -262,22 +263,22 @@ namespace SysBot.Pokemon.Discord
                         embedMsg += $"\n**EVs**: {trade.EV_HP}/{trade.EV_ATK}/{trade.EV_DEF}/{trade.EV_SPA}/{trade.EV_SPD}/{trade.EV_SPE}";
                     embedMsg += $"\n**__Moves__**";
                     if (trade.Move1 != 0)
-                        embedMsg += $"\n- {(Move)trade.Move1}";
+                        embedMsg += $"\n- {GameInfo.GetStrings(1).Move[trade.Move1]}";
                     if (trade.Move2 != 0)
-                        embedMsg += $"\n- {(Move)trade.Move2}";
+                        embedMsg += $"\n- {GameInfo.GetStrings(1).Move[trade.Move2]}";
                     if (trade.Move3 != 0)
-                        embedMsg += $"\n- {(Move)trade.Move3}";
+                        embedMsg += $"\n- {GameInfo.GetStrings(1).Move[trade.Move3]}";
                     if (trade.Move4 != 0)
-                        embedMsg += $"\n- {(Move)trade.Move4}";
-                    if (trade.EncryptionConstant == 0)
-                        embedMsg += $"\n### :bangbang: **Pokémon generated with 0 EC** :bangbang:";
+                        embedMsg += $"\n- {GameInfo.GetStrings(1).Move[trade.Move4]}";
+                    if (trade.Met_Location != 30018 && trade.EncryptionConstant == 0) //Pokemon Home Origins
+                        embedMsg += $"\n### :bangbang: **Pokémon has 0 EC** :bangbang:";
                     if (botversion == "PK9")
                     {
                         PK9 tradesv = (PK9)(PKM)trade;
                         if (trade.Generation != 9 && tradesv.Tracker == 0 && !trade.IsEgg)
-                            embedMsg += $"\n## :bangbang: **Pokémon has NO HOME Tracker** :bangbang:\n\n";
+                            embedMsg += $"\n## :bangbang: **Pokémon has NO HOME Tracker** :bangbang:";
                     }
-                    embedMsg += $"\n\n{trader.Mention} - Added to the LinkTrade queue";
+                    embedMsg += $"\n\n{trader.Mention} - Added to the queue";
 
                     EmbedAuthorBuilder embedAuthorBuild = new()
                     {
@@ -286,7 +287,7 @@ namespace SysBot.Pokemon.Discord
                     };
                     EmbedFooterBuilder embedFtr = new()
                     {
-                        Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + ".\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " minutes.",
+                        Text = $"Current Position: " + SysCord<T>.Runner.Hub.Queues.Info.Count.ToString() + "\nEstimated Wait: " + Math.Round(((SysCord<T>.Runner.Hub.Queues.Info.Count) * 1.65), 1).ToString() + " mins",
                         IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
                     };
 
@@ -359,7 +360,7 @@ namespace SysBot.Pokemon.Discord
 
             var ticketID = "";
             if (TradeStartModule<T>.IsStartChannel(context.Channel.Id))
-                ticketID = $", unique ID: {detail.ID}";
+                ticketID = $", ID: {detail.ID}";
 
             var pokeName = "";
             if (t == PokeTradeType.Specific && pk.Species != 0)

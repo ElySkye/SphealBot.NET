@@ -14,6 +14,7 @@ namespace SysBot.Pokemon
             var counts = TradeSettings;
             var sf = offered.Nickname;
             var user = partner.TrainerName;
+            var offers = GameInfo.GetStrings(1).Species[offered.Species];
             var evolve = "evo";
             var ballSwap = new List<string>
             {
@@ -36,7 +37,7 @@ namespace SysBot.Pokemon
             {
                 if (poke.Type == PokeTradeType.LinkLA)
                     poke.SendNotification(this, $"__**Legality Analysis**__\n{la.Report()}");
-                msg = $"{user}, **{(Species)offered.Species}** is not legal\n";
+                msg = $"{user}, **{offers}** is not legal\n";
                 msg += $"Features cannot be used\n\n";
                 msg += $"__**Legality Report**__\n";
                 msg += la.Report();
@@ -46,7 +47,7 @@ namespace SysBot.Pokemon
             }
             else if (Regex.IsMatch(sf, evolve, RegexOptions.IgnoreCase))
             {
-                Log($"{user} is requesting Trilogy swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Trilogy swap for: {offers}");
 
                 toSend.CurrentLevel = 100;//#1 Set level to 100 (Level Swap)
                 
@@ -113,7 +114,7 @@ namespace SysBot.Pokemon
                 toSend.WeightAbsolute = toSend.CalcWeightAbsolute;
 
                 //#3 Clear Nicknames
-                if (!toSend.FatefulEncounter)
+                if (!toSend.FatefulEncounter || toSend.Tracker == 0)
                     toSend.ClearNickname();
                 toSend.RefreshChecksum();
 
@@ -140,13 +141,13 @@ namespace SysBot.Pokemon
             }
             else if (ballSwap.Contains(sf) || Enum.TryParse(sf, true, out Ball _))
             {
-                Log($"{user} is requesting Ball Swap for: {GameInfo.GetStrings(1).Species[offered.Species]}");
+                Log($"{user} is requesting Ball Swap for: {offers}");
 
                 if (toSend.Tracker != 0 && toSend.Version == 47)
                     toSend.Tracker = 0;
                 else if (toSend.Version != 47)
                 {
-                    msg = $"Pokémon: **{(Species)offered.Species}**\n";
+                    msg = $"Pokémon: **{offers}**\n";
                     msg += $"{user} is attempting to Ballswap non PLA origin Pokémon\n";
                     msg += $"You can only ballswap PLA origin Pokémon";
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", offered);
@@ -171,7 +172,7 @@ namespace SysBot.Pokemon
                     toSend.Ball = (int)(Ball)Enum.Parse(typeof(Ball), toSend.Nickname, true);
                     toSend.ClearNickname();
                     toSend.RefreshChecksum();
-                    Log($"Ball swapped to: {(Ball)toSend.Ball}");
+                    Log($"Ball swapped to: {GameInfo.GetStrings(1).balllist[toSend.Ball]}");
 
                     var la2 = new LegalityAnalysis(toSend);
                     if (la2.Valid)
@@ -184,7 +185,7 @@ namespace SysBot.Pokemon
                     }
                     else
                     {
-                        msg = $"{user}, **{(Species)offered.Species}** cannot be in {(Ball)toSend.Ball}";
+                        msg = $"{user}, **{offers}** cannot be in {GameInfo.GetStrings(1).balllist[toSend.Ball]}";
                         msg += $"\nThe ball cannot be swapped";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Ball Swap:").ConfigureAwait(false);
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
@@ -194,7 +195,7 @@ namespace SysBot.Pokemon
             }
             return (toSend, PokeTradeResult.Success);
         }
-        private async Task<bool> SetTradePartnerDetailsLA(PA8 toSend, SAV8LA sav, CancellationToken token)
+        private async Task<bool> SetTradePartnerDetailsLA(PokeTradeDetail<PA8> poke, PA8 toSend, SAV8LA sav, CancellationToken token)
         {
             var cln = (PA8)toSend.Clone();
             var custom = Hub.Config.CustomSwaps;
@@ -223,7 +224,7 @@ namespace SysBot.Pokemon
 
             if (tradela.Valid)
             {
-                if (custom.LogTrainerDetails == false) //So it does not log twice
+                if (!custom.LogTrainerDetails && !custom.FilterLogging) //So it does not log twice
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
@@ -233,9 +234,11 @@ namespace SysBot.Pokemon
                     Log($"Language: {(LanguageID)(cln.Language)}");
                 }
                 Log($"OT Swap Success");
+                poke.TradeData = cln;
                 await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
             }
-            else Log($"Sending original Pokémon as it can't be OT swapped");
+            else
+                Log($"Sending original Pokémon as it can't be OT swapped");
             return tradela.Valid;
         }
     }

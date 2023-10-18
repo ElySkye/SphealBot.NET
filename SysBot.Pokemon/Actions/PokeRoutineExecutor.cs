@@ -135,8 +135,9 @@ namespace SysBot.Pokemon
         }
 
         protected async Task<PokeTradeResult> CheckPartnerReputation(PokeRoutineExecutor<T> bot, PokeTradeDetail<T> poke, ulong TrainerNID, string TrainerName,
-            TradeAbuseSettings AbuseSettings, CooldownTracker UserCooldowns, CancellationToken token)
+            TradeAbuseSettings AbuseSettings, CooldownTracker UserCooldowns, PokeTradeHubConfig config, CancellationToken token)
         {
+            Sphealcl spheal = new(config);
             bool quit = false;
             var user = poke.Trainer;
             bool isDistribution = false;
@@ -171,19 +172,19 @@ namespace SysBot.Pokemon
                 var banexpire = AbuseSettings.BannedIDs.List[banIndex].Expiration;
                 if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
                     await BlockUser(token).ConfigureAwait(false);
-                var bmsg = $"🚨Alert🚨\n";
+                var bmsg = $"🚨 Alert 🚨\n";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                 {
-                    bmsg += $"Banned NPC named **{TrainerName}** is attempting to Prison Break\n";
-                    bmsg += $"Spheal Guards are now sending them back to their cell\n\n";
-                    bmsg += $"They were banned for: {entry.Comment}\n";
+                    bmsg += $"**{TrainerName}** is attempting to Prison Break\n";
+                    bmsg += $"Spheal Guards are sending them back to their cell\n\n";
+                    bmsg += $"Banned for: {entry.Comment}\n";
                     bmsg += $"Release Date: {banexpire}";
-                    EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
+                    EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "[Warning] Detected Banned NPC"));
                 }
                 if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
                 {
                     bmsg = $"{AbuseSettings.BannedIDMatchEchoMention} {bmsg}";
-                    EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "[Warning] Banned NPC Detection"));
+                    EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "[Warning] Detected Banned NPC"));
                 }
                 return PokeTradeResult.SuspiciousActivity;
             }
@@ -217,14 +218,14 @@ namespace SysBot.Pokemon
                     var msg = $"**{TrainerName}** was caught by the NPC Police\n**NPC ID**: {TrainerNID}";
                     var wait = TimeSpan.FromMinutes(cd) - delta;
 
-                    poke.Notifier.SendNotification(bot, poke, $"Still on trade cooldown, CD missed by **{wait.TotalMinutes:F1}** minute(s).");
+                    poke.Notifier.SendNotification(bot, poke, $"You are still on cooldown, CD missed by **{wait.TotalMinutes:F1}** minute(s).");
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
-                        EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected"));
+                        EchoUtil.EchoEmbed(spheal.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));
 
                     if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
                     {
                         msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                        EchoUtil.EchoEmbed(Sphealcl.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detected"));
+                        EchoUtil.EchoEmbed(spheal.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));
                     }
                     if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(30) < coolDelta)
                     {
@@ -232,10 +233,10 @@ namespace SysBot.Pokemon
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
                             string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
-                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "CD Abuse Ban", expiration) });
+                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Autobanned on", expiration) });
                             var bmsg = $"Unfortunately...\n";
                             bmsg += $"{TrainerName}-{TrainerNID} has been **BANNED** for cooldown abuse\n";
-                            EchoUtil.EchoEmbed(Sphealcl.EmbedBanMessage(bmsg, "Cooldown Abuse Ban", true));
+                            EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "Cooldown Abuse Ban", true));
                         }
                     }
                     return PokeTradeResult.SuspiciousActivity;
@@ -318,7 +319,7 @@ namespace SysBot.Pokemon
             ID = id,
             Name = name,
             Expiration = DateTime.Parse(expiration),
-            Comment = $"Added automatically on {DateTime.Now:yyyy.MM.dd-hh:mm:ss} ({comment})",
+            Comment = $"{comment} {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
         };
 
         // Blocks a user from the box during in-game trades (SWSH).

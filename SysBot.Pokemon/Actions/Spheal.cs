@@ -9,124 +9,19 @@ using System.Net;
 
 namespace SysBot.Pokemon
 {
-    public partial class PokeTradeBotBS : PokeRoutineExecutor8BS, ICountBot
-    {
-        private async Task<bool> SetTradePartnerDetailsBDSP(PB8 toSend, PB8 offered, SAV8BS sav, CancellationToken token)
-        {
-            var cln = (PB8)toSend.Clone();
-            var custom = Hub.Config.CustomSwaps;
-            var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
-            string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
-
-            switch (cln.Species) //OT for Arceus on the other version
-            {
-                case (ushort)Species.Arceus:
-                    {
-                        if (tradepartner.Game == (int)GameVersion.BD) //Brilliant Diamond
-                        {
-                            cln.Met_Location = 218;
-                            cln.Version = (int)GameVersion.BD;
-                        }
-                        else if (tradepartner.Game == (int)GameVersion.SP) //Shining Pearl
-                        {
-                            cln.Met_Location = 618;
-                            cln.Version = (int)GameVersion.SP;
-                        }
-                        break;
-                    }
-            }
-
-            cln.TrainerTID7 = offered.TrainerTID7;
-            cln.TrainerSID7 = offered.TrainerSID7;
-            cln.OT_Name = tradepartner.TrainerName;
-            cln.Version = tradepartner.Game;
-            cln.Language = offered.Language;
-            cln.OT_Gender = offered.OT_Gender;
-
-            if (toSend.IsEgg == false)
-            {
-                if (cln.HeldItem >= 0 && cln.Species != (ushort)Species.Spheal)
-                    cln.ClearNickname();
-            }
-            else //Set eggs received in Picnic, instead of received in Link Trade
-            {
-                cln.HeightScalar = (byte)rnd.Next(0, 256);
-                cln.WeightScalar = (byte)rnd.Next(0, 256);
-                cln.IsNicknamed = true;
-                cln.Nickname = cln.Language switch
-                {
-                    1 => "タマゴ",
-                    3 => "Œuf",
-                    4 => "Uovo",
-                    5 => "Ei",
-                    7 => "Huevo",
-                    8 => "알",
-                    9 or 10 => "蛋",
-                    _ => "Egg",
-                };
-            }
-
-            if (ballItem.Length > 1 && ballItem[1] == "Ball") //Distro Ball Selector
-            {
-                if (ballItem[0] == "Master")
-                {
-                    if (toSend.IsEgg || toSend.WasEgg)
-                        Log($"Eggs (hatched or not) cannot be in Master Ball");
-                }
-                else
-                {
-                    if (ballItem[0] == "Poké") //Account for Pokeball having an apostrophe
-                        ballItem[0] = "Poke";
-                    cln.Ball = (int)(Ball)Enum.Parse(typeof(Ball), ballItem[0]);
-                    Log($"Ball swapped to: {(Ball)cln.Ball} Ball");
-                }
-            }
-
-            //OT for Shiny Roamers, else set shiny as normal
-            if (toSend.Species == (ushort)Species.Mesprit || toSend.Species == (ushort)Species.Cresselia)
-            {
-                if (toSend.IsShiny)
-                    cln.PID = (((uint)(cln.TID16 ^ cln.SID16) ^ (cln.PID & 0xFFFF) ^ 1u) << 16) | (cln.PID & 0xFFFF);
-                else
-                    cln.PID = cln.PID; //Do nothing since not shiny
-            }
-            else
-            {
-                if (toSend.IsShiny)
-                    cln.SetShiny();
-                else //reroll PID for non-shiny
-                {
-                    cln.SetShiny();
-                    cln.SetUnshiny();
-                }
-                cln.SetRandomEC();
-            }
-            cln.RefreshChecksum();
-
-            var tradebdsp = new LegalityAnalysis(cln);
-            if (tradebdsp.Valid)
-            {
-                if (custom.LogTrainerDetails == false) //So it does not log twice
-                {
-                    Log($"OT info swapped to:");
-                    Log($"OT_Name: {cln.OT_Name}");
-                    Log($"TID: {cln.TrainerTID7}");
-                    Log($"SID: {cln.TrainerSID7}");
-                    Log($"Gender: {(Gender)cln.OT_Gender}");
-                    Log($"Language: {(LanguageID)(cln.Language)}");
-                    Log($"Game: {(GameVersion)(cln.Version)}");
-                }
-                Log($"OT Swap Success");
-                await SetBoxPokemonAbsolute(BoxStartOffset, cln, token, sav).ConfigureAwait(false);
-            }   
-            else
-                Log($"Sending original Pokémon as it can't be OT swapped");
-            return tradebdsp.Valid;
-        }
-    }
     public class Sphealcl
     {
         static readonly HttpClient client = new();
+        private readonly PokeTradeHubConfig Hub;
+        public Sphealcl(PokeTradeHubConfig hub)
+        {
+            Hub = hub;
+        }
+        public Sphealcl()
+        {
+            Hub = new PokeTradeHubConfig();
+        }
+
         public async Task EmbedPokemonMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
         {
             EmbedAuthorBuilder embedAuthor = new()
@@ -171,10 +66,44 @@ namespace SysBot.Pokemon
 
             EchoUtil.EchoEmbed(embedMsg);
         }
-        public static Embed EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
+        public async Task EmbedMarkMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, int counts, string msgTitle)
         {
+            string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://www.serebii.net/swordshield/ribbons/worldchampionribbon.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Total Mark Swaps: {counts}",
+                IconUrl = "https://archives.bulbagarden.net/media/upload/2/26/Bag_Mark_Charm_SV_Sprite.png"
+            };
+
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Gold,
+                ThumbnailUrl = embedThumbUrl,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+
+            Embed embedMsg = embedBuilder.Build();
+
+            EchoUtil.EchoEmbed(embedMsg);
+        }
+        public Embed EmbedCDMessage(TimeSpan cdAbuse, double cd, int attempts, int repeatConnections, string msg, string msgTitle)
+        {
+            var custom = Hub.CustomEmbed;
             string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
-            string embedImageURL = "https://media.tenor.com/6Wu-MMdSdu8AAAAC/officer-dogdog-capoo.gif";
+            string embedImageURL;
+
+            if (custom.CustomGIFs)
+                embedImageURL = $"{custom.CooldownGIF}";
+            else
+                embedImageURL = "https://media.tenor.com/6Wu-MMdSdu8AAAAC/officer-dogdog-capoo.gif";
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -209,7 +138,7 @@ namespace SysBot.Pokemon
             };
             EmbedFooterBuilder embedFtr = new()
             {
-                Text = $"Current trade cooldown of the bot is {cd} mins",
+                Text = $"Cooldown: {cd} mins",
                 IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png"
             };
             EmbedBuilder embedBuilder = new()
@@ -222,14 +151,64 @@ namespace SysBot.Pokemon
             };
             return embedBuilder;
         }
-        public static Embed EmbedBanMessage(string msg, string msgTitle, bool banned = false)
+        public static EmbedBuilder EmbedGeneric(string msg, string msgTitle, string gif, bool spheal = false)
+        {
+            Color color;
+            string icon;
+            string embedImageURL;
+
+            if (spheal)
+            {
+                embedImageURL = gif;
+                icon = "https://cdn.discordapp.com/emojis/1115571174949265428.gif?size=128&quality=lossless";
+                color = Color.Teal;
+            }
+            else
+            {
+                embedImageURL = "";
+                icon = "https://archives.bulbagarden.net/media/upload/b/bb/Tretta_Mega_Evolution_icon.png";
+                color = Color.DarkOrange;
+            }
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = icon,
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Spheal Bot",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = color,
+                ImageUrl = embedImageURL,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            return embedBuilder;
+        }
+        public Embed EmbedBanMessage(string msg, string msgTitle, bool banned = false)
         {
             string embedThumbUrl = "https://www.serebii.net/scarletviolet/ribbons/alphamark.png";
             string embedImageURL;
-            if (banned)
-                embedImageURL = "https://media.tenor.com/9zCgefg___cAAAAC/bane-no.gif";
+            var custom = Hub.CustomEmbed;
+
+            if (custom.CustomGIFs)
+            {
+                if (banned)
+                    embedImageURL = $"{custom.BanEmbedGIF}";
+                else
+                    embedImageURL = $"{custom.BanUEmbedGIF}";
+            }
             else
-                embedImageURL = "https://media.tenor.com/EOPjsoaIVOYAAAAC/sirius-sirius-black.gif0";
+            {
+                if (banned)
+                    embedImageURL = "https://media.tenor.com/9zCgefg___cAAAAC/bane-no.gif";
+                else
+                    embedImageURL = "https://media.tenor.com/WFa_7zf0KvgAAAAC/waiting-i-did-my-waiting.gif";
+            }
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -253,9 +232,15 @@ namespace SysBot.Pokemon
             Embed embedMsg = embedBuilder.Build();
             return embedMsg;
         }
-        public static Embed EmbedSFList(string msg, string msgTitle)
+        public static Embed EmbedSFList(string msg, string msgTitle, bool marks = false)
         {
             string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
+            string embedImageURL;
+
+            if (marks)
+                embedImageURL = "https://media.discordapp.net/attachments/1092662051777826856/1159371227165642784/image.png?ex=6530c798&is=651e5298&hm=f1a1f7441b303d401d39804e47dc6ceb8f747644289104ca0cc5ffc2ba3656bb&=&width=972&height=662";
+            else
+                embedImageURL = "";
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -271,6 +256,7 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Teal,
                 ThumbnailUrl = embedThumbUrl,
+                ImageUrl = embedImageURL,
                 Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr
@@ -351,14 +337,6 @@ namespace SysBot.Pokemon
                 }
             }
             return URLString;
-        }
-        public static string FixHeldItemName(string name)
-        {
-            name = name.Replace("____", " ");
-            name = name.Replace("___", ".");
-            name = name.Replace("__", "'");
-            name = name.Replace("_", "-");
-            return name;
         }
     }
 }

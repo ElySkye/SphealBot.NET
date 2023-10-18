@@ -1,5 +1,4 @@
-﻿using Discord;
-using PKHeX.Core;
+﻿using PKHeX.Core;
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
@@ -20,7 +19,8 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<PK8> Hub;
         private readonly TradeSettings TradeSettings;
         private readonly TradeAbuseSettings AbuseSettings;
-        readonly Sphealcl SphealEmbed = new();
+        private static readonly Random rnd = new();
+        readonly Sphealcl SphealEmbed;
 
         public ICountSettings Counts => TradeSettings;
 
@@ -46,6 +46,7 @@ namespace SysBot.Pokemon
             TradeSettings = hub.Config.Trade;
             AbuseSettings = hub.Config.TradeAbuse;
             DumpSetting = hub.Config.Folder;
+            SphealEmbed = new(Hub.Config);
         }
 
         // Cached offsets that stay the same per session.
@@ -327,7 +328,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBotSWSH>.Record($"Initiating\t{trainerNID:X16}\t{trainerName}\t{poke.Trainer.TrainerName}\t{poke.Trainer.ID}\t{poke.ID}\t{toSend.EncryptionConstant:X8}");
             Log($"Found Link Trade partner: {trainerName}-{trainerTID} (ID: {trainerNID})");
 
-            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, trainerName, AbuseSettings, UserCooldowns, token);
+            var partnerCheck = await CheckPartnerReputation(this, poke, trainerNID, trainerName, AbuseSettings, UserCooldowns, Hub.Config, token);
             if (partnerCheck != PokeTradeResult.Success)
             {
                 await ExitSeedCheckTrade(token).ConfigureAwait(false);
@@ -349,11 +350,11 @@ namespace SysBot.Pokemon
             var data = await Connection.ReadBytesAsync(LinkTradePartnerNameOffset - 0x8, 8, token).ConfigureAwait(false);
             var custom = Hub.Config.CustomSwaps;
             if (poke.Type != PokeTradeType.Random)
-                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nOTGender: {(Gender)data[6]}\nTID: {trainerTID}\nSID: {trainerSID}\nLanguage: {(LanguageID)data[5]}\nGame: {(GameVersion)data[4]}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
+                poke.SendNotification(this, $"__**Found Trainer**__\n ```OT: {trainerName}\nOTGender: {(Gender)data[6]}\nTID: {trainerTID}\nSID: {trainerSID}\nLanguage: {(LanguageID)data[5]}\n.Version={data[4]}\nNID: {trainerNID}```\n**Waiting for a Pokémon**...");
 
             if (custom.LogTrainerDetails)
             {
-                Log($"Found Trainer:\r```OT: {trainerName}\rOTGender: {(Gender)data[6]}\rTID: {trainerTID}\rSID: {trainerSID}\rLanguage: {(LanguageID)data[5]}\rGame: {(GameVersion)data[4]}\rNID: {trainerNID}```");
+                Log($"Found Trainer:\r```OT: {trainerName}\rOTGender: {(Gender)data[6]}\rTID: {trainerTID}\rSID: {trainerSID}\rLanguage: {(LanguageID)data[5]}\r.Version={data[4]}\rNID: {trainerNID}```");
                 Log($"Waiting for a Pokémon...");
             }
 
@@ -379,15 +380,21 @@ namespace SysBot.Pokemon
                 if (offered.HeldItem != 229)
                     list.TryRegister(trainerNID, trainerName);
             }
-            if (poke.Type == PokeTradeType.Specific && custom.AllowTraderOTInformation)
+            if (poke.Type == PokeTradeType.Specific)
             {
-                //Auto OT for $t command/PK files if not specified by the user
-                var ot = toSend.OT_Name;
-                var config = Hub.Config.Legality;
-                if (ot == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
-                    await SetTradePartnerDetailsSWSH(toSend, offered, trainerName, sav, token).ConfigureAwait(false);
-                else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
-                    await SetTradePartnerDetailsSWSH(toSend, offered, trainerName, sav, token).ConfigureAwait(false);
+                if ((GameVersion)toSend.Version == GameVersion.SW || (GameVersion)toSend.Version == GameVersion.SH || toSend.IsEgg)
+                {
+                    if (custom.AllowTraderOTInformation)
+                    {
+                        //Auto OT for $t command/PK files if not specified by the user
+                        var ot = toSend.OT_Name;
+                        var config = Hub.Config.Legality;
+                        if (ot == config.GenerateOT && toSend.TID16 == config.GenerateTID16 && toSend.SID16 == config.GenerateSID16)
+                            await SetTradePartnerDetailsSWSH(poke, toSend, offered, trainerName, sav, token).ConfigureAwait(false);
+                        else if (Regex.IsMatch(ot, "PKHEX", RegexOptions.IgnoreCase) || Regex.IsMatch(ot, "Sysbot", RegexOptions.IgnoreCase))
+                            await SetTradePartnerDetailsSWSH(poke, toSend, offered, trainerName, sav, token).ConfigureAwait(false);
+                    }
+                }
             }
 
             PokeTradeResult update;
@@ -430,7 +437,7 @@ namespace SysBot.Pokemon
             RecordUtil<PokeTradeBotSWSH>.Record($"Finished\t{trainerNID:X16}\t{toSend.EncryptionConstant:X8}\t{received.EncryptionConstant:X8}");
 
             // Only log if we completed the trade.
-            UpdateCountsAndExport(poke, received, toSend);
+            UpdateCountsAndExport(poke, received);
 
             // Log for Trade Abuse tracking.
             LogSuccessfulTrades(poke, trainerNID, trainerName);
@@ -455,7 +462,7 @@ namespace SysBot.Pokemon
             return await WaitForPokemonChanged(LinkTradePartnerPokemonOffset, Hub.Config.Trade.TradeWaitTime * 1_000, 0_200, token).ConfigureAwait(false);
         }
 
-        private void UpdateCountsAndExport(PokeTradeDetail<PK8> poke, PK8 received, PK8 toSend)
+        private void UpdateCountsAndExport(PokeTradeDetail<PK8> poke, PK8 received)
         {
             var counts = TradeSettings;
             if (poke.Type == PokeTradeType.Random || poke.Type == PokeTradeType.LinkSWSH)
@@ -470,7 +477,7 @@ namespace SysBot.Pokemon
                 var subfolder = poke.Type.ToString().ToLower();
                 DumpPokemon(DumpSetting.DumpFolder, subfolder, received); // received by bot
                 if (poke.Type is PokeTradeType.Specific or PokeTradeType.Clone)
-                    DumpPokemon(DumpSetting.DumpFolder, "traded", toSend); // sent to partner
+                    DumpPokemon(DumpSetting.DumpFolder, "traded", poke.TradeData); // sent to partner
             }
         }
 
@@ -575,12 +582,12 @@ namespace SysBot.Pokemon
             // Allow the trade partner to do a Ledy swap.
             var config = Hub.Config.Distribution;
             var custom = Hub.Config.CustomSwaps;
-            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies, custom.LedySpecies2);
+            var trade = Hub.Ledy.GetLedyTrade(offered, partner.TrainerOnlineID, config.LedySpecies);
             var swap = offered.HeldItem;
             var user = partner.TrainerName;
             var nick = offered.Nickname;
             var offer = offered.Species;
-            var eventmsg = $"============\r\nSpheal Easter Egg Winner:\r\n> OT: {user} <\r\n============";
+            var offers = GameInfo.GetStrings(1).Species[offered.Species];
 
             if (Regex.IsMatch(nick, custom.MysteryEgg, RegexOptions.IgnoreCase))
             {
@@ -607,13 +614,12 @@ namespace SysBot.Pokemon
                     (ushort)Species.Pumpkaboo,
                     (ushort)Species.Boldore,
                 };
-                var evo = offered.Species;
-                if (evo > 0 && tradeevo.Contains(evo))
+                if (offer > 0 && tradeevo.Contains(offer))
                 {
                     if (swap != 229)
                     {
                         var msg = $"\n{user} has been given a ticket for Unauthorised goods";
-                        msg += $"\nEquip an Everstone on **{(Species)offered.Species}** to allow trade";
+                        msg += $"\nEquip an Everstone on **{offers}** to allow trade";
                         await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Activity").ConfigureAwait(false);
                         return (toSend, PokeTradeResult.TrainerRequestBad);
                     }
@@ -632,7 +638,7 @@ namespace SysBot.Pokemon
                 }
 
                 toSend = trade.Receive;
-                var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
+                var result = await SetTradePartnerDetailsSWSH(poke, toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
                 if (result.Item2 == true)
                     toSend = result.Item1;
                 poke.TradeData = toSend;
@@ -644,23 +650,22 @@ namespace SysBot.Pokemon
             else if (config.LedyQuitIfNoMatch)
             {
                 if (poke.Type == PokeTradeType.LinkSWSH)
-                    poke.SendNotification(this, $"```Invalid Request: {(Species)offered.Species} named {nick}```");
+                    poke.SendNotification(this, $"```Invalid Request: {offers} named {nick}```");
                 DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
-                var msg = $"**{user}** has offered **{(Species)offered.Species}**\n";
+                var msg = $"**{user}** has offered **{offers}**\n";
                 msg += $"Nickname: **{offered.Nickname}**";
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad Request From:").ConfigureAwait(false);
                 return (toSend, PokeTradeResult.TrainerRequestBad);
             }
             else if (Hub.Config.CustomSwaps.AllowRandomOT) //Random Distribution OT without Ledy Nicknames
             {
-                var result = await SetTradePartnerDetailsSWSH(toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
-                var counts1 = TradeSettings;
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
+                var result = await SetTradePartnerDetailsSWSH(poke, toSend, offered, partner.TrainerName, sav, token).ConfigureAwait(false);
+                Log($"Offered nickname of {nick} does not exist, Sending: {GameInfo.GetStrings(1).Species[toSend.Species]}");
                 if (result.Item2 == true)
                     toSend = result.Item1;
                 await SetBoxPokemon(toSend, 0, 0, token, sav).ConfigureAwait(false);
                 await Task.Delay(2_500, token).ConfigureAwait(false);
-                counts1.AddCompletedDistribution();
                 return (toSend, PokeTradeResult.Success);
             }
             for (int i = 0; i < 5; i++)
@@ -733,8 +738,8 @@ namespace SysBot.Pokemon
                 var tid = pk.GetDisplayTID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringTID());
                 var sid = pk.GetDisplaySID().ToString(pk.GetTrainerIDFormat().GetTrainerIDFormatStringSID());
                 var lang = (LanguageID)pk.Language;
-                var game = (GameVersion)pk.Version;
-                msg += $"\n**__Trainer Data__**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}\nLanguage: {lang}\nGame: {game}```";
+                var game = pk.Version;
+                msg += $"\n**__Trainer Data__**\n```OT: {ot}\nOTGender: {ot_gender}\nTID: {tid}\nSID: {sid}\nLanguage: {lang}\n.Version={game}```";
 
                 // Extra information for shiny eggs, because of people dumping to skip hatching.
                 var eggstring = pk.IsEgg ? "Egg " : string.Empty;

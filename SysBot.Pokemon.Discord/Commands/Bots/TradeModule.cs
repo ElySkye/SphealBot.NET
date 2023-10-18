@@ -61,6 +61,11 @@ namespace SysBot.Pokemon.Discord
             {
                 var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
                 var pkm = sav.GetLegal(template, out var result);
+                bool pla = typeof(T) == typeof(PA8);
+
+                if (!pla && pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                    FeatureTrigger<T>.AllowEggShowdown(pkm);
+
                 var la = new LegalityAnalysis(pkm);
                 var spec = GameInfo.Strings.Species[template.Species];
                 pkm = EntityConverter.ConvertToType(pkm, typeof(T), out _) ?? pkm;
