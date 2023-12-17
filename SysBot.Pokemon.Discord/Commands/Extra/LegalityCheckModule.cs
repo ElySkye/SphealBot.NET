@@ -34,12 +34,64 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
+            Sphealcl spheal = new();
+            bool CanGMax = false;
             var pkm = download.Data!;
+            uint FormArgument = 0;
+            switch (pkm.Version)
+            {
+                case (int)GameVersion.X or (int)GameVersion.Y:
+                    PK6 mon6 = (PK6)pkm.Clone();
+                    FormArgument = mon6.FormArgument;
+                    break;
+                case (int)GameVersion.SN or (int)GameVersion.MN or (int)GameVersion.US or (int)GameVersion.UM:
+                    PK7 mon7 = (PK7)pkm.Clone();
+                    FormArgument = mon7.FormArgument;
+                    break;
+                case (int)GameVersion.GP or (int)GameVersion.GE:
+                    PB7 monLGPE = (PB7)pkm.Clone();
+                    FormArgument = monLGPE.FormArgument;
+                    break;
+                case (int)GameVersion.SW or (int)GameVersion.SH:
+                    PK8 mon8 = (PK8)pkm.Clone();
+                    CanGMax = mon8.CanGigantamax;
+                    FormArgument = mon8.FormArgument;
+                    break;
+                case (int)GameVersion.BD or (int)GameVersion.SP:
+                    PB8 monBDSP = (PB8)pkm.Clone();
+                    FormArgument = monBDSP.FormArgument;
+                    break;
+                case (int)GameVersion.PLA:
+                    PA8 monLA = (PA8)pkm.Clone();
+                    FormArgument = monLA.FormArgument;
+                    break;
+                case (int)GameVersion.SL or (int)GameVersion.VL:
+                    PK9 mon9 = (PK9)pkm.Clone();
+                    FormArgument = mon9.FormArgument;
+                    break;
+            }
+
             var la = new LegalityAnalysis(pkm);
+            string embedThumbUrl = await spheal.EmbedImgUrlBuilder(pkm, false, FormArgument.ToString("00000000")).ConfigureAwait(false);
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Ballimg/50x50/" + ((Ball)pkm.Ball).ToString().ToLower() + "ball.png",
+                Name = $"Legality Report Request",
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"SphealBot",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
+
             var builder = new EmbedBuilder
             {
+                Author = embedAuthor,
                 Color = la.Valid ? Color.Green : Color.Red,
-                Description = $"Legality Report for {download.SanitizedFileName}:",
+                ThumbnailUrl = embedThumbUrl,
+                Description = $"**File**: {download.SanitizedFileName}\n**Requester**: {Context.User.Mention}",
+                Footer = embedFtr
             };
 
             builder.AddField(x =>
@@ -49,7 +101,7 @@ namespace SysBot.Pokemon.Discord
                 x.IsInline = false;
             });
 
-            await ReplyAsync("Here's the legality report!", false, builder.Build()).ConfigureAwait(false);
+            await ReplyAsync("", false, builder.Build()).ConfigureAwait(false);
         }
     }
 }

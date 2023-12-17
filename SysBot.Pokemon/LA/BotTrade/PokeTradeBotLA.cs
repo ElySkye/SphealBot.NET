@@ -301,6 +301,7 @@ namespace SysBot.Pokemon
                 isDistribution = true;
             var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
             var listCool = UserCooldowns;
+            var listEvo = EvoTracker;
             var custom = Hub.Config.CustomSwaps;
             var settings = Hub.Config.Legality;
 
@@ -337,8 +338,6 @@ namespace SysBot.Pokemon
                 await ExitTrade(false, token).ConfigureAwait(false);
                 return PokeTradeResult.TrainerTooSlow;
             }
-            if (offered.Species == (ushort)Species.Kadabra || offered.Species == (ushort)Species.Machoke || offered.Species == (ushort)Species.Gurdurr || offered.Species == (ushort)Species.Haunter || offered.Species == (ushort)Species.Graveler || offered.Species == (ushort)Species.Phantump || offered.Species == (ushort)Species.Pumpkaboo || offered.Species == (ushort)Species.Boldore)
-                list.TryRegister(trainerNID, tradePartner.TrainerName);
             PokeTradeResult update;
             var trainer = new PartnerDataHolder(0, tradePartner.TrainerName, tradePartner.TID7);
             (toSend, update) = await GetEntityToSend(sav, poke, offered, toSend, trainer, token).ConfigureAwait(false);
@@ -370,7 +369,7 @@ namespace SysBot.Pokemon
                 }
             }
             Log("Confirming trade.");
-            var tradeResult = await ConfirmAndStartTrading(poke, token).ConfigureAwait(false);
+            var tradeResult = await ConfirmAndStartTrading(poke, offered, token).ConfigureAwait(false);
             if (tradeResult != PokeTradeResult.Success)
             {
                 if (tradeResult == PokeTradeResult.TrainerLeft)
@@ -428,7 +427,7 @@ namespace SysBot.Pokemon
             }
         }
 
-        private async Task<PokeTradeResult> ConfirmAndStartTrading(PokeTradeDetail<PA8> detail, CancellationToken token)
+        private async Task<PokeTradeResult> ConfirmAndStartTrading(PokeTradeDetail<PA8> detail, PA8 offered, CancellationToken token)
         {
             // We'll keep watching B1S1 for a change to indicate a trade started -> should try quitting at that point.
             var oldEC = await SwitchConnection.ReadBytesAbsoluteAsync(BoxStartOffset, 8, token).ConfigureAwait(false);
@@ -440,6 +439,44 @@ namespace SysBot.Pokemon
                     return PokeTradeResult.TrainerLeft;
                 if (await IsUserBeingShifty(detail, token).ConfigureAwait(false))
                     return PokeTradeResult.SuspiciousActivity;
+                if (AbuseSettings.AutoBanCooldown)
+                {
+                    var tradePartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+                    var trainerNID = await GetTradePartnerNID(TradePartnerNIDOffset, token).ConfigureAwait(false);
+                    var banduration = AbuseSettings.AutoBanEvoDuration;
+                    var tradeevo = new List<ushort>
+                    {
+                        (ushort)Species.Kadabra,
+                        (ushort)Species.Machoke,
+                        (ushort)Species.Gurdurr,
+                        (ushort)Species.Haunter,
+                        (ushort)Species.Graveler,
+                        (ushort)Species.Phantump,
+                        (ushort)Species.Pumpkaboo,
+                        (ushort)Species.Boldore,
+                    };
+                    var trash = await ReadUntilPresentPointer(Offsets.LinkTradePartnerPokemonPointer, 5_000, 1_000, BoxFormatSlotSize, token).ConfigureAwait(false);
+                    if (trash != null && trash.Species != detail.TradeData.Species && trash.Checksum != detail.TradeData.Checksum)
+                    {
+                        if (tradeevo.Contains(trash.Species) && trash.HeldItem != 229 && !trash.IsEgg)
+                        {
+                            if (detail.Type == PokeTradeType.LinkLA)
+                                detail.SendNotification(this, $"```No Trade Evolutions\nYou are now banned for {banduration} days```");
+                            Log($"Trade evo detected via B Swap\nOriginal Offer: {GameInfo.GetStrings(1).Species[offered.Species]}\nSwapped Offer: {GameInfo.GetStrings(1).Species[trash.Species]}");
+                            DateTime expires = DateTime.Now.AddDays(banduration);
+                            string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
+                            AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(tradePartner.TrainerName, trainerNID, "Autobanned for TradeEvo (B Swap)", expiration) });
+
+                            var msg = $"{tradePartner.TrainerName} tried to give a trade evolution via B Swapping\n";
+                            msg += $"No punishment evasion, They are now banned for **{banduration}** days\n\n";
+                            msg += $"Original Offer: {GameInfo.GetStrings(1).Species[offered.Species]}\n";
+                            msg += $"Swapped Offer: {GameInfo.GetStrings(1).Species[trash.Species]}";
+                            await SphealEmbed.EmbedTradeEvoMsg(trash, false, trash.FormArgument, msg, "Trade Evo Ban", 1, 1, true).ConfigureAwait(false);
+                            await ExitTrade(false, token).ConfigureAwait(false);
+                            return PokeTradeResult.IllegalTrade;
+                        }
+                    }
+                }
                 await Click(A, 1_000, token).ConfigureAwait(false);
 
                 // EC is detectable at the start of the animation.
@@ -725,12 +762,10 @@ namespace SysBot.Pokemon
                     (ushort)Species.Boldore,
                 };
                 var evo = offered.Species;
-                if (evo != 0 && tradeevo.Contains(evo))
+                if (tradeevo.Contains(evo))
                 {
-                    var msg = $"{user} offered **{offers}**";
-                    msg += $"\nLeaving Trade...";
-                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Unauthorised Trade Evolution").ConfigureAwait(false);
-                    return (toSend, PokeTradeResult.TrainerRequestBad);
+                    var hte = await HandleTradeEvo(poke, offered, toSend, partner, token).ConfigureAwait(false);
+                    return (hte);
                 }
                 if (trade.Type == LedyResponseType.AbuseDetected)
                 {
@@ -772,6 +807,16 @@ namespace SysBot.Pokemon
                 toSend = Hub.Ledy.Pool.GetRandomTrade();
 
                 Log($"Offered nickname of {sf} does not exist, Sending: {GameInfo.GetStrings(1).Species[toSend.Species]}");
+                if (offered.IsNicknamed)
+                {
+                    if (poke.Type == PokeTradeType.LinkSV)
+                        poke.SendNotification(this, $"```Invalid Request: {offers} named {sf}```");
+                    DumpPokemon(DumpSetting.DumpFolder, "rejects", offered); //Dump copy of failed request
+                    var msg = $"**{user}** has offered **{offers}**\n";
+                    msg += $"Nickname: **{sf}**\n";
+                    msg += $"**{GameInfo.GetStrings(1).Species[toSend.Species]}** was sent instead";
+                    await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Wrong Nickname").ConfigureAwait(false);
+                }
                 if (!await SetTradePartnerDetailsLA(poke, toSend, sav, token).ConfigureAwait(false))
                 {
                     await SetBoxPokemonAbsolute(BoxStartOffset, toSend, token, sav).ConfigureAwait(false);

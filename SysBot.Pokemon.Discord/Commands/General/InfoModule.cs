@@ -15,24 +15,39 @@ namespace SysBot.Pokemon.Discord
     // Copyright 2017, Christopher F. <foxbot@protonmail.com>
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
-        private const string detail = "I am an open-source Discord bot powered by PKHeX.Core and other open-source software.";
+        private const string detail = "An open-source Discord bot powered by PKHeX.Core and other open-source software.";
         private const string repo = "https://github.com/kwsch/SysBot.NET";
+        private const string repo2 = "https://github.com/ElySkye/SphealBot.NET/tree/SphealMain";
 
         [Command("info")]
         [Alias("about", "whoami", "owner")]
         public async Task InfoAsync()
         {
             var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
-
+            string icon = "https://cdn.discordapp.com/emojis/1116237525665718352.webp?size=128&quality=lossless";
+            string msgTitle = "SphealBot Info";
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = icon,
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"SphealBot",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
             var builder = new EmbedBuilder
             {
+                Author = embedAuthor,
                 Color = new Color(114, 137, 218),
                 Description = detail,
+                Footer = embedFtr
             };
 
             builder.AddField("Info",
-                $"- [Source Code]({repo})\n" +
-                $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
+                $"- [Original Source Code]({repo})\n" +
+                $"- [This Fork's Source Code]({repo2})\n" +
+                $"- {Format.Bold("Owner")}: {app.Owner.GlobalName} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Library")}: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
                 $"- {Format.Bold("Runtime")}: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture} " +

@@ -12,6 +12,7 @@
         TrainerRequestBad,
         IllegalTrade,
         SuspiciousActivity,
+        TradeEvo,
 
         // Recovery -- General Bot Failures
         // Anything below here should be retried once if possible.

@@ -50,6 +50,9 @@ namespace SysBot.Pokemon
         [Category(CustomSwap), Description("Held item used to trigger Date Swap.")]
         public SwapItem DateSwapItem { get; set; } = SwapItem.EjectPack;
 
+        [Category(CustomSwap), Description("Held item used to trigger Ultimate Swap.")]
+        public SwapItem UltimateSwapItem { get; set; } = SwapItem.LuminousMoss;
+
         [Category(CustomSwap), Description("Held item used to trigger EV Reset")]
         public SwapItem EVResetItem { get; set; } = SwapItem.TinyMushroom;
 

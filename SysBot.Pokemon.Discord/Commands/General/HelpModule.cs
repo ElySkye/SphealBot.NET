@@ -19,10 +19,22 @@ namespace SysBot.Pokemon.Discord
         [Summary("Lists available commands.")]
         public async Task HelpAsync()
         {
+            string icon = "https://cdn.discordapp.com/emojis/1116237525665718352.webp?size=128&quality=lossless";
+            string msgTitle = "SphealBot Commands";
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = icon,
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"SphealBot",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
             var builder = new EmbedBuilder
             {
                 Color = new Color(114, 137, 218),
-                Description = "Commands:",
+                Description = "Here are the commands:",
             };
 
             var mgr = SysCordSettings.Manager;

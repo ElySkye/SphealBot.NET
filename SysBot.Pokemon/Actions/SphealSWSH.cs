@@ -2,6 +2,7 @@
 using SysBot.Base;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Pokemon.PokeDataOffsetsSWSH;
@@ -41,7 +42,7 @@ namespace SysBot.Pokemon
             myst += $"**Gender**: ||**{(Gender)toSend.Gender}**||\n";
             myst += $"**Shiny**: ||**{Shiny}**||\n";
             myst += $"**Nature**: ||**{(Nature)toSend.Nature}**||\n";
-            myst += $"**Ability**: **{GameInfo.GetStrings(1).Ability[toSend.Ability]}**\n";
+            myst += $"**Ability**: ||**{GameInfo.GetStrings(1).Ability[toSend.Ability]}**||\n";
             myst += $"**IVs**: ||**{toSend.IV_HP}/{toSend.IV_ATK}/{toSend.IV_DEF}/{toSend.IV_SPA}/{toSend.IV_SPD}/{toSend.IV_SPE}**||\n";
             myst += $"**Language**: ||**{(LanguageID)toSend.Language}**||";
 
@@ -59,12 +60,14 @@ namespace SysBot.Pokemon
             var offers = GameInfo.GetStrings(1).Species[offered.Species];
             var offerts = GameInfo.GetStrings(1).Species[toSend.Species];
             var la = new LegalityAnalysis(offered);
+            var botot = Hub.Config.Legality.GenerateOT;
             var notball = new List<int>
             {
                 228, //Smoke Ball
                 236, //Light Ball
                 278, //Iron Ball
                 541, //Air Balloon
+                649, //Snowball
             };
 
             string? msg;
@@ -73,9 +76,12 @@ namespace SysBot.Pokemon
             if (!la.Valid)
             {
                 if (poke.Type == PokeTradeType.LinkSWSH)
-                    poke.SendNotification(this, $"__**Legality Analysis**__\n{la.Report()}");
-                msg = $"{user}, **{offers}** is not legal\n";
-                msg += $"Features cannot be used\n\n";
+                    poke.SendNotification(this, $"**{offers}** is not legal\n\n__**Legality Analysis**__\n```{la.Report()}```");
+                msg = $"{user}, **{offers}** is not legal, Features cannot be used\n";
+                msg += $"**OT**: {offered.OT_Name}-{offered.TID16}\n**HT**: {offered.HT_Name}\n";
+                msg += $"**Game**: {(GameVersion)offered.Version}\n\n";
+                if (la.Info.PIDIV.Type != PIDType.None)
+                    msg += $"**PIDType**: {la.Info.PIDIV.Type}\n\n";
                 msg += $"__**Legality Report**__\n";
                 msg += la.Report();
                 await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Illegal Request").ConfigureAwait(false);
@@ -95,7 +101,11 @@ namespace SysBot.Pokemon
                         poke.SendNotification(this, $"```{user}, {offers} cannot be OT swap\n\nPokémon is either:\n1) Not SWSH native\n2) SWSH Event/In-game trade with FIXED OT```");
                     msg = $"{user}, **{offers}** cannot be OT swap\n\n";
                     msg += "Pokémon is either:\n1) Not SWSH native\n2) SWSH Event / In - game trade with FIXED OT\n\n";
-                    msg += $"Original OT: {offered.OT_Name}";
+                    msg += $"Original OT: **{offered.OT_Name}**\nGame: {(GameVersion)toSend.Version}\n";
+                    if (offered.FatefulEncounter)
+                        msg += $"Pokémon is a Fateful Encounter (Event)\n";
+                    else if (offered.Met_Location == 30001)
+                        msg += $"Pokémon is an in-game trade\n";
                     await SphealEmbed.EmbedAlertMessage(offered, false, offered.FormArgument, msg, "Bad OT Swap").ConfigureAwait(false);
                     DumpPokemon(DumpSetting.DumpFolder, "hacked", toSend);
                     return (toSend, PokeTradeResult.TrainerRequestBad);
@@ -189,6 +199,13 @@ namespace SysBot.Pokemon
                             break;
                         case (ushort)Species.Pumpkaboo:
                             toSend.Species = (ushort)Species.Gourgeist;
+                            toSend.Form = offered.Form switch
+                            {
+                                0 => 0, //Average
+                                1 => 1, //Small
+                                2 => 2, //Large
+                                _ => 3, //Super
+                            };
                             break;
                         case (ushort)Species.Boldore:
                             toSend.Species = (ushort)Species.Gigalith;
@@ -204,6 +221,10 @@ namespace SysBot.Pokemon
                             break;
                     }
                     toSend.HeldItem = 224;
+                    if (botot != "SysBot")
+                        toSend.HT_Name = botot;
+                    else toSend.HT_Name = user;
+                    toSend.HT_Language = 2;
                 }
                 else
                 {
@@ -212,12 +233,16 @@ namespace SysBot.Pokemon
                     {
                         case (ushort)Species.Farfetchd:
                             if (toSend.Form == 1)
+                            {
                                 toSend.Species = (ushort)Species.Sirfetchd;
+                                toSend.Form = 0;
+                            }
                             break;
                         case (ushort)Species.Yamask:
                             if (toSend.Form == 1)
                             {
                                 toSend.Species = (ushort)Species.Runerigus;
+                                toSend.Form = 0;
                                 toSend.FormArgument = 50;
                             }
                             break;
@@ -245,7 +270,7 @@ namespace SysBot.Pokemon
                 var la2 = new LegalityAnalysis(toSend);
                 if (la2.Valid)
                 {
-                    Log($"Swap Success. Sending back: {offerts}.");
+                    Log($"Swap Success. Sending back: {GameInfo.GetStrings(1).Species[toSend.Species]}.");
                     poke.TradeData = toSend;
                     counts.AddCompletedTrilogySwaps();
                     DumpPokemon(DumpSetting.DumpFolder, "trilogy", toSend);
@@ -255,7 +280,7 @@ namespace SysBot.Pokemon
                 }
                 else //Safety Net incase something slips through
                 {
-                    msg = $"{user}, **{offerts}** has a problem\n\n";
+                    msg = $"{user}, **{GameInfo.GetStrings(1).Species[toSend.Species]}** has a problem\n\n";
                     msg += $"__**Legality Analysis**__\n";
                     msg += la2.Report();
                     await SphealEmbed.EmbedAlertMessage(toSend, false, toSend.FormArgument, msg, "Bad Trilogy Swap").ConfigureAwait(false);
@@ -291,9 +316,16 @@ namespace SysBot.Pokemon
             var PIDla = new LegalityAnalysis(toSend);
             string[] ballItem = GameInfo.GetStrings(1).Item[offered.HeldItem].Split(' ');
 
-            if (toSend.Species != (ushort)Species.Ditto)
+            if (toSend.Species != (ushort)Species.Ditto || offered.HeldItem == (int)custom.OTSwapItem)
             {
-                cln.OT_Name = trainerName;
+                string pattern = "(yt\\.? | youtube\\.? | ttv\\.? | tv\\.?)";
+                if (trainerName.Contains('.') || Regex.IsMatch(trainerName, pattern, RegexOptions.IgnoreCase))
+                {
+                    cln.OT_Name = Regex.Replace(trainerName, pattern, string.Empty, RegexOptions.IgnoreCase); //Gives their OT without the Ads in the name
+                    cln.OT_Name = trainerName.Replace(".", string.Empty); //Allow users who accidentally have a fullstop in their IGN
+                }
+                else
+                    cln.OT_Name = trainerName;
                 cln.Version = data[4];
                 cln.Language = data[5];
                 cln.OT_Gender = data[6];
@@ -313,7 +345,7 @@ namespace SysBot.Pokemon
                     cln.Egg_Location = 60002; //Nursery (SWSH)
                 if (toSend.IsEgg == false)
                 {
-                    if (cln.HeldItem > 0 && cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal)
+                    if (cln.HeldItem > 0 && (cln.Species != (ushort)Species.Yamper || cln.Species != (ushort)Species.Spheal))
                         cln.ClearNickname();
                     else if (offered.HeldItem == (int)custom.OTSwapItem)
                         cln.ClearNickname();
@@ -414,11 +446,12 @@ namespace SysBot.Pokemon
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
-                    Log($"TID: {cln.TrainerTID7}");
-                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"TID: {cln.TrainerTID7:000000}");
+                    Log($"SID: {cln.TrainerSID7:0000}");
                     Log($"Gender: {(Gender)cln.OT_Gender}");
                     Log($"Language: {(LanguageID)(cln.Language)}");
-                    Log($"Game: {(GameVersion)(cln.Version)}");
+                    if (!cln.IsEgg)
+                        Log($"Game: {GameInfo.GetStrings(1).gamelist[cln.Version]}");
                 }
                 Log($"OT Swap success");
                 if (offered.HeldItem == (int)custom.OTSwapItem)
@@ -436,6 +469,44 @@ namespace SysBot.Pokemon
                     Log($"Reason: Fateful Encounter");
             return (toSend, false);
             }
+        }
+        private async Task<(PK8 offered, PokeTradeResult check)> HandleTradeEvo(PokeTradeDetail<PK8> poke, PK8 offered, PK8 toSend, PartnerDataHolder partner, CancellationToken token)
+        {
+            bool isDistribution = true;
+            var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+            var listCool = UserCooldowns;
+            var listEvo = EvoTracker;
+            var trainerNID = await GetTradePartnerNID(token).ConfigureAwait(false);
+            var cd = AbuseSettings.TradeCooldown;
+            var user = partner.TrainerName;
+            var offers = GameInfo.GetStrings(1).Species[offered.Species];
+            int attempts;
+            attempts = listEvo.TryInsert(trainerNID, user);
+
+            list.TryRegister(trainerNID, partner.TrainerName);
+
+            Log($"{user} is trying to give a trade evolution ({offered.Species})");
+            if (poke.Type == PokeTradeType.LinkSWSH)
+                poke.SendNotification(this, $"```No Trade Evolutions\nAttach an everstone to allow trading```");
+            var msg = $"\n{user} is trying to give a trade evolution\n";
+            msg += $"\nEquip an Everstone on **{offers}** to allow trade";
+            await SphealEmbed.EmbedTradeEvoMsg(offered, false, offered.FormArgument, msg, "Illegal Activity", attempts, AbuseSettings.RepeatConnections).ConfigureAwait(false);
+
+            if (AbuseSettings.AutoBanCooldown && cd == 0)
+            {
+                if (attempts >= AbuseSettings.RepeatConnections)
+                {
+                    if (poke.Type == PokeTradeType.LinkSWSH)
+                        poke.SendNotification(this, $"```No Trade Evolutions\nYou are now banned for 3 days```");
+                    DateTime expires = DateTime.Now.AddDays(3);
+                    string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
+                    AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(user, trainerNID, "Autobanned for tradeEvo", expiration) });
+                    msg = $"\n{user} tried to give a trade evolution too many times\n";
+                    msg += $"\nNo punishment evasion, They are now banned for 3 days";
+                    await SphealEmbed.EmbedTradeEvoMsg(offered, false, offered.FormArgument, msg, "Trade Evo Ban", attempts, AbuseSettings.RepeatConnections, true).ConfigureAwait(false);
+                }
+            }
+            return (toSend, PokeTradeResult.TradeEvo);
         }
     }
 }

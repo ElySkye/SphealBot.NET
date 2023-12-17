@@ -6,7 +6,6 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -40,7 +39,7 @@ namespace SysBot.Pokemon.Discord
             pkm = EntityConverter.ConvertToType(pkm, typeof(T), out _) ?? pkm;
             if (pkm.HeldItem == 0)
             {
-                await ReplyAsync($"{Context.User.Username}, the item you entered wasn't recognized.").ConfigureAwait(false);
+                await ReplyAsync($"**{Context.User.Username}**, {item} is not a valid item").ConfigureAwait(false);
                 return;
             }
 
@@ -98,8 +97,8 @@ namespace SysBot.Pokemon.Discord
                             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
                         else
                         {
-                            var msg = "This command is disabled for BDSP";
-                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            var msg = "# This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command");
                             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                         }
                         break;
@@ -136,8 +135,8 @@ namespace SysBot.Pokemon.Discord
                             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
                         else
                         {
-                            var msg = "This command is disabled for BDSP";
-                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            var msg = "# This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command");
                             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                         }
                         break;
@@ -153,7 +152,7 @@ namespace SysBot.Pokemon.Discord
         {
             string msg = Info.GetTradeList(PokeRoutineType.DirectTrade);
 
-            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Queue List", "");
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Queue List");
             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
         }
 
@@ -187,8 +186,8 @@ namespace SysBot.Pokemon.Discord
                             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
                         else
                         {
-                            var msg = "This command is disabled for BDSP";
-                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            var msg = "# This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command");
                             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                         }
                         break;
@@ -225,8 +224,8 @@ namespace SysBot.Pokemon.Discord
                             await QueueHelper<T>.AddToQueueAsync(Context, code, Context.User.Username, sig, new T(), PokeRoutineType.DirectTrade, PokeTradeType.LinkBDSP).ConfigureAwait(false);
                         else
                         {
-                            var msg = "This command is disabled for BDSP";
-                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command", "");
+                            var msg = "# This command is disabled for BDSP";
+                            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Disabled Command");
                             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                         }
                         break;
@@ -235,13 +234,22 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("checkgame")]
-        [Alias("game", "cg")]
+        [Alias("game", "cg", "currentgame", "whatgame")]
         [Summary("What game is currently running?")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task CheckGame()
         {
             var me = SysCord<T>.Runner;
+            var custom = SysCordSettings.HubConfig.CustomEmbed;
+            var cd = SysCordSettings.HubConfig.TradeAbuse.TradeCooldown;
+            var p = SysCordSettings.Settings.CommandPrefix;
+            var cooldown = $"Cooldown: **{cd}** mins";
+            if (cd == 0)
+                cooldown = "There is no Cooldown";
+            
             string botversion = "";
+            string gameicon = "";
+
             if (me is not null)
                 botversion = me.ToString()!.Substring(46, 3);
             var gamever = botversion switch
@@ -252,9 +260,21 @@ namespace SysBot.Pokemon.Discord
                 "PB8" => "Brilliant Diamond & Shining Pearl",
                 _ => "Let's Go Pikachu & Eevee",
             };
-            var msg = $"# Current Game running is **{gamever}**";
+            if (custom.CustomEmoji)
+                gameicon = botversion switch
+                {
+                    "PK9" => custom.TEGameIconSV,
+                    "PK8" => custom.TEGameIconSWSH,
+                    "PA8" => custom.TEGameIconPLA,
+                    "PB8" => custom.TEGameIconBDSP,
+                    _ => ""
+                };
 
-            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Current Game", "");
+            var msg = $"### Current Game: {gameicon}**{gamever}**\n";
+            msg += $"{cooldown}\n\n";
+            msg += $"**Commands**:\r\n{p}**rsv**, {p}**rme**, {p}**t**, {p}**it**, {p}**tc**, {p}**dump**,\r\n{p}**clone**, {p}**checkcd**, {p}**dt**l, {p}**spf**";
+
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Game Status");
             await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
         }
 
@@ -268,14 +288,17 @@ namespace SysBot.Pokemon.Discord
             if (res)
             {
                 SysCordSettings.HubConfig.TradeAbuse.TradeCooldown = cooldown;
-                SysCordSettings.HubConfig.TradeAbuse.CooldownUpdate = $"{DateTime.Now:yyyy.MM.dd - HH:mm:ss}";
-                await ReplyAsync($"Cooldown has been updated to **{cooldown}** minutes.").ConfigureAwait(false);
+                var msg = $"Cooldown has been updated to **{cooldown}** minutes";
+
+                EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Cooldown Update");
+                await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
             }
             else
-                await ReplyAsync("Please enter a valid number of minutes.").ConfigureAwait(false);
+                await ReplyAsync("`Please enter a valid number of minutes.`").ConfigureAwait(false);
         }
 
         [Command("checkcd")]
+        [Alias("ccd")]
         [Summary("Allows users to check their current cooldown using NID")]
         [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
         public async Task CooldownLeft([Remainder] string input)
@@ -301,18 +324,18 @@ namespace SysBot.Pokemon.Discord
                 double ddelta = delta.TotalMinutes;
                 if (ddelta.CompareTo((double)cd) < 1)
                 {
-                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your last encounter with the bot was {delta.TotalMinutes:F1} mins ago.\nTime left: {wait.TotalMinutes:F1} mins.", "[Cooldown Checker]");
+                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your last encounter with the bot was {delta.TotalMinutes:F1} mins ago.\nTime left: {wait.TotalMinutes:F1} mins.", "Cooldown Checker");
                     await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                 }
                 else
                 {
-                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your cooldown is up. You may trade again.", "[Cooldown Checker]");
+                    EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"{trainerName} your cooldown is up. You may trade again.", "Cooldown Checker");
                     await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                 }
             }
             else
             {
-                EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"User has not traded with the bot recently.", "[Cooldown Checker]");
+                EmbedBuilder? embed = Sphealcl.EmbedCDMessage2(cd, $"User has not traded with the bot recently.", "Cooldown Checker");
                 await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
             }
             if (!Context.IsPrivate)
@@ -320,6 +343,7 @@ namespace SysBot.Pokemon.Discord
         }
 
         [Command("addwl")]
+        [Alias("wladd", "whitelist")]
         [Summary("Adds NID to whitelist for cooldown skipping. Format: <prefix>addwl [NID] [IGN] [Duration in hours](optional)")]
         [RequireSudo]
         // Adds a <NID> to cooldown whitelist.  Syntax: <prefix>addwl <NID>, <IGN>, <Duration in hours>
@@ -388,7 +412,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCord<T>.Runner.GetBot(address);
             if (bot == null)
             {
-                await ReplyAsync($"No bot found with the specified address ({address}).").ConfigureAwait(false);
+                await ReplyAsync($"```No bot found with the specified address ({address}).```").ConfigureAwait(false);
                 return;
             }
 
@@ -396,75 +420,188 @@ namespace SysBot.Pokemon.Discord
             var bytes = await c.PixelPeek(token).ConfigureAwait(false);
             if (bytes.Length == 1)
             {
-                await ReplyAsync($"Failed to take a screenshot for bot at {address}. Is the bot connected?").ConfigureAwait(false);
+                await ReplyAsync($"```Failed to take a screenshot for bot at {address}. Is the bot connected?```").ConfigureAwait(false);
                 return;
             }
             MemoryStream ms = new(bytes);
 
+            var imgicon = Context.User.GetAvatarUrl() switch
+            {
+                null => Context.User.GetDefaultAvatarUrl(),
+                _ => Context.User.GetAvatarUrl(),
+            };
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = imgicon,
+                Name = "Switch Status",
+            };
+
+            var icon = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
             var img = "SphealCheck.jpg";
-            var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = Color.Blue }.WithFooter(new EmbedFooterBuilder { Text = $"Captured image from bot at address {address}." });
+            var embed = new EmbedBuilder { Author = embedAuthor, ImageUrl = $"attachment://{img}", Color = Color.Teal }.WithFooter(new EmbedFooterBuilder { IconUrl = icon, Text = $"Captured image from bot at address {address}." });
             await Context.Channel.SendFileAsync(ms, img, "", false, embed: embed.Build());
             if (!Context.IsPrivate)
                 await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
         }
-        [Command("spheal")]
-        [Alias("sotd", "qotd")]
-        [Summary("Sends random Spheals")]
-        public async Task SphealAsync()
+
+        [Command("facts")]
+        [Alias("fact", "fax", "spheal", "qotd")]
+        [Summary("Sends random Spheal facts")]
+        public async Task FaxSpeaker()
         {
             string gif = "";
-            string title = "";
-            string msg = "";
-            Random rndmsg = new();
-            int num = rndmsg.Next(1, 9);
-            switch (num)
-            {
-                case 1:
-                    gif = $"https://media.tenor.com/b6poqCTHCXkAAAAd/tess-spheal.gif";
-                    title = "Spheal in a Pool";
-                    msg = ":star::star::star:\n\nA carefree Spheal, just spinning in the pool, free of all worries";
-                    break;
-                case 2:
-                    gif = $"https://media.tenor.com/UfSl83Kq2ZkAAAAC/spheal-pokemon.gif";
-                    title = "Clapping Spheal";
-                    msg = ":star::star::star:\n\nA happy Spheal, hes showing great enthusiasm";
-                    break;
-                case 3:
-                    gif = $"https://media.tenor.com/LeY7aqDgKrAAAAAC/swoshi-swsh.gif";
-                    title = "Crown's Tundra - A Spheal Performance";
-                    msg = ":star::star::star::star:\n\nTwo happy Spheals, showing this random adventurer how happy they are";
-                    break;
-                case 4:
-                    gif = $"https://media.tenor.com/SBZlFs2nvJEAAAAC/spheal-pokemon.gif";
-                    title = "BulbaSpheal? No, its a Spheal hiding in the Grass";
-                    msg = ":star::star::star:\n\nA Spheal whos trying to cosplay as a Bulbasaur, or simply just want to surprise you from the bushes";
-                    break;
-                case 5:
-                    gif = $"https://media.tenor.com/q8w8kujQeyYAAAAd/pokemon-spheal.gif";
-                    title = "Shiny Spheal rolling in Snow";
-                    msg = ":star::star::star::star::star:\n\nElusive Shiny Spheal rolling happyily in the Snow without a care in the world";
-                    break;
-                case 6:
-                    gif = $"https://media.tenor.com/IXLsyG9QYxcAAAAd/spheal-wake.gif";
-                    title = "Spheal about to sleep & happy";
-                    msg = ":star::star::star:\n\nSpheal who wants to sleep but is also happy";
-                    break;
-                case 7:
-                    gif = $"https://media.tenor.com/wH0l_PaFRskAAAAC/on-my-way-pokemon.gif";
-                    title = "I'm on my way ! - Spheal";
-                    msg = ":star::star::star::star:\n\nWhen in trouble, Spheal always has your back";
-                    break;
-                case 8:
-                    gif = $"https://media.tenor.com/fY3-eIP4RfwAAAAd/pokemon-spheal.gif";
-                    title = "Pokémon Legends Spheal - Here I Roll";
-                    msg = ":star::star::star::star::star:\n\nSpheal Army on their way to the battlefield, or are they just playing";
-                    break;
-            }
+            string title = "Invalid Command";
+            string msg = "This command only works in Whitelisted Servers, not intended for public use";
 
-            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, title, gif, true);
-            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
-            if (!Context.IsPrivate)
-                await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
+            var custom = SysCordSettings.HubConfig.CustomEmbed;
+            var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
+            var whitelisted = new List<ulong>
+            {
+                1078487890318860378,
+            };
+
+            if (!whitelisted.Contains(Context.Guild.Id) && Context.User.Username != app.Owner.Username)
+            {
+                EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, title);
+                await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+            }
+            else
+            {
+                Random rndmsg = new();
+                //add toggle to hide sphealfacts
+                /*if (custom.DisableOldFacts)*/
+                int num = rndmsg.Next(1, 25);
+                switch (num)
+                {
+                    case 1:
+                    case 25:
+                        gif = $"https://media.tenor.com/b6poqCTHCXkAAAAd/tess-spheal.gif";
+                        title = "Sphealtopian Fact #1";
+                        msg = "Spheals are carefree creatures";
+                        break;
+                    case 2:
+                        gif = $"https://media.tenor.com/UfSl83Kq2ZkAAAAC/spheal-pokemon.gif";
+                        title = "Sphealtopian Fact #2";
+                        msg = "Spheals are mostly always happy, thats why they clap their fins";
+                        break;
+                    case 3:
+                        gif = $"https://media.tenor.com/LeY7aqDgKrAAAAAC/swoshi-swsh.gif";
+                        title = "Sphealtopian Fact #3";
+                        msg = "Spheals love the company of other adventurers";
+                        break;
+                    case 4:
+                        gif = $"https://media.tenor.com/SBZlFs2nvJEAAAAC/spheal-pokemon.gif";
+                        title = "Sphealtopian Fact #4";
+                        msg = "Spheals are playful and love to hide";
+                        break;
+                    case 5:
+                        gif = $"https://media.tenor.com/q8w8kujQeyYAAAAd/pokemon-spheal.gif";
+                        title = "Sphealtopian Fact #5";
+                        msg = "As a natural snow inhabitant, Spheals love the snow";
+                        break;
+                    case 6:
+                        gif = $"https://media.tenor.com/IXLsyG9QYxcAAAAd/spheal-wake.gif";
+                        title = "Sphealtopian Fact #6";
+                        msg = "Spheal just wants to sleep, but it appears something is preventing it";
+                        break;
+                    case 7:
+                        gif = $"https://media.tenor.com/wH0l_PaFRskAAAAC/on-my-way-pokemon.gif";
+                        title = "Sphealtopian Fact #7";
+                        msg = "Spheals don't walk, we roll";
+                        break;
+                    case 8:
+                        gif = $"https://media.tenor.com/fY3-eIP4RfwAAAAd/pokemon-spheal.gif";
+                        title = "Sphealtopian Fact #8";
+                        msg = "Spheals get exercise by rolling down mountains and cliffs";
+                        break;
+                    case 9:
+                        gif = $"https://media.tenor.com/RaeurldBMa0AAAAd/kafka.gif";
+                        title = "Sphealtopian Fact #9";
+                        msg = "Di$co likes Kafka but is too shy to download Star Rail to meet his destiny with her";
+                        break;
+                    case 10:
+                        gif = $"https://media.tenor.com/uYd9QIUs_U0AAAAC/pokemon-fennekin.gif";
+                        title = "Sphealtopian Fact #10";
+                        msg = "Roshi has a secret weakness for Fox-like creatures (Who would have thought tho?)";
+                        break;
+                    case 11:
+                        gif = $"https://media.tenor.com/JFZnLq-pEXUAAAAC/pokemon-gardevoir.gif";
+                        title = "Sphealtopian Fact #11";
+                        msg = "Fraudious's favourite Pokémon is Gardevoir";
+                        break;
+                    case 12:
+                        gif = $"https://media.tenor.com/-peVj0fSHl4AAAAC/mew-shiny.gif";
+                        title = "Sphealtopian Fact #12";
+                        msg = "Mew Mew does not have a Gender";
+                        break;
+                    case 13:
+                        gif = $"https://media.tenor.com/8go55uv3EWkAAAAC/riverdale-strike.gif";
+                        title = "Sphealtopian Fact #13";
+                        msg = "The CEO of FraudCorp does not pay his employees";
+                        break;
+                    case 14:
+                        gif = $"";
+                        title = "Sphealtopian Fact #14";
+                        msg = "The master of Spheals is just a Spheal holding a beer";
+                        break;
+                    case 15:
+                        gif = $"";
+                        title = "Sphealtopian Fact #15";
+                        msg = "Mother of Spheals is the most relentless Spheal-Member, protector of SphealKind";
+                        break;
+                    case 16:
+                        gif = $"https://media.tenor.com/Msp-rktu24YAAAAC/greys-anatomy-meredith-grey.gif";
+                        title = "Sphealtopian Fact #16";
+                        msg = "During BDSP rushhour, we had 2 security guards. Nobody got past them.";
+                        break;
+                    case 17:
+                        gif = $"https://media.tenor.com/SfV3v9XeSZcAAAAC/jueee-tortuga.gif";
+                        title = "Sphealtopian Fact #17";
+                        msg = "Step Spheal is actually a cosplay turtle";
+                        break;
+                    case 18:
+                        gif = $"https://media.tenor.com/F3j4rPPTMSkAAAAd/npc.gif";
+                        title = "Sphealtopian Fact #18";
+                        msg = "NPCs are users that require immediate help, and clocks of course";
+                        break;
+                    case 19:
+                        gif = $"https://media.tenor.com/Mq6Jvu9RuEwAAAAd/boltund-yamper.gif";
+                        title = "Sphealtopian Fact #19";
+                        msg = "The true boss of FraudCorp is the CEO's pet dog IRL, he is the true mastermind";
+                        break;
+                    case 20:
+                        gif = $"https://media.tenor.com/pRIi24X3tAQAAAAC/tkthao219-capoo.gif";
+                        title = "Sphealtopian Fact #20";
+                        msg = "All Spheals are actually bugcats in disguise";
+                        break;
+                    case 21:
+                        gif = $"https://media.tenor.com/H3ngcuMGMXoAAAAC/blue-cat.gif";
+                        title = "Sphealtopian Fact #21";
+                        msg = "Bugcats are Spheals in cosplay";
+                        break;
+                    case 22:
+                        gif = $"https://media.tenor.com/qYuKuP6d_hMAAAAC/he-had-such-a-knowledge-of-the-dark-side-starwars.gif";
+                        title = "Sphealtopian Fact #22";
+                        msg = "The CEO & Vader live in the same star Galaxy";
+                        break;
+                    case 23:
+                        gif = $"https://media.tenor.com/rr2m8vD0vPsAAAAC/skitty-happy.gif";
+                        title = "Sphealtopian Fact #23";
+                        msg = "Katora is a secret skitty lover";
+                        break;
+                    case 24:
+                        gif = $"https://media.tenor.com/qVyPGfLoA54AAAAC/pikachu-sad.gif";
+                        title = "Sphealtopian Fact #24";
+                        msg = "Mayo is actually a bottle of sauce";
+                        break;
+                }
+                custom.AddSphealCount();
+                EmbedBuilder? embed = Sphealcl.EmbedSpheal(msg, title, gif, custom.SphealFactsCounter);
+                await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                if (!Context.IsPrivate)
+                    await Context.Message.DeleteAsync(RequestOptions.Default).ConfigureAwait(false);
+            }
         }
 
         [Command("specialfeatures")]
@@ -555,7 +692,7 @@ namespace SysBot.Pokemon.Discord
 
                 swsh += "**__Trade Evo <Purifier>__**\n";
                 swsh += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                swsh += "__**Species List**__\n```Kadabra | Machoke | Gurdurr\nHaunter | Phantump| Pumpkaboo\nBoldore | Feebas\nShelmet | Karrablast```\n";
+                swsh += "__**Species List**__\n```Kadabra | Machoke | Gurdurr\nHaunter | Phantump | Pumpkaboo\nBoldore | Feebas\nShelmet | Karrablast```\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(swsh, "Special Features - SWSH");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
@@ -580,16 +717,6 @@ namespace SysBot.Pokemon.Discord
                 bdsp += "**__Pokéball Select__**\n";
                 bdsp += "Function: Allows Ball selection on nicknamed mons holding the respective Pokéball\nSwap Item: **Pokéball of choice**\n";
                 bdsp += "> • If it cannot legally be in that ball, it comes in whatever is on the sheet and without your OT\n> • If the Pokémon does not hold any ball, it will come in the ball specified on the sheet with your OT\n";
-
-                bdsp += "**__OT Swap__**\n";
-                bdsp += $"Function: Changes existing Pokémon OT to yours\nSwap Item: **{swaps[(int)swap.OTSwapItem]}**\n";
-                bdsp += $"> • Only **{gamever}** natives allowed with exceptions\n\n";
-
-                bdsp += "**__Trilogy Swap__**\n";
-                bdsp += "# :bangbang: This function disallows pressing B :bangbang:";
-                bdsp += $"Function: Performs a trio of actions ➜ \nClear Nickname | Set Level to 1OO | Evolve Species\nSwap Item: **{swaps[(int)swap.TrilogySwapItem]}**\n";
-                bdsp += "> • First two functions can be done on any legal mon\n\n**Clear Nickname** ➜ Clears the Nickname\n**Level to 1OO** ➜ Sets the Pokémon's level to 1OO\n**Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n";
-                bdsp += "__**Species List**__\n```Kadabra | Machoke | Haunter\nGraveler | Clamperl (Nickname: Hunt = Huntail, Gore = Gorebyss)\nOnix\nFeebas | Electabuzz | Magmar\nPorygon | Porygon2 | Rhydon\nSeadra | Poliwhirl | Scyther\nDusclops | Slowpoke```\n";
 
                 Embed? embed = Sphealcl.EmbedSFList(bdsp, "Special Features - BDSP");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
@@ -622,7 +749,7 @@ namespace SysBot.Pokemon.Discord
             {
                 var sv = "**__Trilogy Swap__**\n";
                 sv += $"Function: Performs a trio of actions ➜ \nClear Nickname | Level to 1OO | Evolve Species\nSwap Item: **{swaps[(int)swap.TrilogySwapItem]}**\nFirst two functions can be done on any legal mon\n";
-                sv += "> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species**__\n```Finizen\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
+                sv += "> **Evolve** ➜ Evolves the Species, all of its stats/details will be cloned\n\n__**Species**__\n```Finizen | Inkay\r\nRellor | Pawmo | Bramblin\nKalos Sliggoo | White Basculin\nGimmighoul | Primeape | Bisharp```\n";
 
                 sv += "**__Friendship Swap__**\n";
                 sv += $"Function: Like Trilogy, but focuses on Friendship\nSets Friendship to MAX & Gives Best Friends + Partner Ribbons (Nickname: 'null' to disable ribbons)\nSwap Item: **{swaps[(int)swap.FriendshipSwapItem]}\n**";
@@ -630,7 +757,7 @@ namespace SysBot.Pokemon.Discord
 
                 sv += "**__Trade Evo <Purifier>__**\n";
                 sv += "Function: Evolve Basic Trade Evolutions\nSwap Item: **Everstone**\n";
-                sv += "__**Species**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke\nFeebas | Scyther | Dusclops```\n";
+                sv += "__**Species**__\n```Haunter | Graveler | Phantump\nGurdurr | Poliwhirl | Slowpoke\nFeebas | Scyther | Dusclops\nRhydon | Magmar```\n";
 
                 sv += "**__Gender Swap__**\n";
                 sv += $"Function: Allows Gender swap for existing Pokémon\nSwap Item: **{swaps[(int)swap.GenderSwapItem]}**\n";
@@ -652,11 +779,15 @@ namespace SysBot.Pokemon.Discord
                 sv += $"Function: Allows Date customization [**Must not have entered HOME**]\nSwap Item: **{swaps[(int)swap.DateSwapItem]}**\n";
                 sv += $"> Main purpose to fix correct date for Destiny Mark as the Bot cannot read your birthday\n> Fixed Year of 2023\n> Nickname a Pokémon in this format:\n> MM/DD\n> Make sure to not forget the / between Month & Day\n\n";
 
+                sv += "**__Ultimate Swapperino__**\n";
+                sv += $"Function: Performs many functions\nSwap Item: **{swaps[(int)swap.UltimateSwapItem]}**\n";
+                sv += $"> {p}us for more information\n\n";
+
                 Embed? embed = Sphealcl.EmbedSFList(sv, "Special Features - SV");
                 await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
             }
         }
-        
+
         [Command("mark")]
         [Alias("mk")]
         [Summary("Displays Mark Swap Info")]
@@ -672,6 +803,53 @@ namespace SysBot.Pokemon.Discord
 
             Embed? embed = Sphealcl.EmbedSFList(mk, "Mark Info", true);
             await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+        }
+
+        [Command("ultimate")]
+        [Alias("ulti", "us")]
+        [Summary("Displays Ultimate Swap Info")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task UltimateInfo()
+        {
+            var p = SysCordSettings.Settings.CommandPrefix;
+            var ut = "## __Instructions__\nCan be used on **ANY** Pokémon, However, will only apply possible swaps to it\n\n";
+            ut += "So what does this do? This is the ultimate swapperino of all swaps. This does *nearly* all possible swaps from the bot in a single trade & more\n";
+            ut += "In order for this to work, introducing an old method: TrashMon (You hit **B** and offer this trashmon to apply more options)\n\n";
+            ut += "Example: Lechonk nicknamed '**Steel**' & trashmon Fidough nicknamed '**Beast**' gets you Steel Tera & Beast Ball alongside the default swap options\n\n";
+
+            ut += "## __Any Pokémon (Default)__\n";
+            ut += "- Reset EVs | Revert to Original Tera | Set Lv to 1OO\n";
+            ut += "- Max PPups | Set all possible TMs | Max Friendship\n";
+            ut += "- Reset Mints\n\n";
+
+            ut += "## __Any Pokémon (Read brackets)__\n";
+            ut += "- Tera Swap (Nickname on either or Held Item) | EV Presets (Held Item on the **TRASHMON** only)\n";
+            ut += "- Best Friends & Partner Ribbons (Disable with nickname: **null**)\n\n";
+
+            ut += "## __SV Only (**Read brackets**)__\n";
+            ut += "- Date Swap (Held Item on the **TRASHMON** only) | Fix Egg Date to match Hatch Date (**Default**) | Remove all Marks & Ribbons (Req: **null** nickname)\n";
+            ut += "- Remove all PP ups (Nickname: **NoPPUP**) | Ball Swap (Nick on either or Held on **TRASHmon**) | Size Swap (Only **255** & **0**)\n";
+            ut += "- Randomize IVs (Nickname: **rndiv**) | Clear Nickname & Set to **YOUR** OT (**Default**) || Gender Swap (Held Item on the **TRASHMON** only)\n";
+            ut += "- Reset Level to Met Level (Nickname: **reset**) | Base Nature Swap (Held Item <Mint> on the **TRASHMON** only)\n\n";
+            ut += $"For details how to nickname for existing swap format check {p}spf or {p}spf2\n";
+
+            Embed? embed = Sphealcl.EmbedSFList(ut, "Ultimate Swap Info");
+            await ReplyAsync("", false, embed: embed).ConfigureAwait(false);
+        }
+
+        [Command("nohome")]
+        [Alias("10015", "homeerror")]
+        [Summary("Display FAQ for Home error")]
+        public async Task HomeFAQ()
+        {
+            var msg = "## Depositing Pokémon into HOME\n\n";
+            msg += "Starting with HOME Ver. 3.1.0, the servers will now validate Pokémon based on their HOME data (or lack thereof).\n\n";
+            msg += "This can include the following:\r\n- Having no HOME Tracker.\r\n- The existing HOME data is invalid.\r\n- Immutable stats (such as IVs) were modified after being assigned a valid HOME Tracker.\n\n";
+            msg += "To avoid this error code, you should only be generating Pokémon in their respective origin games (e.g. BDSP Darkrai in BDSP, not SV), and transfer them to other games using HOME, not PKHeX.\n\n";
+            msg += "Note that this is not an issue that can (ever) be solved by PKHeX or the bot owner\n";
+
+            EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Error Code 10015");
+            await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
         }
     }
 }

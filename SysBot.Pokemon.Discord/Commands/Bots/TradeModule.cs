@@ -72,10 +72,12 @@ namespace SysBot.Pokemon.Discord
                 if (pkm is not T pk || !la.Valid)
                 {
                     var reason = result == "Timeout" ? $"That {spec} set took too long to generate." : result == "VersionMismatch" ? "Request refused: PKHeX and Auto-Legality Mod version mismatch." : $"I wasn't able to create a {spec} from that set.";
-                    var imsg = $"Oops! {reason}";
+                    var imsg = $"{Context.User.Mention}, {reason}";
                     if (result == "Failed")
                         imsg += $"\n{AutoLegalityWrapper.GetLegalizationHint(template, sav, pkm)}";
-                    await ReplyAsync(imsg).ConfigureAwait(false);
+
+                    EmbedBuilder? embed = Sphealcl.EmbedGeneric(imsg, "Illegal Set");
+                    await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
                     return;
                 }
                 pk.ResetPartyStats();
@@ -196,14 +198,17 @@ namespace SysBot.Pokemon.Discord
         {
             if (!pk.CanBeTraded())
             {
-                await ReplyAsync("Provided Pokémon content is blocked from trading!").ConfigureAwait(false);
+                await ReplyAsync($"Provided File: **{pk.FileName}** is blocked from trading!").ConfigureAwait(false);
                 return;
             }
 
             var la = new LegalityAnalysis(pk);
             if (!la.Valid)
             {
-                await ReplyAsync($"{typeof(T).Name} attachment is not legal, and cannot be traded!").ConfigureAwait(false);
+                var msg = $"{Context.User.Mention}, **{pk.FileName}** is not legal, and cannot be traded!\n\n__**Legality Analysis**__\n```{la.Report()}```";
+                EmbedBuilder? embed = Sphealcl.EmbedGeneric(msg, "Illegal File");
+                await ReplyAsync("", false, embed: embed.Build()).ConfigureAwait(false);
+                await Context.Channel.SendPKMAsync(pk, "__Attached File__").ConfigureAwait(false);
                 return;
             }
 

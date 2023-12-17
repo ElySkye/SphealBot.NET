@@ -56,6 +56,7 @@ namespace SysBot.Pokemon
         private int _completedFriendshipSwaps;
         private int _completedMarkSwaps;
         private int _completedDateSwaps;
+        private int _completedUltimateSwaps;
         private int _completedEVSwaps;
         private int _completedDoubleSwaps;
         private int _completedMystery;
@@ -153,6 +154,13 @@ namespace SysBot.Pokemon
             set => _completedDateSwaps = value;
         }
 
+        [Category(Counts), Description("Completed Ultimate Swap Trades")]
+        public int CompletedUltimateSwaps
+        {
+            get => _completedUltimateSwaps;
+            set => _completedUltimateSwaps = value;
+        }
+
         [Category(Counts), Description("Completed EV Swap Trades")]
         public int CompletedEVSwaps
         {
@@ -212,6 +220,7 @@ namespace SysBot.Pokemon
         public void AddCompletedFriendshipSwaps() => Interlocked.Increment(ref _completedFriendshipSwaps);
         public void AddCompletedMarkSwaps() => Interlocked.Increment(ref _completedMarkSwaps);
         public void AddCompletedDateSwaps() => Interlocked.Increment(ref _completedDateSwaps);
+        public void AddCompletedUltimateSwaps() => Interlocked.Increment(ref _completedUltimateSwaps);
         public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
         public void AddCompletedDoubleSwaps() => Interlocked.Increment(ref _completedDoubleSwaps);
         public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
@@ -252,6 +261,8 @@ namespace SysBot.Pokemon
                 yield return $"Mark Swaps: {CompletedMarkSwaps}";
             if (CompletedDateSwaps != 0)
                 yield return $"Date Swaps: {CompletedDateSwaps}";
+            if (CompletedUltimateSwaps != 0)
+                yield return $"Ultimate Swaps: {CompletedUltimateSwaps}";
             if (CompletedEVSwaps != 0)
                 yield return $"EV Swaps: {CompletedEVSwaps}";
             if (CompletedDoubleSwaps != 0)

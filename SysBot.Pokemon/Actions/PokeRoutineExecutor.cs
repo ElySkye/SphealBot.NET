@@ -166,12 +166,15 @@ namespace SysBot.Pokemon
                 }
             }
                 // Matches to a list of banned NIDs, in case the user ever manages to enter a trade.
-                var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
+                    var entry = AbuseSettings.BannedIDs.List.Find(z => z.ID == TrainerNID);
             if (entry != null)
             {
                 var banexpire = AbuseSettings.BannedIDs.List[banIndex].Expiration;
                 if (AbuseSettings.BlockDetectedBannedUser && bot is PokeRoutineExecutor8SWSH)
                     await BlockUser(token).ConfigureAwait(false);
+                var cmsg = $"{AbuseSettings.BannedIDMatchEchoMention}";
+                if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
+                    EchoUtil.Echo(cmsg);
                 var bmsg = $"🚨 Alert 🚨\n";
                 if (!string.IsNullOrWhiteSpace(entry.Comment))
                 {
@@ -181,11 +184,7 @@ namespace SysBot.Pokemon
                     bmsg += $"Release Date: {banexpire}";
                     EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "[Warning] Detected Banned NPC"));
                 }
-                if (!string.IsNullOrWhiteSpace(AbuseSettings.BannedIDMatchEchoMention))
-                {
-                    bmsg = $"{AbuseSettings.BannedIDMatchEchoMention} {bmsg}";
-                    EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "[Warning] Detected Banned NPC"));
-                }
+
                 return PokeTradeResult.SuspiciousActivity;
             }
             if (wlIndex > -1)
@@ -207,35 +206,37 @@ namespace SysBot.Pokemon
             if (previous != null)
             {
                 var delta = DateTime.Now - previous.Time; // Time that has passed since last trade.
-                var coolDelta = DateTime.Now - DateTime.ParseExact(AbuseSettings.CooldownUpdate, "yyyy.MM.dd - HH:mm:ss", CultureInfo.InvariantCulture);
                 Log($"Last saw {user.TrainerName} {delta.TotalMinutes:F1} minutes ago (OT: {TrainerName}).");
 
                 var cd = AbuseSettings.TradeCooldown;
                 attempts = listCool.TryInsert(TrainerNID, TrainerName);
                 if (cd != 0 && TimeSpan.FromMinutes(cd) > delta && !wlAllow)
                 {
+                    var msg = "";
                     list.TryRegister(TrainerNID, TrainerName);
-                    var msg = $"**{TrainerName}** was caught by the NPC Police\n**NPC ID**: {TrainerNID}";
+                    if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
+                        msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
+                    else
+                        msg = $"**{TrainerName}** was caught by the NPC Police\n**NPC ID**: {TrainerNID}";
                     var wait = TimeSpan.FromMinutes(cd) - delta;
 
                     poke.Notifier.SendNotification(bot, poke, $"You are still on cooldown, CD missed by **{wait.TotalMinutes:F1}** minute(s).");
                     if (AbuseSettings.EchoNintendoOnlineIDCooldown)
                         EchoUtil.EchoEmbed(spheal.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));
 
-                    if (!string.IsNullOrWhiteSpace(AbuseSettings.CooldownAbuseEchoMention))
-                    {
-                        msg = $"{AbuseSettings.CooldownAbuseEchoMention} {msg}";
-                        EchoUtil.EchoEmbed(spheal.EmbedCDMessage(delta, cd, attempts, AbuseSettings.RepeatConnections, msg, "[Warning] NPC Detection"));
-                    }
-                    if (AbuseSettings.AutoBanCooldown && TimeSpan.FromMinutes(30) < coolDelta)
+                    if (AbuseSettings.AutoBanCooldown)
                     {
                         if (attempts >= AbuseSettings.RepeatConnections)
                         {
                             DateTime expires = DateTime.Now.AddDays(2);
                             string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
                             AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(TrainerName, TrainerNID, "Autobanned on", expiration) });
+                            int banIndex2 = AbuseSettings.BannedIDs.List.FindIndex(z => z.ID == TrainerNID);
+                            var banExpires2 = AbuseSettings.BannedIDs.List[banIndex2].Expiration;
+
                             var bmsg = $"Unfortunately...\n";
                             bmsg += $"{TrainerName}-{TrainerNID} has been **BANNED** for cooldown abuse\n";
+                            bmsg += $"Release Date: {banExpires2}\n";
                             EchoUtil.EchoEmbed(spheal.EmbedBanMessage(bmsg, "Cooldown Abuse Ban", true));
                         }
                     }
@@ -314,7 +315,7 @@ namespace SysBot.Pokemon
                 PreviousUsers.TryRegister(TrainerNID, TrainerName, poke.Trainer.ID);
         }
 
-        private static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "yyyy.MM.dd hh:mm:ss") => new()
+        public static RemoteControlAccess GetReference(string name, ulong id, string comment, string expiration = "yyyy.MM.dd hh:mm:ss") => new()
         {
             ID = id,
             Name = name,

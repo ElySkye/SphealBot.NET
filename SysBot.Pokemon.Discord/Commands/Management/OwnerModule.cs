@@ -35,7 +35,7 @@ namespace SysBot.Pokemon.Discord
 
         [Command("addChannel")]
         [Summary("Adds a channel to the list of channels that are accepting commands.")]
-        [RequireOwner]
+        [RequireSudo]
         // ReSharper disable once UnusedParameter.Global
         public async Task AddChannel()
         {

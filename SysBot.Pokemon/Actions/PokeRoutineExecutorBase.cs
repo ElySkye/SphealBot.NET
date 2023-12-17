@@ -20,6 +20,7 @@ namespace SysBot.Pokemon
         public static readonly TrackedUserLog PreviousUsers = new();
         public static readonly TrackedUserLog PreviousUsersDistribution = new();
         public static readonly CooldownTracker UserCooldowns = new();
+        public static readonly TradeEvoTracker EvoTracker = new();
 
         public override string GetSummary()
         {

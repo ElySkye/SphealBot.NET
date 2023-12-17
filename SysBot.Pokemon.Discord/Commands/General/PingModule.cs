@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Commands;
+﻿using Discord.Commands;
 using System;
 using System.Threading.Tasks;
 
@@ -11,9 +10,10 @@ namespace SysBot.Pokemon.Discord
         [Summary("Makes the bot respond, indicating that it is running.")]
         public async Task PingAsync()
         {
+            var custom = SysCordSettings.HubConfig.CustomEmbed;
             var msg = "";
             Random rndmsg = new();
-            int num = rndmsg.Next(1, 7);
+            int num = rndmsg.Next(1, 12);
             switch (num)
             {
                 case 1:
@@ -33,6 +33,17 @@ namespace SysBot.Pokemon.Discord
                     break;
                 case 6:
                     msg = "https://tenor.com/view/cat-ping-pong-funny-animals-cats-gif-8766860";
+                    break;
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                case 11:
+                case 12:
+                    if (custom.CustomGIFs && custom.CustomPingMsg != null)
+                        msg = $"{custom.CustomPingMsg}";
+                    else
+                        msg = "https://media.tenor.com/WHOwHxdVSQIAAAAC/capoo-capoo-type.gif";
                     break;
             }
             await ReplyAsync(msg).ConfigureAwait(false);

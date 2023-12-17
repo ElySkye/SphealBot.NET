@@ -1,6 +1,5 @@
 ﻿using PKHeX.Core;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using System.Net.Http;
@@ -32,7 +31,9 @@ namespace SysBot.Pokemon
 
             string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
+#pragma warning disable CS8604 // Possible null reference argument.
             Color embedMsgColor = new Color((uint)Enum.Parse(typeof(EmbedColor), Enum.GetName(typeof(Ball), toSend.Ball)));
+#pragma warning restore CS8604 // Possible null reference argument.
 
             EmbedBuilder embedBuilder = new()
             {
@@ -44,9 +45,9 @@ namespace SysBot.Pokemon
             Embed embedMsg = embedBuilder.Build();
             EchoUtil.EchoEmbed(embedMsg);
         }
-        public async Task EmbedAlertMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, string msgTitle)
+        public async Task EmbedAlertMessage(PKM offered, bool CanGMAX, uint formArg, string msg, string msgTitle)
         {
-            string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+            string embedThumbUrl = await EmbedImgUrlBuilder(offered, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
             EmbedAuthorBuilder embedAuthor = new()
             {
@@ -66,7 +67,7 @@ namespace SysBot.Pokemon
 
             EchoUtil.EchoEmbed(embedMsg);
         }
-        public async Task EmbedMarkMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, int counts, string msgTitle)
+        public async Task EmbedMarkMessage(PKM toSend, bool CanGMAX, uint formArg, string msg, int counts, string msgTitle, string markimg)
         {
             string embedThumbUrl = await EmbedImgUrlBuilder(toSend, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
 
@@ -85,6 +86,47 @@ namespace SysBot.Pokemon
             {
                 Color = Color.Gold,
                 ThumbnailUrl = embedThumbUrl,
+                ImageUrl = markimg,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+
+            Embed embedMsg = embedBuilder.Build();
+
+            EchoUtil.EchoEmbed(embedMsg);
+        }
+        public async Task EmbedTradeEvoMsg(PKM offered, bool CanGMAX, uint formArg, string msg, string msgTitle, int attempts, int repeatConnections, bool banned = false)
+        {
+            string embedImageURL = "";
+            var custom = Hub.CustomEmbed;
+            
+            if (banned)
+            {
+                if (custom.CustomGIFs && custom.BanEmbedGIF != null)
+                    embedImageURL = $"{custom.BanEmbedGIF}";
+                else
+                    embedImageURL = "https://media.tenor.com/9zCgefg___cAAAAC/bane-no.gif";
+            }
+
+            string embedThumbUrl = await EmbedImgUrlBuilder(offered, CanGMAX, formArg.ToString("00000000")).ConfigureAwait(false);
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/alert.png",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Strike {attempts} out of {repeatConnections}",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/approvalspheal.png"
+            };
+
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Red,
+                ThumbnailUrl = embedThumbUrl,
+                ImageUrl = embedImageURL,
                 Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr
@@ -100,7 +142,7 @@ namespace SysBot.Pokemon
             string embedThumbUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png";
             string embedImageURL;
 
-            if (custom.CustomGIFs)
+            if (custom.CustomGIFs && custom.CooldownGIF != null)
                 embedImageURL = $"{custom.CooldownGIF}";
             else
                 embedImageURL = "https://media.tenor.com/6Wu-MMdSdu8AAAAC/officer-dogdog-capoo.gif";
@@ -151,27 +193,11 @@ namespace SysBot.Pokemon
             };
             return embedBuilder;
         }
-        public static EmbedBuilder EmbedGeneric(string msg, string msgTitle, string gif, bool spheal = false)
+        public static EmbedBuilder EmbedGeneric(string msg, string msgTitle)
         {
-            Color color;
-            string icon;
-            string embedImageURL;
-
-            if (spheal)
-            {
-                embedImageURL = gif;
-                icon = "https://cdn.discordapp.com/emojis/1115571174949265428.gif?size=128&quality=lossless";
-                color = Color.Teal;
-            }
-            else
-            {
-                embedImageURL = "";
-                icon = "https://archives.bulbagarden.net/media/upload/b/bb/Tretta_Mega_Evolution_icon.png";
-                color = Color.DarkOrange;
-            }
             EmbedAuthorBuilder embedAuthor = new()
             {
-                IconUrl = icon,
+                IconUrl = "https://archives.bulbagarden.net/media/upload/b/bb/Tretta_Mega_Evolution_icon.png",
                 Name = msgTitle,
             };
             EmbedFooterBuilder embedFtr = new()
@@ -181,8 +207,29 @@ namespace SysBot.Pokemon
             };
             EmbedBuilder embedBuilder = new()
             {
-                Color = color,
-                ImageUrl = embedImageURL,
+                Color = Color.DarkOrange,
+                Description = "" + msg + "",
+                Author = embedAuthor,
+                Footer = embedFtr
+            };
+            return embedBuilder;
+        }
+        public static EmbedBuilder EmbedSpheal(string msg, string msgTitle, string gif, int counts)
+        {
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://cdn.discordapp.com/emojis/1115571174949265428.gif?size=128&quality=lossless",
+                Name = msgTitle,
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"Spheal Facts Read: {counts}",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
+            EmbedBuilder embedBuilder = new()
+            {
+                Color = Color.Teal,
+                ImageUrl = gif,
                 Description = "" + msg + "",
                 Author = embedAuthor,
                 Footer = embedFtr
@@ -195,7 +242,7 @@ namespace SysBot.Pokemon
             string embedImageURL;
             var custom = Hub.CustomEmbed;
 
-            if (custom.CustomGIFs)
+            if (custom.CustomGIFs && custom.BanEmbedGIF != null && custom.BanUEmbedGIF != null)
             {
                 if (banned)
                     embedImageURL = $"{custom.BanEmbedGIF}";
@@ -205,9 +252,9 @@ namespace SysBot.Pokemon
             else
             {
                 if (banned)
-                    embedImageURL = "https://media.tenor.com/9zCgefg___cAAAAC/bane-no.gif";
+                    embedImageURL = "https://media.tenor.com/mjsMmSBtmzIAAAAd/honkai-star-rail-kafka.gif";
                 else
-                    embedImageURL = "https://media.tenor.com/WFa_7zf0KvgAAAAC/waiting-i-did-my-waiting.gif";
+                    embedImageURL = "https://media.tenor.com/oRmZ2_3oHZQAAAAd/topaz-star-rail.gif";
             }
 
             EmbedAuthorBuilder embedAuthor = new()
@@ -337,6 +384,33 @@ namespace SysBot.Pokemon
                 }
             }
             return URLString;
+        }
+        public static string MoveTypeImage(ushort move, CustomEmbedSettings custom, EntityContext context)
+        {
+            string url;
+            url = (MoveType)MoveInfo.GetType(move, context) switch
+            {
+                MoveType.Bug => custom.TeraIMGBug,
+                MoveType.Dark => custom.TeraIMGDark,
+                MoveType.Dragon => custom.TeraIMGDragon,
+                MoveType.Electric => custom.TeraIMGElectric,
+                MoveType.Fairy => custom.TeraIMGFairy,
+                MoveType.Fighting => custom.TeraIMGFighting,
+                MoveType.Fire => custom.TeraIMGFire,
+                MoveType.Flying => custom.TeraIMGFlying,
+                MoveType.Ghost => custom.TeraIMGGhost,
+                MoveType.Grass => custom.TeraIMGGrass,
+                MoveType.Ground => custom.TeraIMGGround,
+                MoveType.Ice => custom.TeraIMGIce,
+                MoveType.Normal => custom.TeraIMGNormal,
+                MoveType.Poison => custom.TeraIMGPoison,
+                MoveType.Psychic => custom.TeraIMGPsychic,
+                MoveType.Rock => custom.TeraIMGRock,
+                MoveType.Steel => custom.TeraIMGSteel,
+                MoveType.Water => custom.TeraIMGWater,
+                _ => custom.TeraIMGStellar, //unreleased
+            };
+            return url;
         }
     }
 }

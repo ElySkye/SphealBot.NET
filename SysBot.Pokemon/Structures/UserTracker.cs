@@ -172,4 +172,84 @@ namespace SysBot.Pokemon
             Count = 0;
         }
     }
+    public class TradeEvoTracker
+    {
+        private const int Capacity = 1000;
+        private readonly List<TrackedTradeEvo> Users = new(Capacity);
+        private readonly object _sync = new();
+        private int ReplaceIndex;
+
+        public TrackedTradeEvo? TryGetPrevious(ulong trainerNid)
+        {
+            lock (_sync)
+                return Users.Find(z => z.NetworkID == trainerNid);
+        }
+
+        public int TryInsert(ulong id, string name, bool reset = false)
+        {
+            var user = TryGetPrevious(id);
+            if (user == null)
+            {
+                lock (_sync)
+                    Insert(id, name);
+                user = TryGetPrevious(id);
+                if (user != null)
+                {
+                    lock (_sync)
+                        Update(user);
+                }
+                return 1;
+            }
+
+            if (reset)
+            {
+                lock (_sync)
+                    return Update(user, true);
+            }
+
+            lock (_sync)
+                return Update(user);
+        }
+
+        private int Update(TrackedTradeEvo user, bool reset = false)
+        {
+            var index = Users.IndexOf(user);
+            if (reset)
+            {
+                Users[index].Count = 0;
+            }
+            else
+            {
+                Users[index].Count++;
+            }
+            return Users[index].Count;
+        }
+
+        private void Insert(ulong id, string name)
+        {
+            var user = new TrackedTradeEvo(id, name);
+            if (Users.Count != Capacity)
+            {
+                Users.Add(user);
+                return;
+            }
+
+            Users[ReplaceIndex] = user;
+            ReplaceIndex = (ReplaceIndex + 1) % Capacity;
+        }
+    }
+
+    public sealed record TrackedTradeEvo
+    {
+        public string Name { get; set; }
+        public ulong NetworkID { get; set; }
+        public ushort Count { get; set; }
+
+        public TrackedTradeEvo(ulong NetworkID, string name)
+        {
+            this.NetworkID = NetworkID;
+            Name = name;
+            Count = 0;
+        }
+    }
 }

@@ -18,10 +18,24 @@ namespace SysBot.Pokemon.Discord
         {
             var me = SysCord<T>.Runner;
             var hub = me.Hub;
+            var bots = me.Bots.Select(z => z.Bot).OfType<PokeRoutineExecutorBase>().ToArray();
+
+            EmbedAuthorBuilder embedAuthor = new()
+            {
+                IconUrl = "https://cdn.discordapp.com/emojis/1116237525665718352.webp?size=128&quality=lossless",
+                Name = "Bot Summary & Status",
+            };
+            EmbedFooterBuilder embedFtr = new()
+            {
+                Text = $"SphealBot",
+                IconUrl = "https://raw.githubusercontent.com/PhantomL98/HomeImages/main/Sprites/200x200/poke_capture_0363_000_mf_n_00000000_f_n.png"
+            };
 
             var builder = new EmbedBuilder
             {
+                Author = embedAuthor,
                 Color = Color.Gold,
+                Footer = embedFtr
             };
 
             var runner = SysCord<T>.Runner;
@@ -44,7 +58,7 @@ namespace SysBot.Pokemon.Discord
                 var msg = string.Join("\n", lines);
                 if (string.IsNullOrWhiteSpace(msg))
                     msg = "Nothing counted yet!";
-                x.Name = "Counts";
+                x.Name = "Trade Stats";
                 x.Value = msg;
                 x.IsInline = false;
             });
@@ -79,7 +93,27 @@ namespace SysBot.Pokemon.Discord
                 });
             }
 
-            await ReplyAsync("Bot Status", false, builder.Build()).ConfigureAwait(false);
+            builder.AddField(x =>
+            {
+                var bot0 = me.Bots.Select(z => z.Bot).OfType<PokeRoutineExecutorBase>().ToArray();
+                var summaries = bot0.Select(GetDetailedSummary);
+                var lines = string.Join("\n", summaries);
+                if (bot0.Length == 0)
+                {
+                    lines = "No bots configured.";
+                }
+
+                var msgS = string.Join("\n", lines);
+                x.Name = "Bot Status";
+                x.Value = msgS;
+                x.IsInline = false;
+            });
+
+            await ReplyAsync("", false, builder.Build()).ConfigureAwait(false);
+        }
+        private static string GetDetailedSummary(PokeRoutineExecutorBase z)
+        {
+            return $"```{z.Connection.Label} - {z.Config.CurrentRoutineType} ~ {z.LastTime:hh:mm:ss} | {z.LastLogged}```";
         }
 
         private static string GetNextName(PokeTradeQueue<T> q)

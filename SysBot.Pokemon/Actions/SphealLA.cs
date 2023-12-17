@@ -200,11 +200,19 @@ namespace SysBot.Pokemon
             var cln = (PA8)toSend.Clone();
             var custom = Hub.Config.CustomSwaps;
             var tradepartner = await GetTradePartnerInfo(token).ConfigureAwait(false);
+            var partner = tradepartner.TrainerName;
 
             cln.TrainerTID7 = Convert.ToUInt32(tradepartner.TID7);
             cln.TrainerSID7 = Convert.ToUInt32(tradepartner.SID7);
             cln.Language = tradepartner.Language;
-            cln.OT_Name = tradepartner.TrainerName;
+            string pattern = "(yt\\.? | youtube\\.? | ttv\\.? | tv\\.?)";
+            if (partner.Contains('.') || Regex.IsMatch(partner, pattern, RegexOptions.IgnoreCase))
+            {
+                cln.OT_Name = Regex.Replace(partner, pattern, string.Empty, RegexOptions.IgnoreCase); //Gives their OT without the Ads in the name
+                cln.OT_Name = partner.Replace(".", string.Empty); //Allow users who accidentally have a fullstop in their IGN
+            }
+            else
+                cln.OT_Name = partner;
             cln.OT_Gender = tradepartner.Gender;
             cln.Version = tradepartner.Game;
             cln.ClearNickname();
@@ -228,8 +236,8 @@ namespace SysBot.Pokemon
                 {
                     Log($"OT info swapped to:");
                     Log($"OT_Name: {cln.OT_Name}");
-                    Log($"TID: {cln.TrainerTID7}");
-                    Log($"SID: {cln.TrainerSID7}");
+                    Log($"TID: {cln.TrainerTID7:000000}");
+                    Log($"SID: {cln.TrainerSID7:0000}");
                     Log($"Gender: {(Gender)cln.OT_Gender}");
                     Log($"Language: {(LanguageID)(cln.Language)}");
                 }
@@ -240,6 +248,44 @@ namespace SysBot.Pokemon
             else
                 Log($"Sending original Pokémon as it can't be OT swapped");
             return tradela.Valid;
+        }
+        private async Task<(PA8 offered, PokeTradeResult check)> HandleTradeEvo(PokeTradeDetail<PA8> poke, PA8 offered, PA8 toSend, PartnerDataHolder partner, CancellationToken token)
+        {
+            bool isDistribution = true;
+            var list = isDistribution ? PreviousUsersDistribution : PreviousUsers;
+            var listCool = UserCooldowns;
+            var listEvo = EvoTracker;
+            var trainerNID = await GetTradePartnerNID(TradePartnerNIDOffset, token).ConfigureAwait(false);
+            var cd = AbuseSettings.TradeCooldown;
+            var user = partner.TrainerName;
+            var offers = GameInfo.GetStrings(1).Species[offered.Species];
+            int attempts;
+            attempts = listEvo.TryInsert(trainerNID, user);
+
+            list.TryRegister(trainerNID, partner.TrainerName);
+
+            Log($"{user} is trying to give a trade evolution ({offered.Species})");
+            if (poke.Type == PokeTradeType.LinkLA)
+                poke.SendNotification(this, $"```No Trade Evolutions\nAttach an everstone to allow trading```");
+            var msg = $"\n{user} is trying to give a trade evolution\n";
+            msg += $"\nEquip an Everstone on **{offers}** to allow trade";
+            await SphealEmbed.EmbedTradeEvoMsg(offered, false, offered.FormArgument, msg, "Illegal Activity", attempts, AbuseSettings.RepeatConnections).ConfigureAwait(false);
+
+            if (AbuseSettings.AutoBanCooldown && cd == 0)
+            {
+                if (attempts >= AbuseSettings.RepeatConnections)
+                {
+                    if (poke.Type == PokeTradeType.LinkLA)
+                        poke.SendNotification(this, $"```No Trade Evolutions\nYou are now banned for 3 days```");
+                    DateTime expires = DateTime.Now.AddDays(3);
+                    string expiration = $"{expires:yyyy.MM.dd hh:mm:ss}";
+                    AbuseSettings.BannedIDs.AddIfNew(new[] { GetReference(user, trainerNID, "Autobanned for tradeEvo", expiration) });
+                    msg = $"\n{user} tried to give a trade evolution too many times\n";
+                    msg += $"\nNo punishment evasion, They are now banned for 3 days";
+                    await SphealEmbed.EmbedTradeEvoMsg(offered, false, offered.FormArgument, msg, "Trade Evo Ban", attempts, AbuseSettings.RepeatConnections, true).ConfigureAwait(false);
+                }
+            }
+            return (toSend, PokeTradeResult.TradeEvo);
         }
     }
 }
