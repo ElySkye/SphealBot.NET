@@ -3,32 +3,33 @@ using NLog.Config;
 using NLog.Targets;
 using System.IO;
 
-namespace SysBot.Base;
-
-public static class RecordUtil<T>
+namespace SysBot.Base
 {
-    private static LoggingConfiguration GetConfig()
+    public static class RecordUtil<T>
     {
-        var config = new LoggingConfiguration();
-        const string dir = "records";
-        Directory.CreateDirectory(dir);
-        var name = typeof(T).Name;
-        var record = new FileTarget("record")
+        private static LoggingConfiguration GetConfig()
         {
-            FileName = Path.Combine(dir, $"{name}.txt"),
-            ConcurrentWrites = true,
+            var config = new LoggingConfiguration();
+            const string dir = "records";
+            Directory.CreateDirectory(dir);
+            var name = typeof(T).Name;
+            var record = new FileTarget("record")
+            {
+                FileName = Path.Combine(dir, $"{name}.txt"),
+                ConcurrentWrites = true,
 
-            ArchiveEvery = FileArchivePeriod.None,
-            ArchiveNumbering = ArchiveNumberingMode.Sequence,
-            ArchiveFileName = Path.Combine(dir, $"{name}.{{#}}.txt"),
-            ArchiveAboveSize = 104857600, // 100MB (never)
-            MaxArchiveFiles = 14,
-        };
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, record);
-        return config;
+                ArchiveEvery = FileArchivePeriod.None,
+                ArchiveNumbering = ArchiveNumberingMode.Sequence,
+                ArchiveFileName = Path.Combine(dir, $"{name}.{{#}}.txt"),
+                ArchiveAboveSize = 104857600, // 100MB (never)
+                MaxArchiveFiles = 14,
+            };
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, record);
+            return config;
+        }
+
+        // ReSharper disable once StaticMemberInGenericType
+        private static readonly ILogger Logger = new LogFactory { Configuration = GetConfig() }.GetCurrentClassLogger();
+        public static void Record(string message) => Logger.Log(LogLevel.Info, message);
     }
-
-    // ReSharper disable once StaticMemberInGenericType
-    private static readonly Logger Logger = new LogFactory { Configuration = GetConfig() }.GetCurrentClassLogger();
-    public static void Record(string message) => Logger.Log(LogLevel.Info, message);
 }

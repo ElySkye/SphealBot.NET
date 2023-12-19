@@ -1,17 +1,18 @@
 ﻿using Discord.Commands;
 using System.Threading.Tasks;
 
-namespace SysBot.Pokemon.Discord;
-
-public class HelloModule : ModuleBase<SocketCommandContext>
+namespace SysBot.Pokemon.Discord
 {
-    [Command("hello")]
-    [Alias("says hi")]
-    [Summary("Spheal Speaks")]
-    public async Task PingAsync()
+    public class HelloModule : ModuleBase<SocketCommandContext>
     {
-        var str = SysCordSettings.Settings.HelloResponse;
-        var msg = string.Format(str, Context.User.Mention);
-        await ReplyAsync(msg).ConfigureAwait(false);
+        [Command("hello")]
+        [Alias("says hi")]
+        [Summary("Spheal Speaks")]
+        public async Task PingAsync()
+        {
+            var str = SysCordSettings.Settings.HelloResponse;
+            var msg = string.Format(str, Context.User.Mention);
+            await ReplyAsync(msg).ConfigureAwait(false);
+        }
     }
 }

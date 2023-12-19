@@ -1,13 +1,14 @@
-﻿namespace SysBot.Pokemon;
-
-public sealed record PokeTradeSummaryDetail
+﻿namespace SysBot.Pokemon
 {
-    public readonly string Heading;
-    public readonly string Detail;
-
-    public PokeTradeSummaryDetail(string heading, string detail)
+    public sealed record PokeTradeSummaryDetail
     {
-        Heading = heading;
-        Detail = detail;
+        public readonly string Heading;
+        public readonly string Detail;
+
+        public PokeTradeSummaryDetail(string heading, string detail)
+        {
+            Heading = heading;
+            Detail = detail;
+        }
     }
 }

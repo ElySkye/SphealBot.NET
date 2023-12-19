@@ -1,10 +1,11 @@
-﻿namespace SysBot.Pokemon;
-
-public enum QueueResultAdd
+﻿namespace SysBot.Pokemon
 {
-    /// <summary> Successfully added to the queue. </summary>
-    Added,
+    public enum QueueResultAdd
+    {
+        /// <summary> Successfully added to the queue. </summary>
+        Added,
 
-    /// <summary> Did not add; was already in the queue. </summary>
-    AlreadyInQueue,
+        /// <summary> Did not add; was already in the queue. </summary>
+        AlreadyInQueue,
+    }
 }

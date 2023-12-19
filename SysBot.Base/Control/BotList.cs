@@ -1,11 +1,14 @@
-﻿namespace SysBot.Base;
+﻿using System;
 
-/// <summary>
-/// List of bots saved in the config.
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public class BotList<T> where T : IConsoleBotConfig
+namespace SysBot.Base
 {
-    /// <summary> Saved bots </summary>
-    public T[] Bots { get; set; } = [];
+    /// <summary>
+    /// List of bots saved in the config.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class BotList<T> where T : IConsoleBotConfig
+    {
+        /// <summary> Saved bots </summary>
+        public T[] Bots { get; set; } = Array.Empty<T>();
+    }
 }

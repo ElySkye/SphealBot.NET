@@ -1,8 +1,9 @@
-﻿namespace SysBot.Pokemon;
-
-public enum ContinueAfterMatch
+﻿namespace SysBot.Pokemon
 {
-    Continue,
-    PauseWaitAcknowledge,
-    StopExit,
+    public enum ContinueAfterMatch
+    {
+        Continue,
+        PauseWaitAcknowledge,
+        StopExit,
+    }
 }

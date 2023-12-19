@@ -2,35 +2,36 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace SysBot.Base;
-
-public class BotSynchronizer
+namespace SysBot.Base
 {
-    private readonly ISynchronizationSetting Config;
-
-    public BotSynchronizer(ISynchronizationSetting hub)
+    public class BotSynchronizer
     {
-        Config = hub;
-        Barrier = new Barrier(0, ReleaseBarrier);
-    }
+        private readonly ISynchronizationSetting Config;
 
-    /// <summary>
-    /// Blocks bots from proceeding until all participating bots are waiting at the same step.
-    /// </summary>
-    public readonly Barrier Barrier;
+        public BotSynchronizer(ISynchronizationSetting hub)
+        {
+            Config = hub;
+            Barrier = new Barrier(0, ReleaseBarrier);
+        }
 
-    public readonly List<Action> BarrierReleasingActions = [];
+        /// <summary>
+        /// Blocks bots from proceeding until all participating bots are waiting at the same step.
+        /// </summary>
+        public readonly Barrier Barrier;
 
-    /// <summary>
-    /// When the Barrier releases the bots, this method is executed before the bots continue execution.
-    /// </summary>
-    private void ReleaseBarrier(Barrier b)
-    {
-        foreach (var action in BarrierReleasingActions)
-            action();
+        public readonly List<Action> BarrierReleasingActions = new();
 
-        var ms = Config.SynchronizeDelayBarrier;
-        if (ms != 0)
-            Thread.Sleep(ms);
+        /// <summary>
+        /// When the Barrier releases the bots, this method is executed before the bots continue execution.
+        /// </summary>
+        private void ReleaseBarrier(Barrier b)
+        {
+            foreach (var action in BarrierReleasingActions)
+                action();
+
+            var ms = Config.SynchronizeDelayBarrier;
+            if (ms != 0)
+                Thread.Sleep(ms);
+        }
     }
 }

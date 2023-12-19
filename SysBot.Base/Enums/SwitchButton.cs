@@ -1,26 +1,27 @@
-﻿namespace SysBot.Base;
-
-/// <summary>
-/// Controller Buttons
-/// </summary>
-public enum SwitchButton
+﻿namespace SysBot.Base
 {
-    A,
-    B,
-    X,
-    Y,
-    RSTICK,
-    LSTICK,
-    L,
-    R,
-    ZL,
-    ZR,
-    PLUS,
-    MINUS,
-    DUP,
-    DDOWN,
-    DLEFT,
-    DRIGHT,
-    HOME,
-    CAPTURE,
+    /// <summary>
+    /// Controller Buttons
+    /// </summary>
+    public enum SwitchButton
+    {
+        A,
+        B,
+        X,
+        Y,
+        RSTICK,
+        LSTICK,
+        L,
+        R,
+        ZL,
+        ZR,
+        PLUS,
+        MINUS,
+        DUP,
+        DDOWN,
+        DLEFT,
+        DRIGHT,
+        HOME,
+        CAPTURE,
+    }
 }

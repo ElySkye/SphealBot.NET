@@ -1,8 +1,9 @@
-﻿namespace SysBot.Base;
-
-public interface ISynchronizationSetting
+﻿namespace SysBot.Base
 {
-    BotSyncOption SynchronizeBots { get; set; }
-    int SynchronizeDelayBarrier { get; set; }
-    double SynchronizeTimeout { get; set; }
+    public interface ISynchronizationSetting
+    {
+        BotSyncOption SynchronizeBots { get; set; }
+        int SynchronizeDelayBarrier { get; set; }
+        double SynchronizeTimeout { get; set; }
+    }
 }

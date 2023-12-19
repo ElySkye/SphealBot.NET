@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 using YouTube.Base;
 
-namespace SysBot.Pokemon.YouTube;
-
-internal static class Scopes
+namespace SysBot.Pokemon.YouTube
 {
-    public static readonly IReadOnlyList<OAuthClientScopeEnum> scopes = new[]
+    internal static class Scopes
     {
-        OAuthClientScopeEnum.ManageAccount,
-        OAuthClientScopeEnum.ManageData,
-    };
+        public static readonly IReadOnlyList<OAuthClientScopeEnum> scopes = new[]
+        {
+            OAuthClientScopeEnum.ManageAccount,
+            OAuthClientScopeEnum.ManageData,
+        };
+    }
 }

@@ -1,31 +1,32 @@
 using PKHeX.Core;
 using PKHeX.Drawing.PokeSprite;
 
-namespace SysBot.Pokemon.WinForms;
-
-public static class InitUtil
+namespace SysBot.Pokemon.WinForms
 {
-    public static void InitializeStubs(ProgramMode mode)
+    public static class InitUtil
     {
-        SaveFile sav8 = mode switch
+        public static void InitializeStubs(ProgramMode mode)
         {
-            ProgramMode.SWSH => new SAV8SWSH(),
-            ProgramMode.BDSP => new SAV8BS(),
-            ProgramMode.LA   => new SAV8LA(),
-            ProgramMode.SV   => new SAV9SV(),
-            _                => throw new System.ArgumentOutOfRangeException(nameof(mode)),
-        };
+            SaveFile sav8 = mode switch
+            {
+                ProgramMode.SWSH => new SAV8SWSH(),
+                ProgramMode.BDSP => new SAV8BS(),
+                ProgramMode.LA   => new SAV8LA(),
+                ProgramMode.SV   => new SAV9SV(),
+                _                => throw new System.ArgumentOutOfRangeException(nameof(mode)),
+            };
 
-        SetUpSpriteCreator(sav8);
-    }
+            SetUpSpriteCreator(sav8);
+        }
 
-    private static void SetUpSpriteCreator(SaveFile sav)
-    {
-        SpriteUtil.Initialize(sav);
-        StreamSettings.CreateSpriteFile = (pk, fn) =>
+        private static void SetUpSpriteCreator(SaveFile sav)
         {
-            var png = pk.Sprite();
-            png.Save(fn);
-        };
+            SpriteUtil.Initialize(sav);
+            StreamSettings.CreateSpriteFile = (pk, fn) =>
+            {
+                var png = pk.Sprite();
+                png.Save(fn);
+            };
+        }
     }
 }

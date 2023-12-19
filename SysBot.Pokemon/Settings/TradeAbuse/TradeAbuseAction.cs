@@ -1,8 +1,9 @@
-﻿namespace SysBot.Pokemon;
-
-public enum TradeAbuseAction
+﻿namespace SysBot.Pokemon
 {
-    Ignore,
-    Quit,
-    BlockAndQuit,
+    public enum TradeAbuseAction
+    {
+        Ignore,
+        Quit,
+        BlockAndQuit,
+    }
 }

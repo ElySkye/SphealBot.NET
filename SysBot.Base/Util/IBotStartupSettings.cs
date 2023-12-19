@@ -1,6 +1,7 @@
-﻿namespace SysBot.Base;
-
-public interface IBotStateSettings
+﻿namespace SysBot.Base
 {
-    bool ScreenOff { get; }
+    public interface IBotStateSettings
+    {
+        bool ScreenOff { get; }
+    }
 }

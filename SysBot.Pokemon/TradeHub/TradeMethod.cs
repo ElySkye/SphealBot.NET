@@ -1,17 +1,18 @@
-﻿namespace SysBot.Pokemon;
-
-/// <summary>
-/// Differentiates the different types of player initiated in-game trades.
-/// </summary>
-public enum TradeMethod
+﻿namespace SysBot.Pokemon
 {
     /// <summary>
-    /// Trades between specific players
+    /// Differentiates the different types of player initiated in-game trades.
     /// </summary>
-    LinkTrade,
+    public enum TradeMethod
+    {
+        /// <summary>
+        /// Trades between specific players
+        /// </summary>
+        LinkTrade,
 
-    /// <summary>
-    /// Trades between randomly matched players
-    /// </summary>
-    SurpriseTrade,
+        /// <summary>
+        /// Trades between randomly matched players
+        /// </summary>
+        SurpriseTrade,
+    }
 }

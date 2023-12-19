@@ -1,14 +1,15 @@
-﻿namespace SysBot.Base;
-
-public enum SwitchProtocol
+﻿namespace SysBot.Base
 {
-    /// <summary>
-    /// sys-botbase
-    /// </summary>
-    WiFi,
+    public enum SwitchProtocol
+    {
+        /// <summary>
+        /// sys-botbase
+        /// </summary>
+        WiFi,
 
-    /// <summary>
-    /// usb-botbase
-    /// </summary>
-    USB,
+        /// <summary>
+        /// usb-botbase
+        /// </summary>
+        USB,
+    }
 }

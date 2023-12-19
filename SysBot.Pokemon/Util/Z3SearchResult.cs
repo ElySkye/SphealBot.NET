@@ -1,8 +1,9 @@
-﻿namespace SysBot.Pokemon;
-
-public enum Z3SearchResult
+﻿namespace SysBot.Pokemon
 {
-    Success,
-    SeedMismatch,
-    SeedNone,
+    public enum Z3SearchResult
+    {
+        Success,
+        SeedMismatch,
+        SeedNone,
+    }
 }

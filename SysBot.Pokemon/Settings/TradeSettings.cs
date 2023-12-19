@@ -4,72 +4,183 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
 
-namespace SysBot.Pokemon;
-
-public class TradeSettings : IBotStateSettings, ICountSettings
+namespace SysBot.Pokemon
 {
-    private const string TradeCode = nameof(TradeCode);
-    private const string TradeConfig = nameof(TradeConfig);
-    private const string Dumping = nameof(Dumping);
-    private const string Counts = nameof(Counts);
-    public override string ToString() => "Trade Bot Settings";
-
-    [Category(TradeConfig), Description("Time to wait for a trade partner in seconds.")]
-    public int TradeWaitTime { get; set; } = 30;
-
-    [Category(TradeConfig), Description("Max amount of time in seconds pressing A to wait for a trade to process.")]
-    public int MaxTradeConfirmTime { get; set; } = 25;
-
-    [Category(TradeCode), Description("Minimum Link Code.")]
-    public int MinTradeCode { get; set; } = 8180;
-
-    [Category(TradeCode), Description("Maximum Link Code.")]
-    public int MaxTradeCode { get; set; } = 8199;
-
-    [Category(Dumping), Description("Dump Trade: Dumping routine will stop after a maximum number of dumps from a single user.")]
-    public int MaxDumpsPerTrade { get; set; } = 20;
-
-    [Category(Dumping), Description("Dump Trade: Dumping routine will stop after spending x seconds in trade.")]
-    public int MaxDumpTradeTime { get; set; } = 180;
-
-    [Category(Dumping), Description("Dump Trade: If enabled, Dumping routine will output legality check information to the user.")]
-    public bool DumpTradeLegalityCheck { get; set; } = true;
-
-    [Category(TradeConfig), Description("When enabled, the screen will be turned off during normal bot loop operation to save power.")]
-    public bool ScreenOff { get; set; }
-
-    /// <summary>
-    /// Gets a random trade code based on the range settings.
-    /// </summary>
-    public int GetRandomTradeCode() => Util.Rand.Next(MinTradeCode, MaxTradeCode + 1);
-
-    private int _completedSurprise;
-    private int _completedDistribution;
-    private int _completedTrades;
-    private int _completedSeedChecks;
-    private int _completedClones;
-    private int _completedDumps;
-
-    [Category(Counts), Description("Completed Surprise Trades")]
-    public int CompletedSurprise
+    public class TradeSettings : IBotStateSettings, ICountSettings
     {
-        get => _completedSurprise;
-        set => _completedSurprise = value;
-    }
+        private const string TradeCode = nameof(TradeCode);
+        private const string TradeConfig = nameof(TradeConfig);
+        private const string Dumping = nameof(Dumping);
+        private const string Counts = nameof(Counts);
+        public override string ToString() => "Trade Bot Settings";
 
-    [Category(Counts), Description("Completed Link Trades (Distribution)")]
-    public int CompletedDistribution
-    {
-        get => _completedDistribution;
-        set => _completedDistribution = value;
-    }
+        [Category(TradeConfig), Description("Time to wait for a trade partner in seconds.")]
+        public int TradeWaitTime { get; set; } = 30;
 
-    [Category(Counts), Description("Completed Link Trades (Specific User)")]
-    public int CompletedTrades
-    {
-        get => _completedTrades;
-        set => _completedTrades = value;
-    }
+        [Category(TradeConfig), Description("Max amount of time in seconds pressing A to wait for a trade to process.")]
+        public int MaxTradeConfirmTime { get; set; } = 25;
+
+        [Category(TradeCode), Description("Minimum Link Code.")]
+        public int MinTradeCode { get; set; } = 8180;
+
+        [Category(TradeCode), Description("Maximum Link Code.")]
+        public int MaxTradeCode { get; set; } = 8199;
+
+        [Category(Dumping), Description("Dump Trade: Dumping routine will stop after a maximum number of dumps from a single user.")]
+        public int MaxDumpsPerTrade { get; set; } = 20;
+
+        [Category(Dumping), Description("Dump Trade: Dumping routine will stop after spending x seconds in trade.")]
+        public int MaxDumpTradeTime { get; set; } = 180;
+
+        [Category(Dumping), Description("Dump Trade: If enabled, Dumping routine will output legality check information to the user.")]
+        public bool DumpTradeLegalityCheck { get; set; } = true;
+
+        [Category(TradeConfig), Description("When enabled, the screen will be turned off during normal bot loop operation to save power.")]
+        public bool ScreenOff { get; set; }
+
+        /// <summary>
+        /// Gets a random trade code based on the range settings.
+        /// </summary>
+        public int GetRandomTradeCode() => Util.Rand.Next(MinTradeCode, MaxTradeCode + 1);
+
+        private int _completedSurprise;
+        private int _completedDistribution;
+        private int _completedTrades;
+        private int _completedOTSwaps;
+        private int _completedBallSwaps;
+        private int _completedTeraSwaps;
+        private int _completedTrilogySwaps;
+        private int _completedGenderSwaps;
+        private int _completedPowerSwaps;
+        private int _completedSizeSwaps;
+        private int _completedFriendshipSwaps;
+        private int _completedMarkSwaps;
+        private int _completedDateSwaps;
+        private int _completedUltimateSwaps;
+        private int _completedEVSwaps;
+        private int _completedDoubleSwaps;
+        private int _completedMystery;
+        private int _completedSeedChecks;
+        private int _completedClones;
+        private int _completedDumps;
+
+        [Category(Counts), Description("Completed Surprise Trades")]
+        public int CompletedSurprise
+        {
+            get => _completedSurprise;
+            set => _completedSurprise = value;
+        }
+
+        [Category(Counts), Description("Completed Link Trades (Distribution)")]
+        public int CompletedDistribution
+        {
+            get => _completedDistribution;
+            set => _completedDistribution = value;
+        }
+
+        [Category(Counts), Description("Completed Link Trades (Specific User)")]
+        public int CompletedTrades
+        {
+            get => _completedTrades;
+            set => _completedTrades = value;
+        }
+
+        [Category(Counts), Description("Completed OT Swap Trades")]
+        public int CompletedOTSwaps
+        {
+            get => _completedOTSwaps;
+            set => _completedOTSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Ball Swap Trades")]
+        public int CompletedBallSwaps
+        {
+            get => _completedBallSwaps;
+            set => _completedBallSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Tera Swap Trades")]
+        public int CompletedTeraSwaps
+        {
+            get => _completedTeraSwaps;
+            set => _completedTeraSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Trilogy Swap Trades")]
+        public int CompletedTrilogySwaps
+        {
+            get => _completedTrilogySwaps;
+            set => _completedTrilogySwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Gender Swap Trades")]
+        public int CompletedGenderSwaps
+        {
+            get => _completedGenderSwaps;
+            set => _completedGenderSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Power Swap Trades")]
+        public int CompletedPowerSwaps
+        {
+            get => _completedPowerSwaps;
+            set => _completedPowerSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Size Swap Trades")]
+        public int CompletedSizeSwaps
+        {
+            get => _completedSizeSwaps;
+            set => _completedSizeSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Friendship Swap Trades")]
+        public int CompletedFriendshipSwaps
+        {
+            get => _completedFriendshipSwaps;
+            set => _completedFriendshipSwaps = value;
+        }
+        [Category(Counts), Description("Completed Mark Swap Trades")]
+        public int CompletedMarkSwaps
+        {
+            get => _completedMarkSwaps;
+            set => _completedMarkSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Date Swap Trades")]
+        public int CompletedDateSwaps
+        {
+            get => _completedDateSwaps;
+            set => _completedDateSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Ultimate Swap Trades")]
+        public int CompletedUltimateSwaps
+        {
+            get => _completedUltimateSwaps;
+            set => _completedUltimateSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed EV Swap Trades")]
+        public int CompletedEVSwaps
+        {
+            get => _completedEVSwaps;
+            set => _completedEVSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Double Swap Trades")]
+        public int CompletedDoubleSwaps
+        {
+            get => _completedDoubleSwaps;
+            set => _completedDoubleSwaps = value;
+        }
+
+        [Category(Counts), Description("Completed Mystery Trades [Default: Eggs Only]")]
+        public int CompletedMystery
+        {
+            get => _completedMystery;
+            set => _completedMystery = value;
+        }
 
         [Category(Counts), Description("Completed Seed Check Trades")]
         public int CompletedSeedChecks
@@ -78,27 +189,41 @@ public class TradeSettings : IBotStateSettings, ICountSettings
             set => _completedSeedChecks = value;
         }
 
-    [Category(Counts), Description("Completed Clone Trades (Specific User)")]
-    public int CompletedClones
-    {
-        get => _completedClones;
-        set => _completedClones = value;
-    }
+        [Category(Counts), Description("Completed Clone Trades (Specific User)")]
+        public int CompletedClones
+        {
+            get => _completedClones;
+            set => _completedClones = value;
+        }
 
-    [Category(Counts), Description("Completed Dump Trades (Specific User)")]
-    public int CompletedDumps
-    {
-        get => _completedDumps;
-        set => _completedDumps = value;
-    }
+        [Category(Counts), Description("Completed Dump Trades (Specific User)")]
+        public int CompletedDumps
+        {
+            get => _completedDumps;
+            set => _completedDumps = value;
+        }
 
-    [Category(Counts), Description("When enabled, the counts will be emitted when a status check is requested.")]
-    public bool EmitCountsOnStatusCheck { get; set; }
+        [Category(Counts), Description("When enabled, the counts will be emitted when a status check is requested.")]
+        public bool EmitCountsOnStatusCheck { get; set; }
 
         public void AddCompletedTrade() => Interlocked.Increment(ref _completedTrades);
         public void AddCompletedSeedCheck() => Interlocked.Increment(ref _completedSeedChecks);
         public void AddCompletedSurprise() => Interlocked.Increment(ref _completedSurprise);
         public void AddCompletedDistribution() => Interlocked.Increment(ref _completedDistribution);
+        public void AddCompletedOTSwaps() => Interlocked.Increment(ref _completedOTSwaps);
+        public void AddCompletedBallSwaps() => Interlocked.Increment(ref _completedBallSwaps);
+        public void AddCompletedTeraSwaps() => Interlocked.Increment(ref _completedTeraSwaps);
+        public void AddCompletedTrilogySwaps() => Interlocked.Increment(ref _completedTrilogySwaps);
+        public void AddCompletedGenderSwaps() => Interlocked.Increment(ref _completedGenderSwaps);
+        public void AddCompletedPowerSwaps() => Interlocked.Increment(ref _completedPowerSwaps);
+        public void AddCompletedSizeSwaps() => Interlocked.Increment(ref _completedSizeSwaps);
+        public void AddCompletedFriendshipSwaps() => Interlocked.Increment(ref _completedFriendshipSwaps);
+        public void AddCompletedMarkSwaps() => Interlocked.Increment(ref _completedMarkSwaps);
+        public void AddCompletedDateSwaps() => Interlocked.Increment(ref _completedDateSwaps);
+        public void AddCompletedUltimateSwaps() => Interlocked.Increment(ref _completedUltimateSwaps);
+        public void AddCompletedEVSwaps() => Interlocked.Increment(ref _completedEVSwaps);
+        public void AddCompletedDoubleSwaps() => Interlocked.Increment(ref _completedDoubleSwaps);
+        public void AddCompletedMystery() => Interlocked.Increment(ref _completedMystery);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);
 
@@ -116,6 +241,34 @@ public class TradeSettings : IBotStateSettings, ICountSettings
                 yield return $"Link Trades: {CompletedTrades}";
             if (CompletedDistribution != 0)
                 yield return $"Distribution Trades: {CompletedDistribution}";
+            if (CompletedOTSwaps != 0)
+                yield return $"OT Swaps: {CompletedOTSwaps}";
+            if (CompletedBallSwaps != 0)
+                yield return $"Ball Swaps: {CompletedBallSwaps}";
+            if (CompletedTeraSwaps != 0)
+                yield return $"Tera Swaps: {CompletedTeraSwaps}";
+            if (CompletedTrilogySwaps != 0)
+                yield return $"Trilogy Swaps: {CompletedTrilogySwaps}";
+            if (CompletedGenderSwaps != 0)
+                yield return $"Gender Swaps: {CompletedGenderSwaps}";
+            if (CompletedPowerSwaps != 0)
+                yield return $"Power Swaps: {CompletedPowerSwaps}";
+            if (CompletedSizeSwaps != 0)
+                yield return $"Size Swaps: {CompletedSizeSwaps}";
+            if (CompletedFriendshipSwaps != 0)
+                yield return $"Friendship Swaps: {CompletedFriendshipSwaps}";
+            if (CompletedMarkSwaps != 0)
+                yield return $"Mark Swaps: {CompletedMarkSwaps}";
+            if (CompletedDateSwaps != 0)
+                yield return $"Date Swaps: {CompletedDateSwaps}";
+            if (CompletedUltimateSwaps != 0)
+                yield return $"Ultimate Swaps: {CompletedUltimateSwaps}";
+            if (CompletedEVSwaps != 0)
+                yield return $"EV Swaps: {CompletedEVSwaps}";
+            if (CompletedDoubleSwaps != 0)
+                yield return $"Double Swaps: {CompletedDoubleSwaps}";
+            if (CompletedMystery != 0)
+                yield return $"Mystery Eggs: {CompletedMystery}";
             if (CompletedSurprise != 0)
                 yield return $"Surprise Trades: {CompletedSurprise}";
         }

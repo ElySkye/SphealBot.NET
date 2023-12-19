@@ -1,13 +1,14 @@
-﻿namespace SysBot.Pokemon;
-
-public record PokeTradeTrainerInfo
+﻿namespace SysBot.Pokemon
 {
-    public readonly string TrainerName;
-    public readonly ulong ID;
-
-    public PokeTradeTrainerInfo(string name, ulong id = 0)
+    public record PokeTradeTrainerInfo
     {
-        TrainerName = name;
-        ID = id;
+        public readonly string TrainerName;
+        public readonly ulong ID;
+
+        public PokeTradeTrainerInfo(string name, ulong id = 0)
+        {
+            TrainerName = name;
+            ID = id;
+        }
     }
 }
