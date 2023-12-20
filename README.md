@@ -4,9 +4,7 @@
 ## Support Discord:
 
 This is a fork of [SysBot](https://github.com/kwsch/SysBot.NET) with modified custom features. Do not ask official PDP discord for assistance.
-For any issues, wait for an update. Do not bother the devs in PDP.
-Else, feel free to join our discord for support:
-[Sphealtopia](http://discord.gg/sphealtopia)
+No longer providing support.
 
 ## Special Thanks & Credits:
 
